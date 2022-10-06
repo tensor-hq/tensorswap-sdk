@@ -1,0 +1,35 @@
+.DS_Store
+target
+**/*.rs.bk
+node_modules
+
+# Private keys/secrets
+*.jks
+*.p8
+*.p12
+*.key
+.env
+
+# macOS
+.DS_Store
+
+# WSL
+*:Zone.Identifier
+
+# Temp files
+*.orig.*
+*.swp
+*.log
+
+# Node/tsc
+node_modules/
+npm-debug.*
+dist/
+
+# Data
+*.jsonl
+*.gz
+
+# IDEs
+.idea/
+.vscode/
