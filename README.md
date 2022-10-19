@@ -27,6 +27,8 @@ const wlSdk = new TensorWhitelistSDK({ provider });
     config,
     // max price buyer is willing to pay (add ~0.1% for exponential pools b/c of rounding differences)
     maxPrice,
+    // @deprecated
+    proof: [],
   });
   const buyTx = new Transaction(...ixs);
 }
@@ -37,7 +39,7 @@ const wlSdk = new TensorWhitelistSDK({ provider });
 {
 
   // List of buffers contain the merkle proof for this mint and WL (proof stored off-chain).
-  // Fetch from Tensor API.
+  // Fetch from Tensor API (ping @0xrwu or @_ilmoi).
   const proof = ...;
 
   const {
@@ -74,7 +76,11 @@ const wlSdk = new TensorWhitelistSDK({ provider });
     config,
     // min price seller is willing to receive (sub ~0.1% for exponential pools b/c of rounding differences)
     minPrice,
+    // @deprecated
+    proof: [],
   });
   const sellTx = new Transaction(...ixs);
 }
+
+// ========= TODO: initPool / closePool / editPool / withdrawNft / depositNft / withdrawSol / depositSol
 ```
