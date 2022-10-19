@@ -1,10 +1,28 @@
-## Tensorswap SDK
+# Tensorswap SDK
 
-Example:
+- [Getting Started](#getting-started)
+- [Example Code](#example-code)
+- [API Access](#api-access)
+
+## Getting Started
+
+```sh
+git clone https://github.com/tensor-hq/tensorswap-sdk.git
+cd tensorswap-sdk/
+yarn
+# Build JS files
+yarn tsc
+```
+
+## Example Code
 
 ```ts
+const { AnchorProvider, Wallet } = require("@project-serum/anchor");
+const { Connection, Keypair } = require("@solana/web3.js");
+const { TensorSwapSDK, TensorWhitelistSDK } = require(".");
+
 const conn = new Connection("https://api.mainnet-beta.solana.com");
-const provider = new anchor.AnchorProvider(conn);
+const provider = new AnchorProvider(conn, new Wallet(Keypair.generate()));
 const swapSdk = new TensorSwapSDK({ provider });
 const wlSdk = new TensorWhitelistSDK({ provider });
 
@@ -39,7 +57,7 @@ const wlSdk = new TensorWhitelistSDK({ provider });
 {
 
   // List of buffers contain the merkle proof for this mint and WL (proof stored off-chain).
-  // Fetch from Tensor API (ping @0xrwu or @_ilmoi).
+  // Fetch from Tensor API
   const proof = ...;
 
   const {
@@ -59,7 +77,7 @@ const wlSdk = new TensorWhitelistSDK({ provider });
 // Step 2: Send sell tx.
 {
   const {
-    tx: { ixs },
+
   } = await swapSdk.sellNft({
     type: "token", // or 'trade' for a trade pool
     // Whitelist PDA address where name = tensor slug (see TensorWhitelistSDK.nameToBuffer)
@@ -84,3 +102,9 @@ const wlSdk = new TensorWhitelistSDK({ provider });
 
 // ========= TODO: initPool / closePool / editPool / withdrawNft / depositNft / withdrawSol / depositSol
 ```
+
+## API Access
+
+For the off-chain [merkle proofs](https://en.wikipedia.org/wiki/Merkle_tree) we use for collection whitelist, we store the proofs off-chain.
+
+DM @oxrwu or @ilmoi on Telegram to get your API key!
