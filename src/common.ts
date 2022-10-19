@@ -2,7 +2,7 @@ import { Metaplex } from "@metaplex-foundation/js";
 import { AccountClient, BN, Idl, Program, utils } from "@project-serum/anchor";
 import { AllAccountsMap } from "@project-serum/anchor/dist/cjs/program/namespace/types";
 import { AccountInfo, Connection, PublicKey } from "@solana/web3.js";
-import { Tensorswap } from "./tensorswap/idl/tensorswap";
+import { TensorswapIDL } from "./tensorswap";
 import { TensorWhitelist } from "./tensor_whitelist/idl/tensor_whitelist";
 
 export const getAccountRent = (conn: Connection, acct: AccountClient) => {
@@ -28,7 +28,7 @@ export type DiscMap<T extends Idl> = Record<
   { decoder: Decoder; name: keyof AllAccountsMap<T> }
 >;
 
-export const genDiscToDecoderMap = <T extends Tensorswap | TensorWhitelist>(
+export const genDiscToDecoderMap = <T extends TensorswapIDL | TensorWhitelist>(
   program: Program<T>
 ): DiscMap<T> => {
   return Object.fromEntries(

@@ -79,3 +79,16 @@ export const findSolEscrowPDA = ({
     program ?? TENSORSWAP_ADDR
   );
 };
+
+export const findNftAuthorityPDA = ({
+  program,
+  authSeed,
+}: {
+  program?: PublicKey;
+  authSeed: number[];
+}) => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("nft_auth"), Buffer.from(authSeed)],
+    program ?? TENSORSWAP_ADDR
+  );
+};

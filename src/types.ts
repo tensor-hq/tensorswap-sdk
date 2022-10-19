@@ -30,6 +30,7 @@ export type PoolConfig = {
 
 // Parsed account from a raw tx.
 export type ParsedAccount = {
+  // See "getAccountByName" for name suffixes (these are the capitalized, space-separate names).
   name?: string | undefined;
   pubkey: PublicKey;
   isSigner: boolean;

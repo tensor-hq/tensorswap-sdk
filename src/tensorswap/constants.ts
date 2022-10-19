@@ -7,3 +7,7 @@ export const TENSORSWAP_ADDR = new PublicKey(
 export const TSWAP_FEE_ACC = new PublicKey(
   process.env.TSWAP_FEE_ACC || "EuCpcygKBc39MY4iNkGUXE161houE4GYt6v1nGJC1GVQ"
 );
+
+export const TSWAP_COSIGNER = new PublicKey(
+  process.env.TSWAP_COSIGNER || "ErF3DfenxKSC2JhdpDURPExFMVJAiFfVrdHY3FhTXSGJ"
+);

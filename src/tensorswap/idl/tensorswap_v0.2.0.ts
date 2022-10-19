@@ -1,5 +1,5 @@
 export type Tensorswap = {
-  "version": "0.3.5",
+  "version": "0.2.0",
   "name": "tensorswap",
   "instructions": [
     {
@@ -82,11 +82,6 @@ export type Tensorswap = {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "nftAuthority",
-          "isMut": true,
-          "isSigner": false
         }
       ],
       "args": [
@@ -94,15 +89,6 @@ export type Tensorswap = {
           "name": "config",
           "type": {
             "defined": "PoolConfig"
-          }
-        },
-        {
-          "name": "authSeeds",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
           }
         }
       ]
@@ -138,11 +124,6 @@ export type Tensorswap = {
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "nftAuthority",
-          "isMut": true,
           "isSigner": false
         }
       ],
@@ -768,73 +749,6 @@ export type Tensorswap = {
       ]
     },
     {
-      "name": "editPool",
-      "accounts": [
-        {
-          "name": "tswap",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "oldPool",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "newPool",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "oldSolEscrow",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "newSolEscrow",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "whitelist",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Needed for pool seeds derivation / will be stored inside pool"
-          ]
-        },
-        {
-          "name": "nftAuthority",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "oldConfig",
-          "type": {
-            "defined": "PoolConfig"
-          }
-        },
-        {
-          "name": "newConfig",
-          "type": {
-            "defined": "PoolConfig"
-          }
-        }
-      ]
-    },
-    {
       "name": "reallocPool",
       "accounts": [
         {
@@ -1001,16 +915,6 @@ export type Tensorswap = {
           {
             "name": "nftsHeld",
             "type": "u32"
-          },
-          {
-            "name": "nftAuthority",
-            "type": "publicKey"
-          },
-          {
-            "name": "stats",
-            "type": {
-              "defined": "PoolStats"
-            }
           }
         ]
       }
@@ -1029,7 +933,7 @@ export type Tensorswap = {
             "type": "u8"
           },
           {
-            "name": "nftAuthority",
+            "name": "pool",
             "type": "publicKey"
           },
           {
@@ -1038,36 +942,6 @@ export type Tensorswap = {
           },
           {
             "name": "nftEscrow",
-            "type": "publicKey"
-          }
-        ]
-      }
-    },
-    {
-      "name": "nftAuthority",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "randomSeed",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
-            "name": "bump",
-            "type": {
-              "array": [
-                "u8",
-                1
-              ]
-            }
-          },
-          {
-            "name": "pool",
             "type": "publicKey"
           }
         ]
@@ -1134,26 +1008,6 @@ export type Tensorswap = {
             "type": {
               "option": "u16"
             }
-          }
-        ]
-      }
-    },
-    {
-      "name": "PoolStats",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "takerSellCount",
-            "type": "u32"
-          },
-          {
-            "name": "takerBuyCount",
-            "type": "u32"
-          },
-          {
-            "name": "accumulatedMmProfit",
-            "type": "u64"
           }
         ]
       }
@@ -1345,27 +1199,12 @@ export type Tensorswap = {
       "code": 6019,
       "name": "CreatorMismatch",
       "msg": "provided creator address does not match metadata creator"
-    },
-    {
-      "code": 6020,
-      "name": "WrongPoolVersion",
-      "msg": "wrong pool version provided"
-    },
-    {
-      "code": 6021,
-      "name": "PoolsAreTheSame",
-      "msg": "new pool should not match old pool"
-    },
-    {
-      "code": 6022,
-      "name": "WrongAuthority",
-      "msg": "wrong nft authority account provided"
     }
   ]
 };
 
 export const IDL: Tensorswap = {
-  "version": "0.3.5",
+  "version": "0.2.0",
   "name": "tensorswap",
   "instructions": [
     {
@@ -1448,11 +1287,6 @@ export const IDL: Tensorswap = {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "nftAuthority",
-          "isMut": true,
-          "isSigner": false
         }
       ],
       "args": [
@@ -1460,15 +1294,6 @@ export const IDL: Tensorswap = {
           "name": "config",
           "type": {
             "defined": "PoolConfig"
-          }
-        },
-        {
-          "name": "authSeeds",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
           }
         }
       ]
@@ -1504,11 +1329,6 @@ export const IDL: Tensorswap = {
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "nftAuthority",
-          "isMut": true,
           "isSigner": false
         }
       ],
@@ -2134,73 +1954,6 @@ export const IDL: Tensorswap = {
       ]
     },
     {
-      "name": "editPool",
-      "accounts": [
-        {
-          "name": "tswap",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "oldPool",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "newPool",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "oldSolEscrow",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "newSolEscrow",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "whitelist",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Needed for pool seeds derivation / will be stored inside pool"
-          ]
-        },
-        {
-          "name": "nftAuthority",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "oldConfig",
-          "type": {
-            "defined": "PoolConfig"
-          }
-        },
-        {
-          "name": "newConfig",
-          "type": {
-            "defined": "PoolConfig"
-          }
-        }
-      ]
-    },
-    {
       "name": "reallocPool",
       "accounts": [
         {
@@ -2367,16 +2120,6 @@ export const IDL: Tensorswap = {
           {
             "name": "nftsHeld",
             "type": "u32"
-          },
-          {
-            "name": "nftAuthority",
-            "type": "publicKey"
-          },
-          {
-            "name": "stats",
-            "type": {
-              "defined": "PoolStats"
-            }
           }
         ]
       }
@@ -2395,7 +2138,7 @@ export const IDL: Tensorswap = {
             "type": "u8"
           },
           {
-            "name": "nftAuthority",
+            "name": "pool",
             "type": "publicKey"
           },
           {
@@ -2404,36 +2147,6 @@ export const IDL: Tensorswap = {
           },
           {
             "name": "nftEscrow",
-            "type": "publicKey"
-          }
-        ]
-      }
-    },
-    {
-      "name": "nftAuthority",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "randomSeed",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
-            "name": "bump",
-            "type": {
-              "array": [
-                "u8",
-                1
-              ]
-            }
-          },
-          {
-            "name": "pool",
             "type": "publicKey"
           }
         ]
@@ -2500,26 +2213,6 @@ export const IDL: Tensorswap = {
             "type": {
               "option": "u16"
             }
-          }
-        ]
-      }
-    },
-    {
-      "name": "PoolStats",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "takerSellCount",
-            "type": "u32"
-          },
-          {
-            "name": "takerBuyCount",
-            "type": "u32"
-          },
-          {
-            "name": "accumulatedMmProfit",
-            "type": "u64"
           }
         ]
       }
@@ -2711,21 +2404,6 @@ export const IDL: Tensorswap = {
       "code": 6019,
       "name": "CreatorMismatch",
       "msg": "provided creator address does not match metadata creator"
-    },
-    {
-      "code": 6020,
-      "name": "WrongPoolVersion",
-      "msg": "wrong pool version provided"
-    },
-    {
-      "code": 6021,
-      "name": "PoolsAreTheSame",
-      "msg": "new pool should not match old pool"
-    },
-    {
-      "code": 6022,
-      "name": "WrongAuthority",
-      "msg": "wrong nft authority account provided"
     }
   ]
 };
