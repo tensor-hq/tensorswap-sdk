@@ -105,6 +105,6 @@ const wlSdk = new TensorWhitelistSDK({ provider });
 
 ## API Access
 
-For the off-chain [merkle proofs](https://en.wikipedia.org/wiki/Merkle_tree) we use for collection whitelist, we store the proofs off-chain.
+For the off-chain [merkle proofs](https://en.wikipedia.org/wiki/Merkle_tree) we use for collection whitelisting, we store the proofs off-chain.
 
-DM @oxrwu or @ilmoi on Telegram to get your API key!
+Ping us in our [Discord](https://www.discord.com/invite/a8spfqxEpC).
