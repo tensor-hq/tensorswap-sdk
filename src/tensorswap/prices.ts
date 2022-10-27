@@ -24,18 +24,16 @@ export type ComputePriceArgs = {
 };
 
 // This is what should be displayed to the user ((!) no slippage, since slippage is only used for rounding errors).
-// In contrast, computeCurrentPrice is what should be passed to the ix itself
-// (doesn't take into account tswap/mm fees).
+// In contrast, computeTakerPrice is what should be passed to the ix itself (has some noise slippage).
 export const computeTakerDisplayPrice = (args: ComputePriceArgs) => {
   // Explicitly set slippage to 0.
-  return computeTakerWithMMFeesPrice({ ...args, slippage: 0 });
+  return computeTakerPrice({ ...args, slippage: 0 });
 };
 
-// This includes MM fees (when taker is selling).
+// This includes MM fees (when taker is selling into a trade pool).
 // This should be used when computing deposit amounts + display (see computeTakerDisplayPrice) and nothing else.
-// In contrast, computeCurrentPrice is what should be passed to the ix itself
-// (doesn't take into account tswap/mm fees).
-const computeTakerWithMMFeesPrice = (args: ComputePriceArgs): Big | null => {
+// (doesn't take into account mm fees).
+export const computeTakerPrice = (args: ComputePriceArgs): Big | null => {
   let currentPrice = computeCurrentPrice(args);
   if (currentPrice === null) return null;
 
@@ -52,12 +50,12 @@ const computeTakerWithMMFeesPrice = (args: ComputePriceArgs): Big | null => {
   return priceWithMMFees;
 };
 
-// Computes the current price of a pool (WITHOUT MM/TSWAP FEES),
+// Computes the current (base) price of a pool (WITHOUT MM FEES),
 // optionally with slippage (so minPrice for Sell, maxPrice for Buy).
 // Note even w/ 0 slippage this price will differ from the on-chain current price
 // for Exponential curves b/c of rounding differences.
 // Will return null if price is neagtive (ie cannot sell anymore).
-export const computeCurrentPrice = ({
+const computeCurrentPrice = ({
   config,
   takerSellCount,
   takerBuyCount,
@@ -177,7 +175,7 @@ export const computeMakerAmountCount = ({
         ? 0
         : -1 * EXPO_SLIPPAGE),
   };
-  const initTakerPrice = computeTakerWithMMFeesPrice(currPriceArgs);
+  const initTakerPrice = computeTakerPrice(currPriceArgs);
   const initialPrice = initTakerPrice
     ? new BN(initTakerPrice.round().toString())
     : null;
@@ -197,7 +195,7 @@ export const computeMakerAmountCount = ({
       currPriceArgs.takerSellCount++;
     }
 
-    const temp = computeTakerWithMMFeesPrice(currPriceArgs);
+    const temp = computeTakerPrice(currPriceArgs);
     // Need to round decimals since we only deal in BNs/lamports.
     currPrice = temp ? new BN(temp.round().toString()) : null;
   }
