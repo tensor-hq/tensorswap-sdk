@@ -2,6 +2,7 @@
 target
 **/*.rs.bk
 node_modules
+.yarn/
 
 # Private keys/secrets
 *.jks

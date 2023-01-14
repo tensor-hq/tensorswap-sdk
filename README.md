@@ -104,3 +104,4 @@ const wlSdk = new TensorWhitelistSDK({ provider });
 For the off-chain [merkle proofs](https://en.wikipedia.org/wiki/Merkle_tree) we use for collection whitelisting, we store the proofs off-chain.
 
 Ping us in our [Discord](https://www.discord.com/invite/a8spfqxEpC).
+
