@@ -1,8 +1,8 @@
 import { PublicKey } from "@solana/web3.js";
-import { TENSOR_WHITELIST_ADDR } from "./constants";
+import { TLIST_ADDR } from "./constants";
 
 export const findWhitelistAuthPDA = ({ program }: { program?: PublicKey }) => {
-  return PublicKey.findProgramAddressSync([], program ?? TENSOR_WHITELIST_ADDR);
+  return PublicKey.findProgramAddressSync([], program ?? TLIST_ADDR);
 };
 
 export const findWhitelistPDA = ({
@@ -14,7 +14,7 @@ export const findWhitelistPDA = ({
 }) => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from(uuid)],
-    program ?? TENSOR_WHITELIST_ADDR
+    program ?? TLIST_ADDR
   );
 };
 
@@ -29,6 +29,6 @@ export const findMintProofPDA = ({
 }) => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("mint_proof"), mint.toBytes(), whitelist.toBytes()],
-    program ?? TENSOR_WHITELIST_ADDR
+    program ?? TLIST_ADDR
   );
 };

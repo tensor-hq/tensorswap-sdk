@@ -6,7 +6,7 @@ import {
   SystemProgram,
 } from "@solana/web3.js";
 import { Coder, Program, Provider } from "@project-serum/anchor";
-import { TENSOR_WHITELIST_ADDR } from "./constants";
+import { TLIST_ADDR, TLIST_COSIGNER, TLIST_OWNER } from "./constants";
 import {
   findMintProofPDA,
   findWhitelistAuthPDA,
@@ -23,10 +23,47 @@ import {
   removeNullBytes,
 } from "../common";
 
-export const TensorWhitelistIDL = IDL;
+// ---------------------------------------- Versioned IDLs for backwards compat when parsing.
+//v0.1
+import {
+  IDL as IDL_v0_1_0,
+  TensorWhitelist as TensorWhitelist_v0_1_0,
+} from "./idl/tensor_whitelist_v0.1.0";
+
+//v0.2 (added cosigner and 3 verification methods)
+import {
+  IDL as IDL_latest,
+  TensorWhitelist as TensorWhitelist_latest,
+} from "./idl/tensor_whitelist";
+
+// rollout 0.1.0: //todo find tx
+export const TensorWhitelistIDL_v0_1_0 = IDL_v0_1_0;
+export const TensorWhitelistIDL_v0_1_0_EffSlot = 0; //todo find slot
+
+// rollout 0.2.0: //https://solscan.io/tx/55gtoZSTKf96XL6XDD5e9F4nkoiPqXHtP4mJoYNT6eZVwtHw2FRRhVxfg9jHADMLrVS2FmNRh2VAWVCqnTxrX3Ro
+export const TensorWhitelistIDL_latest = IDL_latest;
+export const TensorWhitelistIDL_latest_EffSlot = 172170872;
+
+export type TensorWhitelistIDL =
+  | TensorWhitelist_v0_1_0
+  | TensorWhitelist_latest;
+
+// Use this function to figure out which IDL to use based on the slot # of historical txs.
+export const triageWhitelistIDL = (
+  slot: number | bigint
+): TensorWhitelistIDL | null => {
+  //cba to parse really old txs, this was before public launch
+  if (slot < TensorWhitelistIDL_v0_1_0_EffSlot) return null;
+  if (slot < TensorWhitelistIDL_latest_EffSlot)
+    return TensorWhitelistIDL_v0_1_0;
+  return TensorWhitelistIDL_latest;
+};
+
+// --------------------------------------- state structs
 
 export type AuthorityAnchor = {
   bump: number;
+  cosigner: PublicKey;
   owner: PublicKey;
 };
 
@@ -37,6 +74,9 @@ export type WhitelistAnchor = {
   rootHash: number[];
   uuid: number[];
   name: number[];
+  frozen: boolean;
+  voc?: PublicKey;
+  fvc?: PublicKey;
 };
 
 export type MintProofAnchor = {
@@ -60,13 +100,15 @@ export type TaggedTensorWhitelistPdaAnchor =
       account: MintProofAnchor;
     };
 
+// --------------------------------------- sdk
+
 export class TensorWhitelistSDK {
   program: Program<TensorWhitelist>;
   discMap: DiscMap<TensorWhitelist>;
 
   constructor({
     idl = IDL,
-    addr = TENSOR_WHITELIST_ADDR,
+    addr = TLIST_ADDR,
     provider,
     coder,
   }: {
@@ -110,15 +152,26 @@ export class TensorWhitelistSDK {
 
   // --------------------------------------- authority methods
 
-  //main signature: owner
-  async initUpdateAuthority(owner: PublicKey, newOwner: PublicKey) {
+  //main signature: cosigner
+  async initUpdateAuthority({
+    cosigner = TLIST_COSIGNER,
+    owner = TLIST_OWNER,
+    newCosigner,
+    newOwner,
+  }: {
+    cosigner?: PublicKey;
+    owner?: PublicKey;
+    newCosigner: PublicKey | null;
+    newOwner: PublicKey | null;
+  }) {
     const [authPda] = findWhitelistAuthPDA({});
 
     const builder = this.program.methods
-      .initUpdateAuthority(newOwner)
+      .initUpdateAuthority(newCosigner, newOwner)
       .accounts({
         whitelistAuthority: authPda,
         owner,
+        cosigner,
         systemProgram: SystemProgram.programId,
       });
 
@@ -131,31 +184,105 @@ export class TensorWhitelistSDK {
 
   // --------------------------------------- whitelist methods
 
-  //main signature: owner
+  //main signature: cosigner
   async initUpdateWhitelist({
-    owner,
+    cosigner = TLIST_COSIGNER,
+    owner, //can't pass default here, coz then it'll be auto-included in rem accs
     uuid,
     rootHash = null,
     name = null,
+    voc = null,
+    fvc = null,
   }: {
-    owner: PublicKey;
+    cosigner?: PublicKey;
+    owner?: PublicKey;
     uuid: number[];
     rootHash?: number[] | null;
     name?: number[] | null;
+    voc?: PublicKey | null;
+    fvc?: PublicKey | null;
   }) {
     const [authPda] = findWhitelistAuthPDA({});
     const [whitelistPda] = findWhitelistPDA({
       uuid,
     });
 
+    //only needed for frozen whitelists
+    const remAcc = owner
+      ? [
+          {
+            pubkey: owner,
+            isWritable: false,
+            isSigner: true,
+          },
+        ]
+      : [];
+
     const builder = this.program.methods
-      .initUpdateWhitelist(uuid, rootHash, name)
+      .initUpdateWhitelist(uuid, rootHash, name, voc, fvc)
       .accounts({
         whitelist: whitelistPda,
         whitelistAuthority: authPda,
-        owner,
+        cosigner,
         systemProgram: SystemProgram.programId,
-      });
+      })
+      .remainingAccounts(remAcc);
+
+    return {
+      builder,
+      tx: { ixs: [await builder.instruction()], extraSigners: [] },
+      authPda,
+      whitelistPda,
+    };
+  }
+
+  //main signature: cosigner
+  async freezeWhitelist({
+    uuid,
+    cosigner = TLIST_COSIGNER,
+  }: {
+    uuid: number[];
+    cosigner?: PublicKey;
+  }) {
+    const [authPda] = findWhitelistAuthPDA({});
+    const [whitelistPda] = findWhitelistPDA({
+      uuid,
+    });
+
+    const builder = this.program.methods.freezeWhitelist().accounts({
+      whitelist: whitelistPda,
+      whitelistAuthority: authPda,
+      cosigner,
+      systemProgram: SystemProgram.programId,
+    });
+
+    return {
+      builder,
+      tx: { ixs: [await builder.instruction()], extraSigners: [] },
+      authPda,
+      whitelistPda,
+    };
+  }
+
+  //main signature: owner
+  async unfreezeWhitelist({
+    uuid,
+    owner = TLIST_OWNER,
+  }: {
+    uuid: number[];
+    owner?: PublicKey;
+  }) {
+    const [authPda] = findWhitelistAuthPDA({});
+    const [whitelistPda] = findWhitelistPDA({
+      uuid,
+    });
+
+    const builder = this.program.methods.unfreezeWhitelist().accounts({
+      whitelist: whitelistPda,
+      whitelistAuthority: authPda,
+      owner,
+      systemProgram: SystemProgram.programId,
+    });
 
     return {
       builder,
@@ -193,6 +320,55 @@ export class TensorWhitelistSDK {
       builder,
       tx: { ixs: [await builder.instruction()], extraSigners: [] },
       mintProofPda,
+    };
+  }
+
+  // --------------------------------------- reallocs
+
+  async reallocAuthority({
+    cosigner = TLIST_COSIGNER,
+  }: {
+    cosigner?: PublicKey;
+  }) {
+    const [authPda] = findWhitelistAuthPDA({});
+
+    const builder = this.program.methods.reallocAuthority().accounts({
+      whitelistAuthority: authPda,
+      cosigner,
+      systemProgram: SystemProgram.programId,
+    });
+
+    return {
+      builder,
+      tx: { ixs: [await builder.instruction()], extraSigners: [] },
+      authPda,
+    };
+  }
+
+  async reallocWhitelist({
+    uuid,
+    cosigner = TLIST_COSIGNER,
+  }: {
+    uuid: number[];
+    cosigner?: PublicKey;
+  }) {
+    const [authPda] = findWhitelistAuthPDA({});
+    const [whitelistPda] = findWhitelistPDA({
+      uuid,
+    });
+
+    const builder = this.program.methods.reallocWhitelist().accounts({
+      whitelist: whitelistPda,
+      whitelistAuthority: authPda,
+      cosigner,
+      systemProgram: SystemProgram.programId,
+    });
+
+    return {
+      builder,
+      tx: { ixs: [await builder.instruction()], extraSigners: [] },
+      authPda,
+      whitelistPda,
     };
   }
 

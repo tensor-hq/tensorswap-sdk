@@ -1,23 +1,36 @@
 {
-  "name": "@tensor-hq/tensorswap-sdk",
-  "version": "0.1.0",
-  "description": "Anchor/JS SDK for interacting with the tensorswap Solana program(s).",
+  "name": "@tensor-hq/tensorswap-ts",
+  "version": "1.0.8",
+  "description": "Anchor/JS SDK for interacting with the tensorswap Solana program.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "/dist"
   ],
-  "repository": "https://github.com/tensor-hq/tensorswap-sdk.git",
+  "repository": "https://github.com/tensor-hq/tensorswap.git",
   "license": "MIT",
   "publishConfig": {
     "@tensor-hq:registry": "https://npm.pkg.github.com"
   },
+  "scripts": {
+    "build": "anchor build && bash scripts/cp_idl.sh",
+    "build:test": "anchor build -- --features testing && bash scripts/cp_idl.sh",
+    "test": "bash scripts/full_test.sh",
+    "fast-test": "anchor test --skip-build -- --features testing",
+    "pub": "rm -rf ./dist && yarn tsc && yarn publish --patch",
+    "push": "git push --follow-tags",
+    "pubpush": "yarn pub && yarn push",
+    "upgrade:tswap": "yarn upgrade @tensor/tensorswap-ts --latest --check-files",
+    "upgrade:anchor": "yarn upgrade @project-serum/anchor --latest --check-files"
+  },
   "dependencies": {
-    "@metaplex-foundation/js": "^0.15.0",
+    "@metaplex-foundation/js": "^0.17.5",
     "@metaplex-foundation/mpl-token-metadata": "^2.2.4",
     "@project-serum/anchor": "^0.25.0",
+    "@saberhq/solana-contrib": "^1.14.11",
     "@solana/spl-token": "0.2.0",
     "@solana/web3.js": "^1.33.0",
+    "@tensor-hq/tensor-common": "0.1.80",
     "@types/bn.js": "^5.1.0",
     "big.js": "^6.2.1",
     "bn.js": "^5.2.0",
@@ -25,6 +38,8 @@
     "merkletreejs": "^0.2.32"
   },
   "devDependencies": {
+    "@ledgerhq/hw-app-solana": "^6.27.2",
+    "@ledgerhq/hw-transport-node-hid": "^6.27.2",
     "@types/big.js": "^6.1.5",
     "@types/chai": "^4.3.0",
     "@types/chai-as-promised": "^7.1.4",

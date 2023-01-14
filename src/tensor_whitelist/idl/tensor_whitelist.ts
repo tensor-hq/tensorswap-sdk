@@ -1,5 +1,5 @@
 export type TensorWhitelist = {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "tensor_whitelist",
   "instructions": [
     {
@@ -11,8 +11,16 @@ export type TensorWhitelist = {
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "cosigner",
           "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "both have to sign on any updates"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -23,13 +31,24 @@ export type TensorWhitelist = {
       ],
       "args": [
         {
+          "name": "newCosigner",
+          "type": {
+            "option": "publicKey"
+          }
+        },
+        {
           "name": "newOwner",
-          "type": "publicKey"
+          "type": {
+            "option": "publicKey"
+          }
         }
       ]
     },
     {
       "name": "initUpdateWhitelist",
+      "docs": [
+        "Store min 1, max 3, check in priority order"
+      ],
       "accounts": [
         {
           "name": "whitelist",
@@ -42,13 +61,16 @@ export type TensorWhitelist = {
           "isSigner": false,
           "docs": [
             "there can only be 1 whitelist authority (due to seeds),",
-            "and we're checking that 1)the correct owner is present on it, and 2)is a signer"
+            "and we're checking that 1)the correct cosigner is present on it, and 2)is a signer"
           ]
         },
         {
-          "name": "owner",
+          "name": "cosigner",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "only cosigner has to sign for unfrozen, for frozen owner also has to sign"
+          ]
         },
         {
           "name": "systemProgram",
@@ -86,6 +108,18 @@ export type TensorWhitelist = {
                 32
               ]
             }
+          }
+        },
+        {
+          "name": "voc",
+          "type": {
+            "option": "publicKey"
+          }
+        },
+        {
+          "name": "fvc",
+          "type": {
+            "option": "publicKey"
           }
         }
       ]
@@ -132,6 +166,127 @@ export type TensorWhitelist = {
           }
         }
       ]
+    },
+    {
+      "name": "reallocAuthority",
+      "accounts": [
+        {
+          "name": "whitelistAuthority",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "there can only be 1 whitelist authority (due to seeds),",
+            "and we're checking that 1)the correct cosigner is present on it, and 2)is a signer"
+          ]
+        },
+        {
+          "name": "cosigner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "reallocWhitelist",
+      "accounts": [
+        {
+          "name": "whitelist",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whitelistAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "there can only be 1 whitelist authority (due to seeds),",
+            "and we're checking that 1)the correct cosigner is present on it, and 2)is a signer"
+          ]
+        },
+        {
+          "name": "cosigner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "freezeWhitelist",
+      "accounts": [
+        {
+          "name": "whitelist",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whitelistAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "there can only be 1 whitelist authority (due to seeds),",
+            "and we're checking that 1)the correct cosigner is present on it, and 2)is a signer"
+          ]
+        },
+        {
+          "name": "cosigner",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "freezing only requires cosigner"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "unfreezeWhitelist",
+      "accounts": [
+        {
+          "name": "whitelist",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whitelistAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "there can only be 1 whitelist authority (due to seeds),",
+            "and we're checking that 1)the correct cosigner is present on it, and 2)is a signer"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "unfreezing requires owner"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -145,8 +300,28 @@ export type TensorWhitelist = {
             "type": "u8"
           },
           {
-            "name": "owner",
+            "name": "cosigner",
+            "docs": [
+              "cosigner of the whitelist - has rights to update it if unfrozen"
+            ],
             "type": "publicKey"
+          },
+          {
+            "name": "owner",
+            "docs": [
+              "owner of the whitelist (stricter, should be handled more carefully)",
+              "has rights to 1)freeze, 2)unfreeze, 3)update frozen whitelists"
+            ],
+            "type": "publicKey"
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
           }
         ]
       }
@@ -170,6 +345,9 @@ export type TensorWhitelist = {
           },
           {
             "name": "rootHash",
+            "docs": [
+              "in the case when not present will be [u8; 32]"
+            ],
             "type": {
               "array": [
                 "u8",
@@ -192,6 +370,31 @@ export type TensorWhitelist = {
               "array": [
                 "u8",
                 32
+              ]
+            }
+          },
+          {
+            "name": "frozen",
+            "type": "bool"
+          },
+          {
+            "name": "voc",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "fvc",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
               ]
             }
           }
@@ -225,16 +428,46 @@ export type TensorWhitelist = {
       }
     }
   ],
+  "types": [
+    {
+      "name": "FullMerkleProof",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proof",
+            "type": {
+              "vec": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          },
+          {
+            "name": "leaf",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
   "errors": [
     {
       "code": 6000,
-      "name": "BadOwner",
-      "msg": "passed in owner doesnt have the rights to do this"
+      "name": "BadCosigner",
+      "msg": "passed in cosigner doesnt have the rights to do this"
     },
     {
       "code": 6001,
-      "name": "MissingRootHash",
-      "msg": "missing root hash"
+      "name": "MissingVerification",
+      "msg": "missing all 3 verification methods: at least one must be present"
     },
     {
       "code": 6002,
@@ -243,19 +476,39 @@ export type TensorWhitelist = {
     },
     {
       "code": 6003,
-      "name": "InvalidProof",
-      "msg": "invalid merkle proof, token not whitelisted"
+      "name": "BadWhitelist",
+      "msg": "bad whitelist"
     },
     {
       "code": 6004,
       "name": "ProofTooLong",
       "msg": "proof provided exceeds the limit of 32 hashes"
+    },
+    {
+      "code": 6005,
+      "name": "BadOwner",
+      "msg": "passed in owner doesnt have the rights to do this"
+    },
+    {
+      "code": 6006,
+      "name": "FailedVocVerification",
+      "msg": "failed voc verification"
+    },
+    {
+      "code": 6007,
+      "name": "FailedFvcVerification",
+      "msg": "failed fvc verification"
+    },
+    {
+      "code": 6008,
+      "name": "FailedMerkleProofVerification",
+      "msg": "failed merkle proof verification"
     }
   ]
 };
 
 export const IDL: TensorWhitelist = {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "tensor_whitelist",
   "instructions": [
     {
@@ -267,8 +520,16 @@ export const IDL: TensorWhitelist = {
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "cosigner",
           "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "both have to sign on any updates"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -279,13 +540,24 @@ export const IDL: TensorWhitelist = {
       ],
       "args": [
         {
+          "name": "newCosigner",
+          "type": {
+            "option": "publicKey"
+          }
+        },
+        {
           "name": "newOwner",
-          "type": "publicKey"
+          "type": {
+            "option": "publicKey"
+          }
         }
       ]
     },
     {
       "name": "initUpdateWhitelist",
+      "docs": [
+        "Store min 1, max 3, check in priority order"
+      ],
       "accounts": [
         {
           "name": "whitelist",
@@ -298,13 +570,16 @@ export const IDL: TensorWhitelist = {
           "isSigner": false,
           "docs": [
             "there can only be 1 whitelist authority (due to seeds),",
-            "and we're checking that 1)the correct owner is present on it, and 2)is a signer"
+            "and we're checking that 1)the correct cosigner is present on it, and 2)is a signer"
           ]
         },
         {
-          "name": "owner",
+          "name": "cosigner",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "only cosigner has to sign for unfrozen, for frozen owner also has to sign"
+          ]
         },
         {
           "name": "systemProgram",
@@ -342,6 +617,18 @@ export const IDL: TensorWhitelist = {
                 32
               ]
             }
+          }
+        },
+        {
+          "name": "voc",
+          "type": {
+            "option": "publicKey"
+          }
+        },
+        {
+          "name": "fvc",
+          "type": {
+            "option": "publicKey"
           }
         }
       ]
@@ -388,6 +675,127 @@ export const IDL: TensorWhitelist = {
           }
         }
       ]
+    },
+    {
+      "name": "reallocAuthority",
+      "accounts": [
+        {
+          "name": "whitelistAuthority",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "there can only be 1 whitelist authority (due to seeds),",
+            "and we're checking that 1)the correct cosigner is present on it, and 2)is a signer"
+          ]
+        },
+        {
+          "name": "cosigner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "reallocWhitelist",
+      "accounts": [
+        {
+          "name": "whitelist",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whitelistAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "there can only be 1 whitelist authority (due to seeds),",
+            "and we're checking that 1)the correct cosigner is present on it, and 2)is a signer"
+          ]
+        },
+        {
+          "name": "cosigner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "freezeWhitelist",
+      "accounts": [
+        {
+          "name": "whitelist",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whitelistAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "there can only be 1 whitelist authority (due to seeds),",
+            "and we're checking that 1)the correct cosigner is present on it, and 2)is a signer"
+          ]
+        },
+        {
+          "name": "cosigner",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "freezing only requires cosigner"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "unfreezeWhitelist",
+      "accounts": [
+        {
+          "name": "whitelist",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whitelistAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "there can only be 1 whitelist authority (due to seeds),",
+            "and we're checking that 1)the correct cosigner is present on it, and 2)is a signer"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "unfreezing requires owner"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -401,8 +809,28 @@ export const IDL: TensorWhitelist = {
             "type": "u8"
           },
           {
-            "name": "owner",
+            "name": "cosigner",
+            "docs": [
+              "cosigner of the whitelist - has rights to update it if unfrozen"
+            ],
             "type": "publicKey"
+          },
+          {
+            "name": "owner",
+            "docs": [
+              "owner of the whitelist (stricter, should be handled more carefully)",
+              "has rights to 1)freeze, 2)unfreeze, 3)update frozen whitelists"
+            ],
+            "type": "publicKey"
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
           }
         ]
       }
@@ -426,6 +854,9 @@ export const IDL: TensorWhitelist = {
           },
           {
             "name": "rootHash",
+            "docs": [
+              "in the case when not present will be [u8; 32]"
+            ],
             "type": {
               "array": [
                 "u8",
@@ -448,6 +879,31 @@ export const IDL: TensorWhitelist = {
               "array": [
                 "u8",
                 32
+              ]
+            }
+          },
+          {
+            "name": "frozen",
+            "type": "bool"
+          },
+          {
+            "name": "voc",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "fvc",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
               ]
             }
           }
@@ -481,16 +937,46 @@ export const IDL: TensorWhitelist = {
       }
     }
   ],
+  "types": [
+    {
+      "name": "FullMerkleProof",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proof",
+            "type": {
+              "vec": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          },
+          {
+            "name": "leaf",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
   "errors": [
     {
       "code": 6000,
-      "name": "BadOwner",
-      "msg": "passed in owner doesnt have the rights to do this"
+      "name": "BadCosigner",
+      "msg": "passed in cosigner doesnt have the rights to do this"
     },
     {
       "code": 6001,
-      "name": "MissingRootHash",
-      "msg": "missing root hash"
+      "name": "MissingVerification",
+      "msg": "missing all 3 verification methods: at least one must be present"
     },
     {
       "code": 6002,
@@ -499,13 +985,33 @@ export const IDL: TensorWhitelist = {
     },
     {
       "code": 6003,
-      "name": "InvalidProof",
-      "msg": "invalid merkle proof, token not whitelisted"
+      "name": "BadWhitelist",
+      "msg": "bad whitelist"
     },
     {
       "code": 6004,
       "name": "ProofTooLong",
       "msg": "proof provided exceeds the limit of 32 hashes"
+    },
+    {
+      "code": 6005,
+      "name": "BadOwner",
+      "msg": "passed in owner doesnt have the rights to do this"
+    },
+    {
+      "code": 6006,
+      "name": "FailedVocVerification",
+      "msg": "failed voc verification"
+    },
+    {
+      "code": 6007,
+      "name": "FailedFvcVerification",
+      "msg": "failed fvc verification"
+    },
+    {
+      "code": 6008,
+      "name": "FailedMerkleProofVerification",
+      "msg": "failed merkle proof verification"
     }
   ]
 };

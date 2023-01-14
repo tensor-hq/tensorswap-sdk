@@ -1,6 +1,7 @@
 import {
   AccountInfo,
   Commitment,
+  LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
@@ -17,8 +18,15 @@ import {
   Program,
 } from "@project-serum/anchor";
 import Big from "big.js";
-import { TENSORSWAP_ADDR, TSWAP_FEE_ACC } from "./constants";
 import {
+  TENSORSWAP_ADDR,
+  TSWAP_COSIGNER,
+  TSWAP_FEE_ACC,
+  TSWAP_OWNER,
+} from "./constants";
+import {
+  findMarginPDA,
+  findNextFreeMarginNr,
   findNftAuthorityPDA,
   findNftDepositReceiptPDA,
   findNftEscrowPDA,
@@ -44,30 +52,49 @@ import { InstructionDisplay } from "@project-serum/anchor/dist/cjs/coder/borsh/i
 import { CurveType, ParsedAccount, PoolConfig, PoolType } from "../types";
 import { findMintProofPDA } from "../tensor_whitelist";
 import { v4 } from "uuid";
+import { isNullLike } from "@tensor-hq/tensor-common";
 
 // ---------------------------------------- Versioned IDLs for backwards compat when parsing.
-//v1
+//v0.1
 import {
   IDL as IDL_v0_1_32,
   Tensorswap as Tensorswap_v0_1_32,
 } from "./idl/tensorswap_v0.1.32";
-//v2 (remove cosigner)
-//todo later can specify exact 2.x.x version
+
+//v0.2 (remove cosigner)
 import {
   IDL as IDL_v0_2_0,
   Tensorswap as Tensorswap_v0_2_0,
 } from "./idl/tensorswap_v0.2.0";
-//v3 (editable pools)
+
+//v0.3 (editable pools)
 import {
   IDL as IDL_v0_3_0,
   Tensorswap as Tensorswap_v0_3_0,
 } from "./idl/tensorswap_v0.3.0";
 
-//v3.5 (removed v1 -> v2 migration ixs)
+//v0.3.5 (removed v0.2 -> v0.3 migration ixs)
+import {
+  IDL as IDL_v0_3_5,
+  Tensorswap as Tensorswap_v0_3_5,
+} from "./idl/tensorswap_v0.3.5";
+
+//v1.0 (added sniping)
 import {
   IDL as IDL_latest,
   Tensorswap as Tensorswap_latest,
 } from "./idl/tensorswap";
+
+export const STANDARD_FEE_BPS: number = +IDL_latest.constants.find(
+  (c) => c.name === "STANDARD_FEE_BPS"
+)!.value;
+export const SNIPE_FEE_BPS: number = +IDL_latest.constants.find(
+  (c) => c.name === "SNIPE_FEE_BPS"
+)!.value;
+export const SNIPE_PROFIT_SHARE_BPS: number = +IDL_latest.constants.find(
+  (c) => c.name === "SNIPE_PROFIT_SHARE_BPS"
+)!.value;
+export const SNIPE_MIN_FEE: number = 0.01 * LAMPORTS_PER_SOL;
 
 // rollout 0.1.32: https://solscan.io/tx/5ZWevmR3TLzUEVsPyE9bdUBqseeBdVMuELG45L15dx8rnXVCQZE2n1V1EbqEuGEaF6q4fND7rT7zwW8ZXjP1uC5s
 export const TensorswapIDL_v0_1_32 = IDL_v0_1_32;
@@ -81,14 +108,19 @@ export const TensorswapIDL_v0_2_0_EffSlot = 153016663;
 export const TensorswapIDL_v0_3_0 = IDL_v0_3_0;
 export const TensorswapIDL_v0_3_0_EffSlot = 154762923;
 
-// rollout 0.3.5: https://solscan.io/tx/2NjcKJov7cm7Fa1PqEADMgjiFBS6UXAzXoaiLinCU35stFUAgVyLBniaPyLExPoz18TKis5ch9YxfBs7yAkbjXXn
+// rollout 0.3.5: https://solscan.io/tx/3YruQxQ2HGMEcNRogwGAXw2rXDH3uVKCjZYs655erEKX1T3FxcLBshHHgP5deTLQ4Jd28SZTVGFb2oBpGx6HqANe
+export const TensorswapIDL_v0_3_5 = IDL_v0_3_5;
+export const TensorswapIDL_v0_3_5_EffSlot = 154963721;
+
+// rollout 1.0.0 https://solscan.io/tx/5ogSWohwXU3A2xjdsVwcrF3Hm7gC4zvGfzcsYco4hCKB8SduvTH9aUQTdLZw49YuAVXd4n7B4Ny8q7nEqMaKxJ2N
 export const TensorswapIDL_latest = IDL_latest;
-export const TensorswapIDL_latest_EffSlot = 154963721;
+export const TensorswapIDL_latest_EffSlot = 172173995;
 
 export type TensorswapIDL =
   | Tensorswap_v0_1_32
   | Tensorswap_v0_2_0
   | Tensorswap_v0_3_0
+  | Tensorswap_v0_3_5
   | Tensorswap_latest;
 
 // Use this function to figure out which IDL to use based on the slot # of historical txs.
@@ -97,9 +129,13 @@ export const triageIDL = (slot: number | bigint): TensorswapIDL | null => {
   if (slot < TensorswapIDL_v0_1_32_EffSlot) return null;
   if (slot < TensorswapIDL_v0_2_0_EffSlot) return TensorswapIDL_v0_1_32;
   if (slot < TensorswapIDL_v0_3_0_EffSlot) return TensorswapIDL_v0_2_0;
-  if (slot < TensorswapIDL_latest_EffSlot) return TensorswapIDL_v0_3_0;
+  if (slot < TensorswapIDL_v0_3_5_EffSlot) return TensorswapIDL_v0_3_0;
+  if (slot < TensorswapIDL_latest_EffSlot) return TensorswapIDL_v0_3_5;
   return TensorswapIDL_latest;
 };
+
+export const APPROX_SOL_ESCROW_RENT = 946560;
+export const APPROX_SOL_MARGIN_RENT = 1886160;
 
 // --------------------------------------- pool type
 
@@ -194,7 +230,17 @@ export const castPoolConfig = (config: PoolConfig): PoolConfigAnchor => ({
   mmFeeBps: config.mmFeeBps,
 });
 
-// --------------------------------------- rest
+// --------------------------------------- state accounts
+
+export enum OrderType {
+  Standard = 0,
+  Sniping = 1,
+}
+
+export type Frozen = {
+  amount: BN;
+  time: BN;
+};
 
 export type PoolStatsAnchor = {
   takerSellCount: number;
@@ -215,12 +261,19 @@ export type PoolAnchor = {
   takerSellCount: number;
   takerBuyCount: number;
   nftsHeld: number;
-  //v2
+  //v0.3
   nftAuthority: PublicKey;
   stats: PoolStatsAnchor;
+  //v1.0
+  margin: PublicKey | null;
+  isCosigned: boolean;
+  orderType: OrderType;
+  frozen: Frozen | null;
+  lastTransactedSeconds: BN;
 };
 
 export type SolEscrowAnchor = {};
+
 export type TSwapAnchor = {
   version: number;
   bump: number[];
@@ -243,12 +296,23 @@ export type NftAuthorityAnchor = {
   pool: PublicKey;
 };
 
+export type MarginAccountAnchor = {
+  owner: PublicKey;
+  name: number[];
+  nr: number;
+  bump: number[];
+  poolsAttached: number;
+};
+
+// ----------- together
+
 export type TensorSwapPdaAnchor =
   | PoolAnchor
   | SolEscrowAnchor
   | TSwapAnchor
   | NftDepositReceiptAnchor
-  | NftAuthorityAnchor;
+  | NftAuthorityAnchor
+  | MarginAccountAnchor;
 
 export type TaggedTensorSwapPdaAnchor =
   | {
@@ -270,9 +334,30 @@ export type TaggedTensorSwapPdaAnchor =
   | {
       name: "nftAuthority";
       account: NftAuthorityAnchor;
+    }
+  | {
+      name: "marginAccount";
+      account: MarginAccountAnchor;
     };
 
 export type TensorSwapEventAnchor = Event<typeof IDL_latest["events"][number]>;
+
+export type AccountSuffix =
+  | "Nft Mint"
+  | "Sol Escrow"
+  | "Old Sol Escrow"
+  | "New Sol Escrow"
+  | "Pool"
+  | "Old Pool"
+  | "New Pool"
+  | "Nft Escrow"
+  | "Whitelist"
+  | "Nft Receipt"
+  | "Buyer"
+  | "Seller"
+  | "Owner"
+  | "Nft Authority"
+  | "Margin Account";
 
 // ------------- Types for parsed ixs from raw tx.
 
@@ -362,6 +447,13 @@ export class TensorSwapSDK {
     )) as NftAuthorityAnchor;
   }
 
+  async fetchMarginAccount(marginAccount: PublicKey, commitment?: Commitment) {
+    return (await this.program.account.marginAccount.fetch(
+      marginAccount,
+      commitment
+    )) as MarginAccountAnchor;
+  }
+
   // --------------------------------------- account methods
 
   decode(acct: AccountInfo<Buffer>): TaggedTensorSwapPdaAnchor | null {
@@ -372,13 +464,13 @@ export class TensorSwapSDK {
 
   //main signature: owner
   async initUpdateTSwap({
-    owner,
+    owner = TSWAP_OWNER,
     newOwner,
     config,
     feeVault = TSWAP_FEE_ACC,
-    cosigner = owner,
+    cosigner = TSWAP_COSIGNER,
   }: {
-    owner: PublicKey;
+    owner?: PublicKey;
     newOwner: PublicKey;
     config: TSwapConfigAnchor;
     feeVault?: PublicKey;
@@ -413,11 +505,15 @@ export class TensorSwapSDK {
     whitelist,
     config,
     customAuthSeed,
+    isCosigned = false,
+    orderType = OrderType.Standard,
   }: {
     owner: PublicKey;
     whitelist: PublicKey;
     config: PoolConfigAnchor;
     customAuthSeed?: number[];
+    isCosigned?: boolean;
+    orderType?: OrderType;
   }) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [poolPda, poolBump] = findPoolPDA({
@@ -439,7 +535,7 @@ export class TensorSwapSDK {
     const [nftAuthPda, nftAuthBump] = findNftAuthorityPDA({ authSeed });
 
     const builder = this.program.methods
-      .initPool(config as any, authSeed)
+      .initPool(config as any, authSeed, isCosigned, orderType)
       .accounts({
         tswap: tswapPda,
         pool: poolPda,
@@ -486,7 +582,6 @@ export class TensorSwapSDK {
       curveType: curveTypeU8(config.curveType),
     });
     const [solEscrowPda, solEscrowBump] = findSolEscrowPDA({ pool: poolPda });
-
     const poolAcc = await this.fetchPool(poolPda);
 
     const builder = this.program.methods.closePool(config as any).accounts({
@@ -519,11 +614,13 @@ export class TensorSwapSDK {
     oldConfig,
     //(!) if the user edits the pool but doesn't touch the SP, we set new SP = current price of old pool
     newConfig,
+    isCosigned = null,
   }: {
     owner: PublicKey;
     whitelist: PublicKey;
     oldConfig: PoolConfigAnchor;
     newConfig: PoolConfigAnchor;
+    isCosigned?: boolean | null;
   }) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [oldPoolPda, oldPoolBump] = findPoolPDA({
@@ -556,7 +653,7 @@ export class TensorSwapSDK {
     const poolAcc = await this.fetchPool(oldPoolPda);
 
     const builder = this.program.methods
-      .editPool(oldConfig as any, newConfig as any)
+      .editPool(oldConfig as any, newConfig as any, isCosigned)
       .accounts({
         tswap: tswapPda,
         oldPool: oldPoolPda,
@@ -595,6 +692,8 @@ export class TensorSwapSDK {
     nftSource,
     owner,
     config,
+    //one of these 2 is necessary for verification to work
+    nftMetadata,
     proof,
   }: {
     whitelist: PublicKey;
@@ -602,7 +701,8 @@ export class TensorSwapSDK {
     nftSource: PublicKey;
     owner: PublicKey;
     config: PoolConfigAnchor;
-    proof: Buffer[];
+    nftMetadata?: PublicKey;
+    proof?: Buffer[];
   }) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [poolPda, poolBump] = findPoolPDA({
@@ -620,8 +720,16 @@ export class TensorSwapSDK {
       nftMint,
     });
 
+    let meta;
+    if (nftMetadata) {
+      meta = nftMetadata;
+    } else {
+      const nft = await fetchNft(this.program.provider.connection, nftMint);
+      meta = nft.metadataAddress;
+    }
+
     const builder = this.program.methods
-      .depositNft(config as any, proof)
+      .depositNft(config as any, proof ?? [])
       .accounts({
         tswap: tswapPda,
         pool: poolPda,
@@ -630,6 +738,7 @@ export class TensorSwapSDK {
         nftSource,
         nftEscrow: escrowPda,
         nftReceipt: receiptPda,
+        nftMetadata: meta,
         owner,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
@@ -672,7 +781,6 @@ export class TensorSwapSDK {
       poolType: poolTypeU8(config.poolType),
       curveType: curveTypeU8(config.curveType),
     });
-
     const [solEscrowPda, solEscrowBump] = findSolEscrowPDA({ pool: poolPda });
 
     const builder = this.program.methods
@@ -779,7 +887,6 @@ export class TensorSwapSDK {
       poolType: poolTypeU8(config.poolType),
       curveType: curveTypeU8(config.curveType),
     });
-
     const [solEscrowPda, solEscrowBump] = findSolEscrowPDA({ pool: poolPda });
 
     const builder = this.program.methods
@@ -815,7 +922,6 @@ export class TensorSwapSDK {
     owner,
     buyer,
     config,
-    proof,
     maxPrice,
     metaCreators,
   }: {
@@ -825,7 +931,6 @@ export class TensorSwapSDK {
     owner: PublicKey;
     buyer: PublicKey;
     config: PoolConfigAnchor;
-    proof: Buffer[];
     maxPrice: BN;
     // If provided, skips RPC call to fetch on-chain metadata + creators.
     metaCreators?: {
@@ -866,7 +971,7 @@ export class TensorSwapSDK {
     const builder = this.program.methods
       // TODO: Proofs disabled for buys for now until tx size limit increases.
       // .buyNft(config as any, proof, maxPrice)
-      .buyNft(config as any, [], maxPrice)
+      .buyNft(config as any, maxPrice)
       .accounts({
         tswap: tswapPda,
         feeVault: tSwapAcc.feeVault,
@@ -918,9 +1023,11 @@ export class TensorSwapSDK {
     owner,
     seller,
     config,
-    proof,
     minPrice,
     metaCreators,
+    marginNr = null,
+    isCosigned = false,
+    cosigner = TSWAP_COSIGNER,
   }: {
     type: "trade" | "token";
     whitelist: PublicKey;
@@ -929,13 +1036,15 @@ export class TensorSwapSDK {
     owner: PublicKey;
     seller: PublicKey;
     config: PoolConfigAnchor;
-    proof: Buffer[];
     minPrice: BN;
     // If provided, skips RPC call to fetch on-chain metadata + creators.
     metaCreators?: {
       metadata: PublicKey;
       creators: PublicKey[];
     };
+    marginNr?: number | null;
+    isCosigned?: boolean;
+    cosigner?: PublicKey;
   }) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [poolPda, poolBump] = findPoolPDA({
@@ -954,6 +1063,24 @@ export class TensorSwapSDK {
     const [mintProofPda] = findMintProofPDA({ mint: nftMint, whitelist });
     const tSwapAcc = await this.fetchTSwap(tswapPda);
 
+    //optional cosigner
+    const remAcc =
+      isCosigned && type === "token"
+        ? [{ pubkey: cosigner, isSigner: true, isWritable: false }]
+        : [];
+
+    //optional margin
+    let marginPda;
+    let marginBump;
+    if (!isNullLike(marginNr)) {
+      [marginPda, marginBump] = findMarginPDA({
+        tswap: tswapPda,
+        owner,
+        marginNr,
+      });
+      remAcc.push({ pubkey: marginPda, isSigner: false, isWritable: true });
+    }
+
     // Fetch creators + metadata (if necessary).
     let nftMetadata: PublicKey;
     let creators: PublicKey[];
@@ -964,6 +1091,13 @@ export class TensorSwapSDK {
       nftMetadata = nft.metadataAddress;
       creators = nft.creators.map((c) => c.address);
     }
+    remAcc.push(
+      ...creators.map((c) => ({
+        pubkey: c,
+        isSigner: false,
+        isWritable: true,
+      }))
+    );
 
     const shared = {
       tswap: tswapPda,
@@ -998,7 +1132,7 @@ export class TensorSwapSDK {
 
     // TODO: Proofs passed through PDA instead of ix b/c of tx limit size.
     // const builder = method(config as any, proof, minPrice)
-    const builder = method(config as any, [], minPrice)
+    const builder = method(config as any, minPrice)
       .accounts({
         shared,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -1006,13 +1140,7 @@ export class TensorSwapSDK {
         rent: SYSVAR_RENT_PUBKEY,
         ...accounts,
       })
-      .remainingAccounts(
-        creators.map((c) => ({
-          pubkey: c,
-          isSigner: false,
-          isWritable: true,
-        }))
-      );
+      .remainingAccounts(remAcc);
 
     return {
       builder,
@@ -1028,17 +1156,19 @@ export class TensorSwapSDK {
       escrowBump,
       receiptPda,
       receiptBump,
+      marginPda,
+      marginBump,
     };
   }
 
   async reallocPool({
     owner,
-    tswapOwner,
+    cosigner = TSWAP_COSIGNER,
     whitelist,
     config,
   }: {
     owner: PublicKey;
-    tswapOwner: PublicKey;
+    cosigner: PublicKey;
     whitelist: PublicKey;
     config: PoolConfigAnchor;
   }) {
@@ -1058,7 +1188,7 @@ export class TensorSwapSDK {
       pool: poolPda,
       whitelist,
       owner,
-      tswapOwner,
+      cosigner,
       systemProgram: SystemProgram.programId,
     });
 
@@ -1072,12 +1202,448 @@ export class TensorSwapSDK {
     };
   }
 
+  // --------------------------------------- margin
+
+  //main signer: owner
+  async initMarginAcc({
+    owner,
+    name,
+    desiredNr,
+  }: {
+    owner: PublicKey;
+    name: number[];
+    desiredNr?: number;
+  }) {
+    const [tswapPda, tswapBump] = findTSwapPDA({});
+
+    let marginNr;
+    let marginPda;
+    let marginBump;
+
+    if (isNullLike(desiredNr)) {
+      ({ marginNr, marginPda, marginBump } = await findNextFreeMarginNr({
+        connection: this.program.provider.connection,
+        owner,
+        tswap: tswapPda,
+      }));
+    } else {
+      marginNr = desiredNr;
+      [marginPda, marginBump] = findMarginPDA({
+        tswap: tswapPda,
+        owner,
+        marginNr: desiredNr,
+      });
+    }
+
+    const builder = this.program.methods
+      .initMarginAccount(marginNr, name)
+      .accounts({
+        tswap: tswapPda,
+        marginAccount: marginPda,
+        owner,
+        systemProgram: SystemProgram.programId,
+      });
+
+    return {
+      builder,
+      tx: { ixs: [await builder.instruction()], extraSigners: [] },
+      tswapPda,
+      tswapBump,
+      marginPda,
+      marginBump,
+      marginNr,
+    };
+  }
+
+  //main signer: owner
+  async closeMarginAcc({
+    marginNr,
+    owner,
+  }: {
+    marginNr: number;
+    owner: PublicKey;
+  }) {
+    const [tswapPda, tswapBump] = findTSwapPDA({});
+    const [marginPda, marginBump] = findMarginPDA({
+      tswap: tswapPda,
+      marginNr,
+      owner,
+    });
+
+    const builder = this.program.methods.closeMarginAccount().accounts({
+      tswap: tswapPda,
+      marginAccount: marginPda,
+      owner,
+      systemProgram: SystemProgram.programId,
+    });
+
+    return {
+      builder,
+      tx: { ixs: [await builder.instruction()], extraSigners: [] },
+      tswapPda,
+      tswapBump,
+      marginPda,
+      marginBump,
+    };
+  }
+
+  //main signer: owner
+  async depositMarginAcc({
+    marginNr,
+    owner,
+    amount,
+  }: {
+    marginNr: number;
+    owner: PublicKey;
+    amount: BN;
+  }) {
+    const [tswapPda, tswapBump] = findTSwapPDA({});
+    const [marginPda, marginBump] = findMarginPDA({
+      tswap: tswapPda,
+      marginNr,
+      owner,
+    });
+
+    const builder = this.program.methods.depositMarginAccount(amount).accounts({
+      tswap: tswapPda,
+      marginAccount: marginPda,
+      owner,
+      systemProgram: SystemProgram.programId,
+    });
+
+    return {
+      builder,
+      tx: { ixs: [await builder.instruction()], extraSigners: [] },
+      tswapPda,
+      tswapBump,
+      marginPda,
+      marginBump,
+    };
+  }
+
+  //main signer: owner
+  async withdrawMarginAcc({
+    marginNr,
+    owner,
+    amount,
+  }: {
+    marginNr: number;
+    owner: PublicKey;
+    amount: BN;
+  }) {
+    const [tswapPda, tswapBump] = findTSwapPDA({});
+    const [marginPda, marginBump] = findMarginPDA({
+      tswap: tswapPda,
+      marginNr,
+      owner,
+    });
+
+    const builder = this.program.methods
+      .withdrawMarginAccount(amount)
+      .accounts({
+        tswap: tswapPda,
+        marginAccount: marginPda,
+        owner,
+        systemProgram: SystemProgram.programId,
+      });
+
+    return {
+      builder,
+      tx: { ixs: [await builder.instruction()], extraSigners: [] },
+      tswapPda,
+      tswapBump,
+      marginPda,
+      marginBump,
+    };
+  }
+
+  //main signer: owner
+  async attachPoolMargin({
+    config,
+    marginNr,
+    owner,
+    whitelist,
+  }: {
+    config: PoolConfigAnchor;
+    marginNr: number;
+    owner: PublicKey;
+    whitelist: PublicKey;
+  }) {
+    const [tswapPda, tswapBump] = findTSwapPDA({});
+    const [marginPda, marginBump] = findMarginPDA({
+      tswap: tswapPda,
+      marginNr,
+      owner,
+    });
+    const [poolPda, poolBump] = findPoolPDA({
+      tswap: tswapPda,
+      owner,
+      whitelist,
+      delta: config.delta,
+      startingPrice: config.startingPrice,
+      poolType: poolTypeU8(config.poolType),
+      curveType: curveTypeU8(config.curveType),
+    });
+    const [solEscrowPda, solEscrowBump] = findSolEscrowPDA({ pool: poolPda });
+
+    const builder = this.program.methods
+      .attachPoolToMargin(config as any)
+      .accounts({
+        tswap: tswapPda,
+        marginAccount: marginPda,
+        pool: poolPda,
+        whitelist,
+        owner,
+        solEscrow: solEscrowPda,
+        systemProgram: SystemProgram.programId,
+      });
+
+    return {
+      builder,
+      tx: { ixs: [await builder.instruction()], extraSigners: [] },
+      tswapPda,
+      tswapBump,
+      marginPda,
+      marginBump,
+      poolPda,
+      poolBump,
+      solEscrowPda,
+      solEscrowBump,
+    };
+  }
+
+  //main signer: owner
+  async detachPoolMargin({
+    config,
+    marginNr,
+    owner,
+    amount = new BN(0),
+    whitelist,
+  }: {
+    config: PoolConfigAnchor;
+    marginNr: number;
+    owner: PublicKey;
+    //amount to be moved back to bid escrow
+    amount?: BN;
+    whitelist: PublicKey;
+  }) {
+    const [tswapPda, tswapBump] = findTSwapPDA({});
+    const [marginPda, marginBump] = findMarginPDA({
+      tswap: tswapPda,
+      marginNr,
+      owner,
+    });
+    const [poolPda, poolBump] = findPoolPDA({
+      tswap: tswapPda,
+      owner,
+      whitelist,
+      delta: config.delta,
+      startingPrice: config.startingPrice,
+      poolType: poolTypeU8(config.poolType),
+      curveType: curveTypeU8(config.curveType),
+    });
+    const [solEscrowPda, solEscrowBump] = findSolEscrowPDA({ pool: poolPda });
+
+    const builder = this.program.methods
+      .detachPoolFromMargin(config as any, amount)
+      .accounts({
+        tswap: tswapPda,
+        marginAccount: marginPda,
+        pool: poolPda,
+        whitelist,
+        owner,
+        solEscrow: solEscrowPda,
+        systemProgram: SystemProgram.programId,
+      });
+
+    return {
+      builder,
+      tx: { ixs: [await builder.instruction()], extraSigners: [] },
+      tswapPda,
+      tswapBump,
+      marginPda,
+      marginBump,
+      poolPda,
+      poolBump,
+      solEscrowPda,
+      solEscrowBump,
+    };
+  }
+
+  // --------------------------------------- advanced ordering system
+
+  //main signature cosigner
+  async setPoolFreeze({
+    whitelist,
+    owner,
+    config,
+    marginNr,
+    freeze,
+    cosigner = TSWAP_COSIGNER,
+  }: {
+    whitelist: PublicKey;
+    owner: PublicKey;
+    config: PoolConfigAnchor;
+    marginNr: number;
+    freeze: boolean;
+    cosigner?: PublicKey;
+  }) {
+    const [tswapPda, tswapBump] = findTSwapPDA({});
+    const [poolPda, poolBump] = findPoolPDA({
+      tswap: tswapPda,
+      owner,
+      whitelist,
+      delta: config.delta,
+      startingPrice: config.startingPrice,
+      poolType: poolTypeU8(config.poolType),
+      curveType: curveTypeU8(config.curveType),
+    });
+    const [marginPda, marginBump] = findMarginPDA({
+      tswap: tswapPda,
+      owner,
+      marginNr,
+    });
+    const [solEscrowPda, solEscrowBump] = findSolEscrowPDA({ pool: poolPda });
+
+    const builder = this.program.methods
+      .setPoolFreeze(config as any, freeze)
+      .accounts({
+        tswap: tswapPda,
+        pool: poolPda,
+        whitelist,
+        solEscrow: solEscrowPda,
+        owner,
+        cosigner,
+        marginAccount: marginPda,
+        systemProgram: SystemProgram.programId,
+      });
+
+    return {
+      builder,
+      tx: { ixs: [await builder.instruction()], extraSigners: [] },
+      tswapPda,
+      tswapBump,
+      poolPda,
+      poolBump,
+      solEscrowPda,
+      solEscrowBump,
+      marginPda,
+      marginBump,
+    };
+  }
+
+  //main signature: cosigner
+  async takeSnipe({
+    whitelist,
+    nftMint,
+    nftSellerAcc,
+    owner,
+    seller,
+    config,
+    actualPrice,
+    nftMetadata,
+    marginNr,
+    cosigner = TSWAP_COSIGNER,
+  }: {
+    whitelist: PublicKey;
+    nftMint: PublicKey;
+    nftSellerAcc: PublicKey;
+    owner: PublicKey;
+    seller: PublicKey;
+    config: PoolConfigAnchor;
+    actualPrice: BN;
+    // If provided, skips RPC call to fetch on-chain metadata + creators.
+    nftMetadata?: PublicKey;
+    marginNr: number;
+    cosigner?: PublicKey;
+  }) {
+    const [tswapPda, tswapBump] = findTSwapPDA({});
+    const [poolPda, poolBump] = findPoolPDA({
+      tswap: tswapPda,
+      owner,
+      whitelist,
+      delta: config.delta,
+      startingPrice: config.startingPrice,
+      poolType: poolTypeU8(config.poolType),
+      curveType: curveTypeU8(config.curveType),
+    });
+    const [solEscrowPda, solEscrowBump] = findSolEscrowPDA({ pool: poolPda });
+    const ownerAtaAcc = await getAssociatedTokenAddress(nftMint, owner);
+    const [escrowPda, escrowBump] = findNftEscrowPDA({ nftMint });
+    const [receiptPda, receiptBump] = findNftDepositReceiptPDA({ nftMint });
+    const [mintProofPda] = findMintProofPDA({ mint: nftMint, whitelist });
+    const tSwapAcc = await this.fetchTSwap(tswapPda);
+    const [marginPda, marginBump] = findMarginPDA({
+      tswap: tswapPda,
+      owner,
+      marginNr,
+    });
+
+    let meta;
+    if (nftMetadata) {
+      meta = nftMetadata;
+    } else {
+      const nft = await fetchNft(this.program.provider.connection, nftMint);
+      meta = nft.metadataAddress;
+    }
+
+    const builder = this.program.methods
+      .takeSnipe(config as any, actualPrice)
+      .accounts({
+        shared: {
+          tswap: tswapPda,
+          feeVault: tSwapAcc.feeVault,
+          pool: poolPda,
+          whitelist,
+          nftSellerAcc,
+          nftMint,
+          mintProof: mintProofPda,
+          nftMetadata: meta,
+          solEscrow: solEscrowPda,
+          owner,
+          seller,
+        },
+        ownerAtaAcc,
+        marginAccount: marginPda,
+        cosigner,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY,
+      });
+
+    return {
+      builder,
+      tx: { ixs: [await builder.instruction()], extraSigners: [] },
+      tswapPda,
+      tswapBump,
+      poolPda,
+      poolBump,
+      solEscrowPda,
+      solEscrowBump,
+      ownerAtaAcc,
+      escrowPda,
+      escrowBump,
+      receiptPda,
+      receiptBump,
+      marginPda,
+      marginBump,
+    };
+  }
+
   // --------------------------------------- helper methods
 
   async getSolEscrowRent() {
     return await getAccountRent(
       this.program.provider.connection,
       this.program.account.solEscrow
+    );
+  }
+
+  async getMarginAccountRent() {
+    return await getAccountRent(
+      this.program.provider.connection,
+      this.program.account.marginAccount
     );
   }
 
@@ -1097,6 +1663,7 @@ export class TensorSwapSDK {
   getError(
     name: typeof IDL_latest["errors"][number]["name"]
   ): typeof IDL_latest["errors"][number] {
+    //@ts-ignore (throwing weird ts errors for me)
     return this.program.idl.errors.find((e) => e.name === name)!;
   }
 
@@ -1155,6 +1722,13 @@ export class TensorSwapSDK {
     // No "default": this ensures we explicitly think about how to handle new ixs.
     switch (ix.ix.name) {
       case "initUpdateTswap":
+      case "initMarginAccount":
+      case "closeMarginAccount":
+      case "depositMarginAccount":
+      case "withdrawMarginAccount":
+      case "attachPoolToMargin":
+      case "detachPoolFromMargin":
+      case "takeSnipe":
         return null;
       case "editPool": {
         const config = (ix.ix.data as EditPoolIxData).newConfig;
@@ -1169,6 +1743,7 @@ export class TensorSwapSDK {
       case "buyNft":
       case "sellNftTokenPool":
       case "sellNftTradePool":
+      case "setPoolFreeze":
       case "reallocPool": {
         const config = (ix.ix.data as TSwapIxData).config;
         return castPoolConfigAnchor(config);
@@ -1182,11 +1757,15 @@ export class TensorSwapSDK {
       case "buyNft":
       case "sellNftTradePool":
       case "sellNftTokenPool":
+      case "takeSnipe":
         // NB: the actual sell price includes the "MM fee" (really a spread).
         const event = ix.events[0].data;
         return event.currentPrice.sub(event.mmFee);
       case "depositSol":
       case "withdrawSol":
+      case "depositMarginAccount":
+      case "withdrawMarginAccount":
+      case "detachPoolFromMargin":
         return (ix.ix.data as WithdrawDepositSolData).lamports;
       case "initUpdateTswap":
       case "initPool":
@@ -1195,6 +1774,10 @@ export class TensorSwapSDK {
       case "withdrawNft":
       case "editPool":
       case "reallocPool":
+      case "initMarginAccount":
+      case "closeMarginAccount":
+      case "setPoolFreeze":
+      case "attachPoolToMargin":
         return null;
     }
   }
@@ -1205,6 +1788,7 @@ export class TensorSwapSDK {
       case "buyNft":
       case "sellNftTradePool":
       case "sellNftTokenPool":
+      case "takeSnipe":
         const event = ix.events[0].data;
         return event.tswapFee.add(event.creatorsFee);
       case "initUpdateTswap":
@@ -1216,6 +1800,13 @@ export class TensorSwapSDK {
       case "withdrawSol":
       case "editPool":
       case "reallocPool":
+      case "initMarginAccount":
+      case "closeMarginAccount":
+      case "depositMarginAccount":
+      case "withdrawMarginAccount":
+      case "attachPoolToMargin":
+      case "detachPoolFromMargin":
+      case "setPoolFreeze":
         return null;
     }
   }
@@ -1226,21 +1817,7 @@ export class TensorSwapSDK {
   // shared.sol_escrow -> "Shared > Sol Escrow"
   getAccountByName(
     ix: ParsedTSwapIx,
-    name:
-      | "Nft Mint"
-      | "Sol Escrow"
-      | "Old Sol Escrow"
-      | "New Sol Escrow"
-      | "Pool"
-      | "Old Pool"
-      | "New Pool"
-      | "Nft Escrow"
-      | "Whitelist"
-      | "Nft Receipt"
-      | "Buyer"
-      | "Seller"
-      | "Owner"
-      | "Nft Authority"
+    name: AccountSuffix
   ): ParsedAccount | undefined {
     // We use endsWith since composite nested accounts (eg shared.sol_escrow)
     // will prefix it as "Shared > Sol Escrow"

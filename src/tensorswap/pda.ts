@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { AccountInfo, Connection, PublicKey } from "@solana/web3.js";
 import { TENSORSWAP_ADDR } from "./constants";
 import { BN } from "@project-serum/anchor";
 
@@ -39,6 +39,60 @@ export const findPoolPDA = ({
 
 export const findTSwapPDA = ({ program }: { program?: PublicKey }) => {
   return PublicKey.findProgramAddressSync([], program ?? TENSORSWAP_ADDR);
+};
+
+export type FindMarginArgs = {
+  tswap: PublicKey;
+  owner: PublicKey;
+  marginNr: number;
+  program?: PublicKey;
+};
+export const findMarginPDA = ({
+  tswap,
+  owner,
+  marginNr,
+  program,
+}: FindMarginArgs) => {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("margin"),
+      tswap.toBytes(),
+      owner.toBytes(),
+      //u16, hence 2 bytes
+      new BN(marginNr).toArrayLike(Uint8Array as any, "le", 2),
+    ],
+    program ?? TENSORSWAP_ADDR
+  );
+};
+
+export const findNextFreeMarginNr = async ({
+  connection,
+  startNr,
+  tswap,
+  owner,
+  program,
+}: {
+  connection: Connection;
+  startNr?: number;
+} & Omit<FindMarginArgs, "marginNr">) => {
+  let marginNr = startNr ?? 0;
+  let marginPda;
+  let marginBump;
+  let account: AccountInfo<Buffer> | null = null;
+  while (marginNr < 2 ** 16) {
+    [marginPda, marginBump] = findMarginPDA({
+      tswap,
+      owner,
+      marginNr,
+      program,
+    });
+    account = await connection.getAccountInfo(marginPda);
+    if (!account) {
+      return { marginNr, marginPda, marginBump };
+    }
+    marginNr++;
+  }
+  throw new Error("margin number > u16::MAX");
 };
 
 export const findNftEscrowPDA = ({

@@ -1,6 +1,63 @@
 export type Tensorswap = {
-  "version": "0.3.5",
+  "version": "1.0.0",
   "name": "tensorswap",
+  "constants": [
+    {
+      "name": "CURRENT_TSWAP_VERSION",
+      "type": "u8",
+      "value": "1"
+    },
+    {
+      "name": "CURRENT_POOL_VERSION",
+      "type": "u8",
+      "value": "2"
+    },
+    {
+      "name": "MAX_CREATORS_FEE_BPS",
+      "type": "u16",
+      "value": "90"
+    },
+    {
+      "name": "MAX_MM_FEES_BPS",
+      "type": "u16",
+      "value": "9900"
+    },
+    {
+      "name": "HUNDRED_PCT_BPS",
+      "type": "u16",
+      "value": "10000"
+    },
+    {
+      "name": "MAX_DELTA_BPS",
+      "type": "u16",
+      "value": "9999"
+    },
+    {
+      "name": "SPREAD_TICKS",
+      "type": "u8",
+      "value": "1"
+    },
+    {
+      "name": "STANDARD_FEE_BPS",
+      "type": "u16",
+      "value": "10"
+    },
+    {
+      "name": "SNIPE_FEE_BPS",
+      "type": "u16",
+      "value": "150"
+    },
+    {
+      "name": "SNIPE_MIN_FEE",
+      "type": "u64",
+      "value": "10_000_000"
+    },
+    {
+      "name": "SNIPE_PROFIT_SHARE_BPS",
+      "type": "u16",
+      "value": "2000"
+    }
+  ],
   "instructions": [
     {
       "name": "initUpdateTswap",
@@ -104,6 +161,14 @@ export type Tensorswap = {
               32
             ]
           }
+        },
+        {
+          "name": "isCosigned",
+          "type": "bool"
+        },
+        {
+          "name": "orderType",
+          "type": "u8"
         }
       ]
     },
@@ -123,7 +188,10 @@ export type Tensorswap = {
         {
           "name": "solEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "(!) if the order is marginated this won't return any funds to the user, since margin isn't auto-closed"
+          ]
         },
         {
           "name": "whitelist",
@@ -216,6 +284,11 @@ export type Tensorswap = {
         },
         {
           "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftMetadata",
           "isMut": false,
           "isSigner": false
         }
@@ -516,17 +589,6 @@ export type Tensorswap = {
           }
         },
         {
-          "name": "proof",
-          "type": {
-            "vec": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          }
-        },
-        {
           "name": "maxPrice",
           "type": "u64"
         }
@@ -564,7 +626,10 @@ export type Tensorswap = {
             {
               "name": "mintProof",
               "isMut": false,
-              "isSigner": false
+              "isSigner": false,
+              "docs": [
+                "intentionally not deserializing here, coz it might be a blank account if merkle proof isn't used"
+              ]
             },
             {
               "name": "nftSellerAcc",
@@ -632,17 +697,6 @@ export type Tensorswap = {
           }
         },
         {
-          "name": "proof",
-          "type": {
-            "vec": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          }
-        },
-        {
           "name": "minPrice",
           "type": "u64"
         }
@@ -680,7 +734,10 @@ export type Tensorswap = {
             {
               "name": "mintProof",
               "isMut": false,
-              "isSigner": false
+              "isSigner": false,
+              "docs": [
+                "intentionally not deserializing here, coz it might be a blank account if merkle proof isn't used"
+              ]
             },
             {
               "name": "nftSellerAcc",
@@ -748,17 +805,6 @@ export type Tensorswap = {
           "name": "config",
           "type": {
             "defined": "PoolConfig"
-          }
-        },
-        {
-          "name": "proof",
-          "type": {
-            "vec": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
           }
         },
         {
@@ -831,6 +877,12 @@ export type Tensorswap = {
           "type": {
             "defined": "PoolConfig"
           }
+        },
+        {
+          "name": "isCosigned",
+          "type": {
+            "option": "bool"
+          }
         }
       ]
     },
@@ -861,7 +913,7 @@ export type Tensorswap = {
           "isSigner": false
         },
         {
-          "name": "tswapOwner",
+          "name": "cosigner",
           "isMut": true,
           "isSigner": true
         },
@@ -877,6 +929,422 @@ export type Tensorswap = {
           "type": {
             "defined": "PoolConfig"
           }
+        }
+      ]
+    },
+    {
+      "name": "initMarginAccount",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "marginNr",
+          "type": "u16"
+        },
+        {
+          "name": "name",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "closeMarginAccount",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "depositMarginAccount",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "lamports",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "withdrawMarginAccount",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "lamports",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "attachPoolToMargin",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whitelist",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Needed for pool seeds derivation / will be stored inside pool"
+          ]
+        },
+        {
+          "name": "solEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "config",
+          "type": {
+            "defined": "PoolConfig"
+          }
+        }
+      ]
+    },
+    {
+      "name": "detachPoolFromMargin",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whitelist",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Needed for pool seeds derivation / will be stored inside pool"
+          ]
+        },
+        {
+          "name": "solEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "config",
+          "type": {
+            "defined": "PoolConfig"
+          }
+        },
+        {
+          "name": "lamports",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "setPoolFreeze",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whitelist",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "solEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "cosigner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "config",
+          "type": {
+            "defined": "PoolConfig"
+          }
+        },
+        {
+          "name": "freeze",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "takeSnipe",
+      "accounts": [
+        {
+          "name": "shared",
+          "accounts": [
+            {
+              "name": "tswap",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "feeVault",
+              "isMut": true,
+              "isSigner": false
+            },
+            {
+              "name": "pool",
+              "isMut": true,
+              "isSigner": false
+            },
+            {
+              "name": "whitelist",
+              "isMut": false,
+              "isSigner": false,
+              "docs": [
+                "Needed for pool seeds derivation, also checked via has_one on pool"
+              ]
+            },
+            {
+              "name": "mintProof",
+              "isMut": false,
+              "isSigner": false,
+              "docs": [
+                "intentionally not deserializing here, coz it might be a blank account if merkle proof isn't used"
+              ]
+            },
+            {
+              "name": "nftSellerAcc",
+              "isMut": true,
+              "isSigner": false
+            },
+            {
+              "name": "nftMint",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "nftMetadata",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "solEscrow",
+              "isMut": true,
+              "isSigner": false
+            },
+            {
+              "name": "owner",
+              "isMut": true,
+              "isSigner": false
+            },
+            {
+              "name": "seller",
+              "isMut": true,
+              "isSigner": true
+            }
+          ]
+        },
+        {
+          "name": "ownerAtaAcc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Snipes are always marginated, hence include as a fixed account"
+          ]
+        },
+        {
+          "name": "cosigner",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "We have to cosign because the ix skips royalties, hence include as a fixed account",
+            "(!) this doesn't mean that the order itself is cosigned, it might not be, just the same kp"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "config",
+          "type": {
+            "defined": "PoolConfig"
+          }
+        },
+        {
+          "name": "actualPrice",
+          "type": "u64"
         }
       ]
     }
@@ -902,6 +1370,9 @@ export type Tensorswap = {
           },
           {
             "name": "config",
+            "docs": [
+              "@DEPRECATED, use constant above instead"
+            ],
             "type": {
               "defined": "TSwapConfig"
             }
@@ -950,22 +1421,19 @@ export type Tensorswap = {
           },
           {
             "name": "createdUnixSeconds",
+            "docs": [
+              "Unix timestamp in seconds when pool was created"
+            ],
             "type": "i64"
           },
           {
             "name": "config",
-            "docs": [
-              "Config & calc"
-            ],
             "type": {
               "defined": "PoolConfig"
             }
           },
           {
             "name": "tswap",
-            "docs": [
-              "Ownership & belonging"
-            ],
             "type": "publicKey"
           },
           {
@@ -974,28 +1442,29 @@ export type Tensorswap = {
           },
           {
             "name": "whitelist",
-            "docs": [
-              "Collection stuff"
-            ],
             "type": "publicKey"
           },
           {
             "name": "solEscrow",
             "docs": [
-              "Used by Trade / Token pools only",
-              "Amount to spend is implied by balance - rent"
+              "Used by Trade / Token pools only, but always initiated",
+              "Amount to spend is implied by balance - rent",
+              "(!) for margin accounts this should always be empty EXCEPT when we move frozen amount in"
             ],
             "type": "publicKey"
           },
           {
             "name": "takerSellCount",
             "docs": [
-              "Accounting"
+              "How many times a taker has SOLD into the pool"
             ],
             "type": "u32"
           },
           {
             "name": "takerBuyCount",
+            "docs": [
+              "How many times a taker has BOUGHT from the pool"
+            ],
             "type": "u32"
           },
           {
@@ -1008,8 +1477,110 @@ export type Tensorswap = {
           },
           {
             "name": "stats",
+            "docs": [
+              "All stats incorporate both 1)carried over and 2)current data"
+            ],
             "type": {
               "defined": "PoolStats"
+            }
+          },
+          {
+            "name": "margin",
+            "docs": [
+              "If margin account present, means it's a marginated pool (currently bids only)"
+            ],
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "isCosigned",
+            "docs": [
+              "Offchain actor signs off to make sure an offchain condition is met (eg trait present)"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "orderType",
+            "docs": [
+              "Order type for indexing ease (anchor enums annoying, so using a u8)",
+              "0 = standard, 1 = sniping (in the future eg 2 = take profit, etc)"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "frozen",
+            "docs": [
+              "Order is being executed by an offchain party and can't be modified at this time",
+              "incl. deposit/withdraw/edit/close/buy/sell"
+            ],
+            "type": {
+              "option": {
+                "defined": "Frozen"
+              }
+            }
+          },
+          {
+            "name": "lastTransactedSeconds",
+            "docs": [
+              "Last time a buy or sell order has been executed"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                4
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "marginAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "name",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "nr",
+            "type": "u16"
+          },
+          {
+            "name": "bump",
+            "type": {
+              "array": [
+                "u8",
+                1
+              ]
+            }
+          },
+          {
+            "name": "poolsAttached",
+            "type": "u32"
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
             }
           }
         ]
@@ -1045,6 +1616,9 @@ export type Tensorswap = {
     },
     {
       "name": "nftAuthority",
+      "docs": [
+        "Connector between a pool and all the NFTs in it, to be able to re-attach them to a different pool if needed"
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -1154,6 +1728,22 @@ export type Tensorswap = {
           {
             "name": "accumulatedMmProfit",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Frozen",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "time",
+            "type": "i64"
           }
         ]
       }
@@ -1323,8 +1913,8 @@ export type Tensorswap = {
     },
     {
       "code": 6015,
-      "name": "InsufficientSolEscrowBalance",
-      "msg": "insufficient SOL escrow balance"
+      "name": "InsufficientTswapAccBalance",
+      "msg": "insufficient Tswap account balance"
     },
     {
       "code": 6016,
@@ -1339,7 +1929,7 @@ export type Tensorswap = {
     {
       "code": 6018,
       "name": "BadMetadata",
-      "msg": "metadata account does not match mint"
+      "msg": "metadata account does not match"
     },
     {
       "code": 6019,
@@ -1360,13 +1950,120 @@ export type Tensorswap = {
       "code": 6022,
       "name": "WrongAuthority",
       "msg": "wrong nft authority account provided"
+    },
+    {
+      "code": 6023,
+      "name": "FrozenAmountMismatch",
+      "msg": "amount frozen doesnt match current price"
+    },
+    {
+      "code": 6024,
+      "name": "BadMintProof",
+      "msg": "mint proof account does not match"
+    },
+    {
+      "code": 6025,
+      "name": "BadCosigner",
+      "msg": "bad cosigner passed - either wrong key or no signature"
+    },
+    {
+      "code": 6026,
+      "name": "PoolFrozen",
+      "msg": "pool is frozen and cannot execute normal operations"
+    },
+    {
+      "code": 6027,
+      "name": "BadMargin",
+      "msg": "bad margin account passed"
+    },
+    {
+      "code": 6028,
+      "name": "PoolNotMarginated",
+      "msg": "expected a marginated pool to be passed in"
+    },
+    {
+      "code": 6029,
+      "name": "PoolMarginated",
+      "msg": "expected a non-marginated pool to be passed in"
+    },
+    {
+      "code": 6030,
+      "name": "WrongOrderType",
+      "msg": "wrong order type"
+    },
+    {
+      "code": 6031,
+      "name": "WrongFrozenStatus",
+      "msg": "wrong frozen status"
+    },
+    {
+      "code": 6032,
+      "name": "MarginInUse",
+      "msg": "margin account has pools open and is in use"
     }
   ]
 };
 
 export const IDL: Tensorswap = {
-  "version": "0.3.5",
+  "version": "1.0.0",
   "name": "tensorswap",
+  "constants": [
+    {
+      "name": "CURRENT_TSWAP_VERSION",
+      "type": "u8",
+      "value": "1"
+    },
+    {
+      "name": "CURRENT_POOL_VERSION",
+      "type": "u8",
+      "value": "2"
+    },
+    {
+      "name": "MAX_CREATORS_FEE_BPS",
+      "type": "u16",
+      "value": "90"
+    },
+    {
+      "name": "MAX_MM_FEES_BPS",
+      "type": "u16",
+      "value": "9900"
+    },
+    {
+      "name": "HUNDRED_PCT_BPS",
+      "type": "u16",
+      "value": "10000"
+    },
+    {
+      "name": "MAX_DELTA_BPS",
+      "type": "u16",
+      "value": "9999"
+    },
+    {
+      "name": "SPREAD_TICKS",
+      "type": "u8",
+      "value": "1"
+    },
+    {
+      "name": "STANDARD_FEE_BPS",
+      "type": "u16",
+      "value": "10"
+    },
+    {
+      "name": "SNIPE_FEE_BPS",
+      "type": "u16",
+      "value": "150"
+    },
+    {
+      "name": "SNIPE_MIN_FEE",
+      "type": "u64",
+      "value": "10_000_000"
+    },
+    {
+      "name": "SNIPE_PROFIT_SHARE_BPS",
+      "type": "u16",
+      "value": "2000"
+    }
+  ],
   "instructions": [
     {
       "name": "initUpdateTswap",
@@ -1470,6 +2167,14 @@ export const IDL: Tensorswap = {
               32
             ]
           }
+        },
+        {
+          "name": "isCosigned",
+          "type": "bool"
+        },
+        {
+          "name": "orderType",
+          "type": "u8"
         }
       ]
     },
@@ -1489,7 +2194,10 @@ export const IDL: Tensorswap = {
         {
           "name": "solEscrow",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "(!) if the order is marginated this won't return any funds to the user, since margin isn't auto-closed"
+          ]
         },
         {
           "name": "whitelist",
@@ -1582,6 +2290,11 @@ export const IDL: Tensorswap = {
         },
         {
           "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftMetadata",
           "isMut": false,
           "isSigner": false
         }
@@ -1882,17 +2595,6 @@ export const IDL: Tensorswap = {
           }
         },
         {
-          "name": "proof",
-          "type": {
-            "vec": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          }
-        },
-        {
           "name": "maxPrice",
           "type": "u64"
         }
@@ -1930,7 +2632,10 @@ export const IDL: Tensorswap = {
             {
               "name": "mintProof",
               "isMut": false,
-              "isSigner": false
+              "isSigner": false,
+              "docs": [
+                "intentionally not deserializing here, coz it might be a blank account if merkle proof isn't used"
+              ]
             },
             {
               "name": "nftSellerAcc",
@@ -1998,17 +2703,6 @@ export const IDL: Tensorswap = {
           }
         },
         {
-          "name": "proof",
-          "type": {
-            "vec": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          }
-        },
-        {
           "name": "minPrice",
           "type": "u64"
         }
@@ -2046,7 +2740,10 @@ export const IDL: Tensorswap = {
             {
               "name": "mintProof",
               "isMut": false,
-              "isSigner": false
+              "isSigner": false,
+              "docs": [
+                "intentionally not deserializing here, coz it might be a blank account if merkle proof isn't used"
+              ]
             },
             {
               "name": "nftSellerAcc",
@@ -2114,17 +2811,6 @@ export const IDL: Tensorswap = {
           "name": "config",
           "type": {
             "defined": "PoolConfig"
-          }
-        },
-        {
-          "name": "proof",
-          "type": {
-            "vec": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
           }
         },
         {
@@ -2197,6 +2883,12 @@ export const IDL: Tensorswap = {
           "type": {
             "defined": "PoolConfig"
           }
+        },
+        {
+          "name": "isCosigned",
+          "type": {
+            "option": "bool"
+          }
         }
       ]
     },
@@ -2227,7 +2919,7 @@ export const IDL: Tensorswap = {
           "isSigner": false
         },
         {
-          "name": "tswapOwner",
+          "name": "cosigner",
           "isMut": true,
           "isSigner": true
         },
@@ -2243,6 +2935,422 @@ export const IDL: Tensorswap = {
           "type": {
             "defined": "PoolConfig"
           }
+        }
+      ]
+    },
+    {
+      "name": "initMarginAccount",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "marginNr",
+          "type": "u16"
+        },
+        {
+          "name": "name",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "closeMarginAccount",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "depositMarginAccount",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "lamports",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "withdrawMarginAccount",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "lamports",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "attachPoolToMargin",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whitelist",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Needed for pool seeds derivation / will be stored inside pool"
+          ]
+        },
+        {
+          "name": "solEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "config",
+          "type": {
+            "defined": "PoolConfig"
+          }
+        }
+      ]
+    },
+    {
+      "name": "detachPoolFromMargin",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whitelist",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Needed for pool seeds derivation / will be stored inside pool"
+          ]
+        },
+        {
+          "name": "solEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "config",
+          "type": {
+            "defined": "PoolConfig"
+          }
+        },
+        {
+          "name": "lamports",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "setPoolFreeze",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whitelist",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "solEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "cosigner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "config",
+          "type": {
+            "defined": "PoolConfig"
+          }
+        },
+        {
+          "name": "freeze",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "takeSnipe",
+      "accounts": [
+        {
+          "name": "shared",
+          "accounts": [
+            {
+              "name": "tswap",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "feeVault",
+              "isMut": true,
+              "isSigner": false
+            },
+            {
+              "name": "pool",
+              "isMut": true,
+              "isSigner": false
+            },
+            {
+              "name": "whitelist",
+              "isMut": false,
+              "isSigner": false,
+              "docs": [
+                "Needed for pool seeds derivation, also checked via has_one on pool"
+              ]
+            },
+            {
+              "name": "mintProof",
+              "isMut": false,
+              "isSigner": false,
+              "docs": [
+                "intentionally not deserializing here, coz it might be a blank account if merkle proof isn't used"
+              ]
+            },
+            {
+              "name": "nftSellerAcc",
+              "isMut": true,
+              "isSigner": false
+            },
+            {
+              "name": "nftMint",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "nftMetadata",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "solEscrow",
+              "isMut": true,
+              "isSigner": false
+            },
+            {
+              "name": "owner",
+              "isMut": true,
+              "isSigner": false
+            },
+            {
+              "name": "seller",
+              "isMut": true,
+              "isSigner": true
+            }
+          ]
+        },
+        {
+          "name": "ownerAtaAcc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Snipes are always marginated, hence include as a fixed account"
+          ]
+        },
+        {
+          "name": "cosigner",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "We have to cosign because the ix skips royalties, hence include as a fixed account",
+            "(!) this doesn't mean that the order itself is cosigned, it might not be, just the same kp"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "config",
+          "type": {
+            "defined": "PoolConfig"
+          }
+        },
+        {
+          "name": "actualPrice",
+          "type": "u64"
         }
       ]
     }
@@ -2268,6 +3376,9 @@ export const IDL: Tensorswap = {
           },
           {
             "name": "config",
+            "docs": [
+              "@DEPRECATED, use constant above instead"
+            ],
             "type": {
               "defined": "TSwapConfig"
             }
@@ -2316,22 +3427,19 @@ export const IDL: Tensorswap = {
           },
           {
             "name": "createdUnixSeconds",
+            "docs": [
+              "Unix timestamp in seconds when pool was created"
+            ],
             "type": "i64"
           },
           {
             "name": "config",
-            "docs": [
-              "Config & calc"
-            ],
             "type": {
               "defined": "PoolConfig"
             }
           },
           {
             "name": "tswap",
-            "docs": [
-              "Ownership & belonging"
-            ],
             "type": "publicKey"
           },
           {
@@ -2340,28 +3448,29 @@ export const IDL: Tensorswap = {
           },
           {
             "name": "whitelist",
-            "docs": [
-              "Collection stuff"
-            ],
             "type": "publicKey"
           },
           {
             "name": "solEscrow",
             "docs": [
-              "Used by Trade / Token pools only",
-              "Amount to spend is implied by balance - rent"
+              "Used by Trade / Token pools only, but always initiated",
+              "Amount to spend is implied by balance - rent",
+              "(!) for margin accounts this should always be empty EXCEPT when we move frozen amount in"
             ],
             "type": "publicKey"
           },
           {
             "name": "takerSellCount",
             "docs": [
-              "Accounting"
+              "How many times a taker has SOLD into the pool"
             ],
             "type": "u32"
           },
           {
             "name": "takerBuyCount",
+            "docs": [
+              "How many times a taker has BOUGHT from the pool"
+            ],
             "type": "u32"
           },
           {
@@ -2374,8 +3483,110 @@ export const IDL: Tensorswap = {
           },
           {
             "name": "stats",
+            "docs": [
+              "All stats incorporate both 1)carried over and 2)current data"
+            ],
             "type": {
               "defined": "PoolStats"
+            }
+          },
+          {
+            "name": "margin",
+            "docs": [
+              "If margin account present, means it's a marginated pool (currently bids only)"
+            ],
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "isCosigned",
+            "docs": [
+              "Offchain actor signs off to make sure an offchain condition is met (eg trait present)"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "orderType",
+            "docs": [
+              "Order type for indexing ease (anchor enums annoying, so using a u8)",
+              "0 = standard, 1 = sniping (in the future eg 2 = take profit, etc)"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "frozen",
+            "docs": [
+              "Order is being executed by an offchain party and can't be modified at this time",
+              "incl. deposit/withdraw/edit/close/buy/sell"
+            ],
+            "type": {
+              "option": {
+                "defined": "Frozen"
+              }
+            }
+          },
+          {
+            "name": "lastTransactedSeconds",
+            "docs": [
+              "Last time a buy or sell order has been executed"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                4
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "marginAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "name",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "nr",
+            "type": "u16"
+          },
+          {
+            "name": "bump",
+            "type": {
+              "array": [
+                "u8",
+                1
+              ]
+            }
+          },
+          {
+            "name": "poolsAttached",
+            "type": "u32"
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
             }
           }
         ]
@@ -2411,6 +3622,9 @@ export const IDL: Tensorswap = {
     },
     {
       "name": "nftAuthority",
+      "docs": [
+        "Connector between a pool and all the NFTs in it, to be able to re-attach them to a different pool if needed"
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -2520,6 +3734,22 @@ export const IDL: Tensorswap = {
           {
             "name": "accumulatedMmProfit",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Frozen",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "time",
+            "type": "i64"
           }
         ]
       }
@@ -2689,8 +3919,8 @@ export const IDL: Tensorswap = {
     },
     {
       "code": 6015,
-      "name": "InsufficientSolEscrowBalance",
-      "msg": "insufficient SOL escrow balance"
+      "name": "InsufficientTswapAccBalance",
+      "msg": "insufficient Tswap account balance"
     },
     {
       "code": 6016,
@@ -2705,7 +3935,7 @@ export const IDL: Tensorswap = {
     {
       "code": 6018,
       "name": "BadMetadata",
-      "msg": "metadata account does not match mint"
+      "msg": "metadata account does not match"
     },
     {
       "code": 6019,
@@ -2726,6 +3956,56 @@ export const IDL: Tensorswap = {
       "code": 6022,
       "name": "WrongAuthority",
       "msg": "wrong nft authority account provided"
+    },
+    {
+      "code": 6023,
+      "name": "FrozenAmountMismatch",
+      "msg": "amount frozen doesnt match current price"
+    },
+    {
+      "code": 6024,
+      "name": "BadMintProof",
+      "msg": "mint proof account does not match"
+    },
+    {
+      "code": 6025,
+      "name": "BadCosigner",
+      "msg": "bad cosigner passed - either wrong key or no signature"
+    },
+    {
+      "code": 6026,
+      "name": "PoolFrozen",
+      "msg": "pool is frozen and cannot execute normal operations"
+    },
+    {
+      "code": 6027,
+      "name": "BadMargin",
+      "msg": "bad margin account passed"
+    },
+    {
+      "code": 6028,
+      "name": "PoolNotMarginated",
+      "msg": "expected a marginated pool to be passed in"
+    },
+    {
+      "code": 6029,
+      "name": "PoolMarginated",
+      "msg": "expected a non-marginated pool to be passed in"
+    },
+    {
+      "code": 6030,
+      "name": "WrongOrderType",
+      "msg": "wrong order type"
+    },
+    {
+      "code": 6031,
+      "name": "WrongFrozenStatus",
+      "msg": "wrong frozen status"
+    },
+    {
+      "code": 6032,
+      "name": "MarginInUse",
+      "msg": "margin account has pools open and is in use"
     }
   ]
 };
