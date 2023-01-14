@@ -19,12 +19,31 @@ yarn tsc
 ```ts
 const { AnchorProvider, Wallet } = require("@project-serum/anchor");
 const { Connection, Keypair } = require("@solana/web3.js");
-const { TensorSwapSDK, TensorWhitelistSDK } = require(".");
+const { TensorSwapSDK, TensorWhitelistSDK, computeTakerPrice, TakerSide, castPoolConfigAnchor } = require(".");
 
 const conn = new Connection("https://api.mainnet-beta.solana.com");
 const provider = new AnchorProvider(conn, new Wallet(Keypair.generate()));
 const swapSdk = new TensorSwapSDK({ provider });
 const wlSdk = new TensorWhitelistSDK({ provider });
+
+// ========= Compute current price (Buy + sell)
+
+// Fetch the pool PDA for its settings.
+const pool = await swapSdk.fetchPool(new PublicKey("<address of target pool>"));
+const config = castPoolConfigAnchor(pool.config);
+
+const price = computeTakerPrice({
+  takerSide: TakerSide.Buy, // or TakerSide.Sell for selling
+  extraNFTsSelected: 0,
+
+  // These fields can be extracted from the pool object above.
+  config,
+  takerSellCount: pool.takerSellCount,
+  takerBuyCount: pool.takerBuyCount,
+  slippage: <number>, // slippage in case pool updates on-chain
+});
+
+
 
 // ========= Buying
 {
@@ -44,6 +63,7 @@ const wlSdk = new TensorWhitelistSDK({ provider });
     // PoolConfig object: construct from pool PDA
     config,
     // max price buyer is willing to pay (add ~0.1% for exponential pools b/c of rounding differences)
+    // see `computeTakerPrice` above to get the current price
     maxPrice
   });
   const buyTx = new Transaction(...ixs);
@@ -91,6 +111,7 @@ const wlSdk = new TensorWhitelistSDK({ provider });
     // PoolConfig object: construct from pool PDA
     config,
     // min price seller is willing to receive (sub ~0.1% for exponential pools b/c of rounding differences)
+    // see `computeTakerPrice` above to get the current price
     minPrice,
   });
   const sellTx = new Transaction(...ixs);
