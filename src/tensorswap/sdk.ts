@@ -54,6 +54,16 @@ import { CurveType, ParsedAccount, PoolConfig, PoolType } from "../types";
 import { findMintProofPDA } from "../tensor_whitelist";
 import { v4 } from "uuid";
 
+/*
+Guide for version upgrades:
+1. upgrade package.json
+2. upgrade cargo.toml
+3. save old IDL under correct version
+4. rebuild the new IDL
+5. fill in the below versioned IDls section
+6. after upgrade, add the tx id and slot
+ */
+
 // ---------------------------------------- Versioned IDLs for backwards compat when parsing.
 //v0.1
 import {
@@ -81,20 +91,15 @@ import {
 
 //v1.0 (added sniping)
 import {
+  IDL as IDL_v1_0_0,
+  Tensorswap as Tensorswap_v1_0_0,
+} from "./idl/tensorswap_v1.0.0";
+
+//v1.1 (added maxTakerSellCount)
+import {
   IDL as IDL_latest,
   Tensorswap as Tensorswap_latest,
 } from "./idl/tensorswap";
-
-export const STANDARD_FEE_BPS: number = +IDL_latest.constants.find(
-  (c) => c.name === "STANDARD_FEE_BPS"
-)!.value;
-export const SNIPE_FEE_BPS: number = +IDL_latest.constants.find(
-  (c) => c.name === "SNIPE_FEE_BPS"
-)!.value;
-export const SNIPE_PROFIT_SHARE_BPS: number = +IDL_latest.constants.find(
-  (c) => c.name === "SNIPE_PROFIT_SHARE_BPS"
-)!.value;
-export const SNIPE_MIN_FEE: number = 0.01 * LAMPORTS_PER_SOL;
 
 // rollout 0.1.32: https://solscan.io/tx/5ZWevmR3TLzUEVsPyE9bdUBqseeBdVMuELG45L15dx8rnXVCQZE2n1V1EbqEuGEaF6q4fND7rT7zwW8ZXjP1uC5s
 export const TensorswapIDL_v0_1_32 = IDL_v0_1_32;
@@ -113,14 +118,19 @@ export const TensorswapIDL_v0_3_5 = IDL_v0_3_5;
 export const TensorswapIDL_v0_3_5_EffSlot = 154963721;
 
 // rollout 1.0.0 https://solscan.io/tx/5ogSWohwXU3A2xjdsVwcrF3Hm7gC4zvGfzcsYco4hCKB8SduvTH9aUQTdLZw49YuAVXd4n7B4Ny8q7nEqMaKxJ2N
+export const TensorswapIDL_v1_0_0 = IDL_v1_0_0;
+export const TensorswapIDL_v1_0_0_EffSlot = 172173995;
+
+// rollout 1.1.0 https://solscan.io/tx/5YSJCyjo7bKi6etipyHmv3HcSCCc1de2fuSVK1h918GL6HqSomNrukZDvUvMnihtQ21UV2ZAGjdFiRx6PYjcSnWA
 export const TensorswapIDL_latest = IDL_latest;
-export const TensorswapIDL_latest_EffSlot = 172173995;
+export const TensorswapIDL_latest_EffSlot = 173144552;
 
 export type TensorswapIDL =
   | Tensorswap_v0_1_32
   | Tensorswap_v0_2_0
   | Tensorswap_v0_3_0
   | Tensorswap_v0_3_5
+  | Tensorswap_v1_0_0
   | Tensorswap_latest;
 
 // Use this function to figure out which IDL to use based on the slot # of historical txs.
@@ -130,9 +140,23 @@ export const triageIDL = (slot: number | bigint): TensorswapIDL | null => {
   if (slot < TensorswapIDL_v0_2_0_EffSlot) return TensorswapIDL_v0_1_32;
   if (slot < TensorswapIDL_v0_3_0_EffSlot) return TensorswapIDL_v0_2_0;
   if (slot < TensorswapIDL_v0_3_5_EffSlot) return TensorswapIDL_v0_3_0;
-  if (slot < TensorswapIDL_latest_EffSlot) return TensorswapIDL_v0_3_5;
+  if (slot < TensorswapIDL_v1_0_0_EffSlot) return TensorswapIDL_v0_3_5;
+  if (slot < TensorswapIDL_latest_EffSlot) return TensorswapIDL_v1_0_0;
   return TensorswapIDL_latest;
 };
+
+// --------------------------------------- constants
+
+export const STANDARD_FEE_BPS: number = +IDL_latest.constants.find(
+  (c) => c.name === "STANDARD_FEE_BPS"
+)!.value;
+export const SNIPE_FEE_BPS: number = +IDL_latest.constants.find(
+  (c) => c.name === "SNIPE_FEE_BPS"
+)!.value;
+export const SNIPE_PROFIT_SHARE_BPS: number = +IDL_latest.constants.find(
+  (c) => c.name === "SNIPE_PROFIT_SHARE_BPS"
+)!.value;
+export const SNIPE_MIN_FEE: number = 0.01 * LAMPORTS_PER_SOL;
 
 export const APPROX_SOL_ESCROW_RENT = 946560;
 export const APPROX_SOL_MARGIN_RENT = 1886160;
@@ -270,6 +294,7 @@ export type PoolAnchor = {
   orderType: OrderType;
   frozen: Frozen | null;
   lastTransactedSeconds: BN;
+  maxTakerSellCount: number;
 };
 
 export type SolEscrowAnchor = {};
@@ -507,6 +532,7 @@ export class TensorSwapSDK {
     customAuthSeed,
     isCosigned = false,
     orderType = OrderType.Standard,
+    maxTakerSellCount,
   }: {
     owner: PublicKey;
     whitelist: PublicKey;
@@ -514,6 +540,7 @@ export class TensorSwapSDK {
     customAuthSeed?: number[];
     isCosigned?: boolean;
     orderType?: OrderType;
+    maxTakerSellCount?: number;
   }) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [poolPda, poolBump] = findPoolPDA({
@@ -535,7 +562,13 @@ export class TensorSwapSDK {
     const [nftAuthPda, nftAuthBump] = findNftAuthorityPDA({ authSeed });
 
     const builder = this.program.methods
-      .initPool(config as any, authSeed, isCosigned, orderType)
+      .initPool(
+        config as any,
+        authSeed,
+        isCosigned,
+        orderType,
+        maxTakerSellCount ?? null
+      )
       .accounts({
         tswap: tswapPda,
         pool: poolPda,
@@ -612,15 +645,17 @@ export class TensorSwapSDK {
     owner,
     whitelist,
     oldConfig,
-    //(!) if the user edits the pool but doesn't touch the SP, we set new SP = current price of old pool
+    //(!) new config is OPTIONAL. If not passed, pool is edited IN PLACE.
     newConfig,
     isCosigned = null,
+    maxTakerSellCount,
   }: {
     owner: PublicKey;
     whitelist: PublicKey;
     oldConfig: PoolConfigAnchor;
-    newConfig: PoolConfigAnchor;
+    newConfig?: PoolConfigAnchor;
     isCosigned?: boolean | null;
+    maxTakerSellCount?: number;
   }) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [oldPoolPda, oldPoolBump] = findPoolPDA({
@@ -632,39 +667,67 @@ export class TensorSwapSDK {
       poolType: poolTypeU8(oldConfig.poolType),
       curveType: curveTypeU8(oldConfig.curveType),
     });
+    const poolAcc = await this.fetchPool(oldPoolPda);
 
     const [oldSolEscrowPda, oldSolEscrowBump] = findSolEscrowPDA({
       pool: oldPoolPda,
     });
 
-    const [newPoolPda, newPoolBump] = findPoolPDA({
-      tswap: tswapPda,
-      owner,
-      whitelist,
-      delta: newConfig.delta,
-      startingPrice: newConfig.startingPrice,
-      poolType: poolTypeU8(newConfig.poolType),
-      curveType: curveTypeU8(newConfig.curveType),
-    });
-    const [newSolEscrowPda, newSolEscrowBump] = findSolEscrowPDA({
-      pool: newPoolPda,
-    });
+    let newPoolPda = oldPoolPda;
+    let newPoolBump = oldPoolBump;
+    let newSolEscrowPda = oldSolEscrowPda;
+    let newSolEscrowBump = oldSolEscrowBump;
+    let builder;
 
-    const poolAcc = await this.fetchPool(oldPoolPda);
-
-    const builder = this.program.methods
-      .editPool(oldConfig as any, newConfig as any, isCosigned)
-      .accounts({
+    if (!isNullLike(newConfig)) {
+      //full edit with pool migration
+      [newPoolPda, newPoolBump] = findPoolPDA({
         tswap: tswapPda,
-        oldPool: oldPoolPda,
-        newPool: newPoolPda,
-        oldSolEscrow: oldSolEscrowPda,
-        newSolEscrow: newSolEscrowPda,
-        nftAuthority: poolAcc.nftAuthority,
-        whitelist,
         owner,
-        systemProgram: SystemProgram.programId,
+        whitelist,
+        delta: newConfig.delta,
+        startingPrice: newConfig.startingPrice,
+        poolType: poolTypeU8(newConfig.poolType),
+        curveType: curveTypeU8(newConfig.curveType),
       });
+      [newSolEscrowPda, newSolEscrowBump] = findSolEscrowPDA({
+        pool: newPoolPda,
+      });
+
+      builder = this.program.methods
+        .editPool(
+          oldConfig as any,
+          newConfig as any,
+          isCosigned,
+          maxTakerSellCount ?? null
+        )
+        .accounts({
+          tswap: tswapPda,
+          oldPool: oldPoolPda,
+          newPool: newPoolPda,
+          oldSolEscrow: oldSolEscrowPda,
+          newSolEscrow: newSolEscrowPda,
+          nftAuthority: poolAcc.nftAuthority,
+          whitelist,
+          owner,
+          systemProgram: SystemProgram.programId,
+        });
+    } else {
+      //in place edit w/o pool migration
+      builder = this.program.methods
+        .editPoolInPlace(
+          oldConfig as any,
+          isCosigned,
+          maxTakerSellCount ?? null
+        )
+        .accounts({
+          tswap: tswapPda,
+          pool: oldPoolPda,
+          whitelist,
+          owner,
+          systemProgram: SystemProgram.programId,
+        });
+    }
 
     return {
       builder,
@@ -1744,6 +1807,7 @@ export class TensorSwapSDK {
       case "sellNftTokenPool":
       case "sellNftTradePool":
       case "setPoolFreeze":
+      case "editPoolInPlace":
       case "reallocPool": {
         const config = (ix.ix.data as TSwapIxData).config;
         return castPoolConfigAnchor(config);
@@ -1773,6 +1837,7 @@ export class TensorSwapSDK {
       case "depositNft":
       case "withdrawNft":
       case "editPool":
+      case "editPoolInPlace":
       case "reallocPool":
       case "initMarginAccount":
       case "closeMarginAccount":
@@ -1799,6 +1864,7 @@ export class TensorSwapSDK {
       case "depositSol":
       case "withdrawSol":
       case "editPool":
+      case "editPoolInPlace":
       case "reallocPool":
       case "initMarginAccount":
       case "closeMarginAccount":

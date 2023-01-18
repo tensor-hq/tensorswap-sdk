@@ -341,6 +341,9 @@ export type TensorWhitelist = {
           },
           {
             "name": "verified",
+            "docs": [
+              "DEPRECATED, doesn't do anything"
+            ],
             "type": "bool"
           },
           {
@@ -850,6 +853,9 @@ export const IDL: TensorWhitelist = {
           },
           {
             "name": "verified",
+            "docs": [
+              "DEPRECATED, doesn't do anything"
+            ],
             "type": "bool"
           },
           {

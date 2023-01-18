@@ -1,5 +1,5 @@
 export type Tensorswap = {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "tensorswap",
   "constants": [
     {
@@ -169,6 +169,12 @@ export type Tensorswap = {
         {
           "name": "orderType",
           "type": "u8"
+        },
+        {
+          "name": "maxTakerSellCount",
+          "type": {
+            "option": "u32"
+          }
         }
       ]
     },
@@ -883,6 +889,12 @@ export type Tensorswap = {
           "type": {
             "option": "bool"
           }
+        },
+        {
+          "name": "maxTakerSellCount",
+          "type": {
+            "option": "u32"
+          }
         }
       ]
     },
@@ -1347,6 +1359,59 @@ export type Tensorswap = {
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "editPoolInPlace",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whitelist",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Needed for pool seeds derivation / will be stored inside pool"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "config",
+          "type": {
+            "defined": "PoolConfig"
+          }
+        },
+        {
+          "name": "isCosigned",
+          "type": {
+            "option": "bool"
+          }
+        },
+        {
+          "name": "maxTakerSellCount",
+          "type": {
+            "option": "u32"
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1528,13 +1593,11 @@ export type Tensorswap = {
             "type": "i64"
           },
           {
-            "name": "reserved",
-            "type": {
-              "array": [
-                "u8",
-                4
-              ]
-            }
+            "name": "maxTakerSellCount",
+            "docs": [
+              "Limit how many buys a pool can execute - useful for cross-margin, else keeps buying into infinity"
+            ],
+            "type": "u32"
           }
         ]
       }
@@ -2000,12 +2063,22 @@ export type Tensorswap = {
       "code": 6032,
       "name": "MarginInUse",
       "msg": "margin account has pools open and is in use"
+    },
+    {
+      "code": 6033,
+      "name": "MaxTakerSellCountExceeded",
+      "msg": "max taker sell count exceeded, pool cannot buy anymore NFTs"
+    },
+    {
+      "code": 6034,
+      "name": "MaxTakerSellCountTooSmall",
+      "msg": "max taker sell count is too small"
     }
   ]
 };
 
 export const IDL: Tensorswap = {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "tensorswap",
   "constants": [
     {
@@ -2175,6 +2248,12 @@ export const IDL: Tensorswap = {
         {
           "name": "orderType",
           "type": "u8"
+        },
+        {
+          "name": "maxTakerSellCount",
+          "type": {
+            "option": "u32"
+          }
         }
       ]
     },
@@ -2889,6 +2968,12 @@ export const IDL: Tensorswap = {
           "type": {
             "option": "bool"
           }
+        },
+        {
+          "name": "maxTakerSellCount",
+          "type": {
+            "option": "u32"
+          }
         }
       ]
     },
@@ -3353,6 +3438,59 @@ export const IDL: Tensorswap = {
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "editPoolInPlace",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whitelist",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Needed for pool seeds derivation / will be stored inside pool"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "config",
+          "type": {
+            "defined": "PoolConfig"
+          }
+        },
+        {
+          "name": "isCosigned",
+          "type": {
+            "option": "bool"
+          }
+        },
+        {
+          "name": "maxTakerSellCount",
+          "type": {
+            "option": "u32"
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -3534,13 +3672,11 @@ export const IDL: Tensorswap = {
             "type": "i64"
           },
           {
-            "name": "reserved",
-            "type": {
-              "array": [
-                "u8",
-                4
-              ]
-            }
+            "name": "maxTakerSellCount",
+            "docs": [
+              "Limit how many buys a pool can execute - useful for cross-margin, else keeps buying into infinity"
+            ],
+            "type": "u32"
           }
         ]
       }
@@ -4006,6 +4142,16 @@ export const IDL: Tensorswap = {
       "code": 6032,
       "name": "MarginInUse",
       "msg": "margin account has pools open and is in use"
+    },
+    {
+      "code": 6033,
+      "name": "MaxTakerSellCountExceeded",
+      "msg": "max taker sell count exceeded, pool cannot buy anymore NFTs"
+    },
+    {
+      "code": 6034,
+      "name": "MaxTakerSellCountTooSmall",
+      "msg": "max taker sell count is too small"
     }
   ]
 };
