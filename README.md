@@ -144,6 +144,15 @@ Ping us in our [Discord](https://www.discord.com/invite/a8spfqxEpC) for access.
 You can query all Tensor collections and their metadata, including their `id` which
 corresponds to `whitelist.uuid` with [this query](https://www.notion.so/tensor-hq/PUBLIC-Tensor-Trade-API-alpha-b18e1a196187473bac9b5d6de5b47032#56b333bfe0b641f8acad51a963a04f4f).
 
+Alternative, you can find a collection for a corresponding mint:
+1. [Get the mint's Tensor slug](https://www.notion.so/tensor-hq/PUBLIC-Tensor-Trade-API-alpha-b18e1a196187473bac9b5d6de5b47032#5ae4f2d0499a4c6ba3ceed4f9ee949ad)
+2. [Get the collection's ID](https://www.notion.so/tensor-hq/PUBLIC-Tensor-Trade-API-alpha-b18e1a196187473bac9b5d6de5b47032#59c583754aa2477caacd2b436071d564)
+3. Use the ID as the `uuid` for the whitelist
+
+The ID for a collection will never change, so feel free to cache this locally.
+
+A mint's collection will almost always never change (99% of the time), so feel free to cache this as needed and update if necessary.
+
 ### Mint Proof
 
 For selling and depositing and for some collections (where `whitelist.rootHash` is not a 0-zero),
