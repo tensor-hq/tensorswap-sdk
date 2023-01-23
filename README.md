@@ -19,7 +19,14 @@ yarn tsc
 ```ts
 const { AnchorProvider, Wallet } = require("@project-serum/anchor");
 const { Connection, Keypair } = require("@solana/web3.js");
-const { TensorSwapSDK, TensorWhitelistSDK, computeTakerPrice, TakerSide, castPoolConfigAnchor } = require(".");
+const {
+  TensorSwapSDK,
+  TensorWhitelistSDK,
+  computeTakerPrice,
+  TakerSide,
+  castPoolConfigAnchor,
+  findWhitelistPDA,
+} = require(".");
 
 const conn = new Connection("https://api.mainnet-beta.solana.com");
 const provider = new AnchorProvider(conn, new Wallet(Keypair.generate()));
@@ -40,7 +47,9 @@ const price = computeTakerPrice({
   config,
   takerSellCount: pool.takerSellCount,
   takerBuyCount: pool.takerBuyCount,
-  slippage: <number>, // slippage in case pool updates on-chain
+  maxTakerSellCount: pool.maxTakerSellCount,
+  statsTakerSellCount: pool.stats.takerSellCount,
+  slippage: <number>, // add optional slippage: in case pool updates on-chain
 });
 
 
@@ -71,25 +80,30 @@ const price = computeTakerPrice({
 
 // ========= Selling
 
-// Step 1: Prepare the mint proof PDA.
+// Whitelist PDA address where uuid = Tensor collection ID (see "Collection UUID" API endpoint below)
+const wlAddr = findWhitelistPDA({uuid: "..."})[0];
+
+// Step 1: Prepare the mint proof PDA (if required).
 {
+  const wl = await swapSdk.fetchWhitelist(wlAddr);
 
-  // List of buffers contain the merkle proof for this mint and WL (proof stored off-chain).
-  // Fetch from Tensor API
-  const proof = ...;
+  // Proof is only required if rootHash is NOT a 0 array, o/w not necessary!
+  if(JSON.stringify(wl.rootHash) !== JSON.stringify(Array(32).fill(0))) {
+    // Off-chain merkle proof (see "Mint Proof" API endpoint below).
+    const proof = ...;
 
-  const {
-    tx: { ixs },
-  } = await wlSDK.initUpdateMintProof({
-    // User signing the tx (the seller)
-    user,
-    // Whitelist PDA address where name = tensor slug (see TensorWhitelistSDK.nameToBuffer)
-    whitelist,
-    // (NFT) Mint address
-    mint,
-    proof,
-  });
-  const proofTx = new Transaction(...ixs);
+    const {
+      tx: { ixs },
+    } = await wlSDK.initUpdateMintProof({
+      // User signing the tx (the seller)
+      user,
+      whitelist: wlAddr,
+      // (NFT) Mint address
+      mint,
+      proof,
+    });
+    const proofTx = new Transaction(...ixs);
+  }
 }
 
 // Step 2: Send sell tx.
@@ -98,8 +112,7 @@ const price = computeTakerPrice({
 
   } = await swapSdk.sellNft({
     type: "token", // or 'trade' for a trade pool
-    // Whitelist PDA address where name = tensor slug (see TensorWhitelistSDK.nameToBuffer)
-    whitelist,
+    whitelist: wlAddr,
     // NFT Mint address
     nftMint,
     // Token account holding seller's mint
@@ -122,7 +135,19 @@ const price = computeTakerPrice({
 
 ## API Access
 
-For the off-chain [merkle proofs](https://en.wikipedia.org/wiki/Merkle_tree) we use for collection whitelisting, we store the proofs off-chain.
+Docs can be [found here](https://tensor-hq.notion.site/PUBLIC-Tensor-Trade-API-alpha-b18e1a196187473bac9b5d6de5b47032).
 
-Ping us in our [Discord](https://www.discord.com/invite/a8spfqxEpC).
+Ping us in our [Discord](https://www.discord.com/invite/a8spfqxEpC) for access.
+
+### Collection UUID
+
+You can query all Tensor collections and their metadata, including their `id` which
+corresponds to `whitelist.uuid` with [this query](https://www.notion.so/tensor-hq/PUBLIC-Tensor-Trade-API-alpha-b18e1a196187473bac9b5d6de5b47032#56b333bfe0b641f8acad51a963a04f4f).
+
+### Mint Proof
+
+For selling and depositing and for some collections (where `whitelist.rootHash` is not a 0-zero),
+you will need to fetch the off-chain [merkle proofs](https://en.wikipedia.org/wiki/Merkle_tree) we use for collection whitelisting from our API.
+
+Endpoint + example can be [found here](https://www.notion.so/tensor-hq/PUBLIC-Tensor-Trade-API-alpha-b18e1a196187473bac9b5d6de5b47032#9be7fb3fc59f49e08cc10a0d7d1d7ba7).
 
