@@ -1,6 +1,8 @@
 import { AccountInfo, Connection, PublicKey } from "@solana/web3.js";
 import { TENSORSWAP_ADDR } from "./constants";
 import { BN } from "@project-serum/anchor";
+import { PREFIX } from "@metaplex-foundation/mpl-token-auth-rules";
+import { AUTH_PROG_ID, TMETA_PROG_ID } from "../common";
 
 export const findPoolPDA = ({
   program,
@@ -144,5 +146,27 @@ export const findNftAuthorityPDA = ({
   return PublicKey.findProgramAddressSync(
     [Buffer.from("nft_auth"), Buffer.from(authSeed)],
     program ?? TENSORSWAP_ADDR
+  );
+};
+
+// todo temp while mplex adds to sdk
+export const findTokenRecordPDA = (mint: PublicKey, token: PublicKey) => {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("metadata"),
+      TMETA_PROG_ID.toBuffer(),
+      mint.toBuffer(),
+      Buffer.from("token_record"),
+      token.toBuffer(),
+    ],
+    TMETA_PROG_ID
+  );
+};
+
+// todo temp while mplex adds to sdk
+export const findRuleSetPDA = async (payer: PublicKey, name: string) => {
+  return await PublicKey.findProgramAddress(
+    [Buffer.from(PREFIX), payer.toBuffer(), Buffer.from(name)],
+    AUTH_PROG_ID
   );
 };

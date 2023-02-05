@@ -1,5 +1,5 @@
 export type Tensorswap = {
-  "version": "1.1.0",
+  "version": "1.3.0",
   "name": "tensorswap",
   "constants": [
     {
@@ -13,14 +13,9 @@ export type Tensorswap = {
       "value": "2"
     },
     {
-      "name": "MAX_CREATORS_FEE_BPS",
-      "type": "u16",
-      "value": "90"
-    },
-    {
       "name": "MAX_MM_FEES_BPS",
       "type": "u16",
-      "value": "9900"
+      "value": "9999"
     },
     {
       "name": "HUNDRED_PCT_BPS",
@@ -40,7 +35,7 @@ export type Tensorswap = {
     {
       "name": "STANDARD_FEE_BPS",
       "type": "u16",
-      "value": "10"
+      "value": "100"
     },
     {
       "name": "SNIPE_FEE_BPS",
@@ -295,8 +290,53 @@ export type Tensorswap = {
         },
         {
           "name": "nftMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintProof",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
         }
       ],
       "args": [
@@ -307,13 +347,10 @@ export type Tensorswap = {
           }
         },
         {
-          "name": "proof",
+          "name": "authorizationData",
           "type": {
-            "vec": {
-              "array": [
-                "u8",
-                32
-              ]
+            "option": {
+              "defined": "AuthorizationDataLocal"
             }
           }
         }
@@ -388,6 +425,46 @@ export type Tensorswap = {
           "name": "rent",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "nftMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
         }
       ],
       "args": [
@@ -395,6 +472,14 @@ export type Tensorswap = {
           "name": "config",
           "type": {
             "defined": "PoolConfig"
+          }
+        },
+        {
+          "name": "authorizationData",
+          "type": {
+            "option": {
+              "defined": "AuthorizationDataLocal"
+            }
           }
         }
       ]
@@ -534,7 +619,7 @@ export type Tensorswap = {
         },
         {
           "name": "nftMetadata",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -585,6 +670,41 @@ export type Tensorswap = {
           "name": "rent",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
         }
       ],
       "args": [
@@ -597,6 +717,18 @@ export type Tensorswap = {
         {
           "name": "maxPrice",
           "type": "u64"
+        },
+        {
+          "name": "rulesAccPresent",
+          "type": "bool"
+        },
+        {
+          "name": "authorizationData",
+          "type": {
+            "option": {
+              "defined": "AuthorizationDataLocal"
+            }
+          }
         }
       ]
     },
@@ -634,7 +766,7 @@ export type Tensorswap = {
               "isMut": false,
               "isSigner": false,
               "docs": [
-                "intentionally not deserializing here, coz it might be a blank account if merkle proof isn't used"
+                "intentionally not deserializing, it would be dummy in the case of VOC/FVC based verification"
               ]
             },
             {
@@ -649,7 +781,7 @@ export type Tensorswap = {
             },
             {
               "name": "nftMetadata",
-              "isMut": false,
+              "isMut": true,
               "isSigner": false
             },
             {
@@ -693,6 +825,41 @@ export type Tensorswap = {
           "name": "rent",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
         }
       ],
       "args": [
@@ -705,6 +872,18 @@ export type Tensorswap = {
         {
           "name": "minPrice",
           "type": "u64"
+        },
+        {
+          "name": "rulesAccPresent",
+          "type": "bool"
+        },
+        {
+          "name": "authorizationData",
+          "type": {
+            "option": {
+              "defined": "AuthorizationDataLocal"
+            }
+          }
         }
       ]
     },
@@ -742,7 +921,7 @@ export type Tensorswap = {
               "isMut": false,
               "isSigner": false,
               "docs": [
-                "intentionally not deserializing here, coz it might be a blank account if merkle proof isn't used"
+                "intentionally not deserializing, it would be dummy in the case of VOC/FVC based verification"
               ]
             },
             {
@@ -757,7 +936,7 @@ export type Tensorswap = {
             },
             {
               "name": "nftMetadata",
-              "isMut": false,
+              "isMut": true,
               "isSigner": false
             },
             {
@@ -804,6 +983,46 @@ export type Tensorswap = {
           "name": "rent",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
         }
       ],
       "args": [
@@ -816,6 +1035,18 @@ export type Tensorswap = {
         {
           "name": "minPrice",
           "type": "u64"
+        },
+        {
+          "name": "rulesAccPresent",
+          "type": "bool"
+        },
+        {
+          "name": "authorizationData",
+          "type": {
+            "option": {
+              "defined": "AuthorizationDataLocal"
+            }
+          }
         }
       ]
     },
@@ -1269,7 +1500,7 @@ export type Tensorswap = {
               "isMut": false,
               "isSigner": false,
               "docs": [
-                "intentionally not deserializing here, coz it might be a blank account if merkle proof isn't used"
+                "intentionally not deserializing, it would be dummy in the case of VOC/FVC based verification"
               ]
             },
             {
@@ -1284,7 +1515,7 @@ export type Tensorswap = {
             },
             {
               "name": "nftMetadata",
-              "isMut": false,
+              "isMut": true,
               "isSigner": false
             },
             {
@@ -1345,6 +1576,41 @@ export type Tensorswap = {
           "name": "rent",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
         }
       ],
       "args": [
@@ -1357,6 +1623,14 @@ export type Tensorswap = {
         {
           "name": "actualPrice",
           "type": "u64"
+        },
+        {
+          "name": "authorizationData",
+          "type": {
+            "option": {
+              "defined": "AuthorizationDataLocal"
+            }
+          }
         }
       ]
     },
@@ -1410,6 +1684,45 @@ export type Tensorswap = {
           "type": {
             "option": "u32"
           }
+        }
+      ]
+    },
+    {
+      "name": "withdrawTswapFees",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "cosigner",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "We ask also for a signature just to make sure this wallet can actually sign things"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "destination",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
         }
       ]
     }
@@ -1812,6 +2125,79 @@ export type Tensorswap = {
       }
     },
     {
+      "name": "AuthorizationDataLocal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "payload",
+            "type": {
+              "vec": {
+                "defined": "TaggedPayload"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TaggedPayload",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "payload",
+            "type": {
+              "defined": "PayloadTypeLocal"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SeedsVecLocal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "seeds",
+            "docs": [
+              "The vector of derivation seeds."
+            ],
+            "type": {
+              "vec": "bytes"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProofInfoLocal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proof",
+            "docs": [
+              "The merkle proof."
+            ],
+            "type": {
+              "vec": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "PoolType",
       "type": {
         "kind": "enum",
@@ -1866,6 +2252,42 @@ export type Tensorswap = {
           },
           {
             "name": "Sell"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PayloadTypeLocal",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Pubkey",
+            "fields": [
+              "publicKey"
+            ]
+          },
+          {
+            "name": "Seeds",
+            "fields": [
+              {
+                "defined": "SeedsVecLocal"
+              }
+            ]
+          },
+          {
+            "name": "MerkleProof",
+            "fields": [
+              {
+                "defined": "ProofInfoLocal"
+              }
+            ]
+          },
+          {
+            "name": "Number",
+            "fields": [
+              "u64"
+            ]
           }
         ]
       }
@@ -2073,12 +2495,17 @@ export type Tensorswap = {
       "code": 6034,
       "name": "MaxTakerSellCountTooSmall",
       "msg": "max taker sell count is too small"
+    },
+    {
+      "code": 6035,
+      "name": "BadRuleSet",
+      "msg": "rule set for programmable nft does not match"
     }
   ]
 };
 
 export const IDL: Tensorswap = {
-  "version": "1.1.0",
+  "version": "1.3.0",
   "name": "tensorswap",
   "constants": [
     {
@@ -2092,14 +2519,9 @@ export const IDL: Tensorswap = {
       "value": "2"
     },
     {
-      "name": "MAX_CREATORS_FEE_BPS",
-      "type": "u16",
-      "value": "90"
-    },
-    {
       "name": "MAX_MM_FEES_BPS",
       "type": "u16",
-      "value": "9900"
+      "value": "9999"
     },
     {
       "name": "HUNDRED_PCT_BPS",
@@ -2119,7 +2541,7 @@ export const IDL: Tensorswap = {
     {
       "name": "STANDARD_FEE_BPS",
       "type": "u16",
-      "value": "10"
+      "value": "100"
     },
     {
       "name": "SNIPE_FEE_BPS",
@@ -2374,8 +2796,53 @@ export const IDL: Tensorswap = {
         },
         {
           "name": "nftMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintProof",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
         }
       ],
       "args": [
@@ -2386,13 +2853,10 @@ export const IDL: Tensorswap = {
           }
         },
         {
-          "name": "proof",
+          "name": "authorizationData",
           "type": {
-            "vec": {
-              "array": [
-                "u8",
-                32
-              ]
+            "option": {
+              "defined": "AuthorizationDataLocal"
             }
           }
         }
@@ -2467,6 +2931,46 @@ export const IDL: Tensorswap = {
           "name": "rent",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "nftMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
         }
       ],
       "args": [
@@ -2474,6 +2978,14 @@ export const IDL: Tensorswap = {
           "name": "config",
           "type": {
             "defined": "PoolConfig"
+          }
+        },
+        {
+          "name": "authorizationData",
+          "type": {
+            "option": {
+              "defined": "AuthorizationDataLocal"
+            }
           }
         }
       ]
@@ -2613,7 +3125,7 @@ export const IDL: Tensorswap = {
         },
         {
           "name": "nftMetadata",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -2664,6 +3176,41 @@ export const IDL: Tensorswap = {
           "name": "rent",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
         }
       ],
       "args": [
@@ -2676,6 +3223,18 @@ export const IDL: Tensorswap = {
         {
           "name": "maxPrice",
           "type": "u64"
+        },
+        {
+          "name": "rulesAccPresent",
+          "type": "bool"
+        },
+        {
+          "name": "authorizationData",
+          "type": {
+            "option": {
+              "defined": "AuthorizationDataLocal"
+            }
+          }
         }
       ]
     },
@@ -2713,7 +3272,7 @@ export const IDL: Tensorswap = {
               "isMut": false,
               "isSigner": false,
               "docs": [
-                "intentionally not deserializing here, coz it might be a blank account if merkle proof isn't used"
+                "intentionally not deserializing, it would be dummy in the case of VOC/FVC based verification"
               ]
             },
             {
@@ -2728,7 +3287,7 @@ export const IDL: Tensorswap = {
             },
             {
               "name": "nftMetadata",
-              "isMut": false,
+              "isMut": true,
               "isSigner": false
             },
             {
@@ -2772,6 +3331,41 @@ export const IDL: Tensorswap = {
           "name": "rent",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
         }
       ],
       "args": [
@@ -2784,6 +3378,18 @@ export const IDL: Tensorswap = {
         {
           "name": "minPrice",
           "type": "u64"
+        },
+        {
+          "name": "rulesAccPresent",
+          "type": "bool"
+        },
+        {
+          "name": "authorizationData",
+          "type": {
+            "option": {
+              "defined": "AuthorizationDataLocal"
+            }
+          }
         }
       ]
     },
@@ -2821,7 +3427,7 @@ export const IDL: Tensorswap = {
               "isMut": false,
               "isSigner": false,
               "docs": [
-                "intentionally not deserializing here, coz it might be a blank account if merkle proof isn't used"
+                "intentionally not deserializing, it would be dummy in the case of VOC/FVC based verification"
               ]
             },
             {
@@ -2836,7 +3442,7 @@ export const IDL: Tensorswap = {
             },
             {
               "name": "nftMetadata",
-              "isMut": false,
+              "isMut": true,
               "isSigner": false
             },
             {
@@ -2883,6 +3489,46 @@ export const IDL: Tensorswap = {
           "name": "rent",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
         }
       ],
       "args": [
@@ -2895,6 +3541,18 @@ export const IDL: Tensorswap = {
         {
           "name": "minPrice",
           "type": "u64"
+        },
+        {
+          "name": "rulesAccPresent",
+          "type": "bool"
+        },
+        {
+          "name": "authorizationData",
+          "type": {
+            "option": {
+              "defined": "AuthorizationDataLocal"
+            }
+          }
         }
       ]
     },
@@ -3348,7 +4006,7 @@ export const IDL: Tensorswap = {
               "isMut": false,
               "isSigner": false,
               "docs": [
-                "intentionally not deserializing here, coz it might be a blank account if merkle proof isn't used"
+                "intentionally not deserializing, it would be dummy in the case of VOC/FVC based verification"
               ]
             },
             {
@@ -3363,7 +4021,7 @@ export const IDL: Tensorswap = {
             },
             {
               "name": "nftMetadata",
-              "isMut": false,
+              "isMut": true,
               "isSigner": false
             },
             {
@@ -3424,6 +4082,41 @@ export const IDL: Tensorswap = {
           "name": "rent",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
         }
       ],
       "args": [
@@ -3436,6 +4129,14 @@ export const IDL: Tensorswap = {
         {
           "name": "actualPrice",
           "type": "u64"
+        },
+        {
+          "name": "authorizationData",
+          "type": {
+            "option": {
+              "defined": "AuthorizationDataLocal"
+            }
+          }
         }
       ]
     },
@@ -3489,6 +4190,45 @@ export const IDL: Tensorswap = {
           "type": {
             "option": "u32"
           }
+        }
+      ]
+    },
+    {
+      "name": "withdrawTswapFees",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "cosigner",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "We ask also for a signature just to make sure this wallet can actually sign things"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "destination",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
         }
       ]
     }
@@ -3891,6 +4631,79 @@ export const IDL: Tensorswap = {
       }
     },
     {
+      "name": "AuthorizationDataLocal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "payload",
+            "type": {
+              "vec": {
+                "defined": "TaggedPayload"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TaggedPayload",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "payload",
+            "type": {
+              "defined": "PayloadTypeLocal"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SeedsVecLocal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "seeds",
+            "docs": [
+              "The vector of derivation seeds."
+            ],
+            "type": {
+              "vec": "bytes"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProofInfoLocal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proof",
+            "docs": [
+              "The merkle proof."
+            ],
+            "type": {
+              "vec": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "PoolType",
       "type": {
         "kind": "enum",
@@ -3945,6 +4758,42 @@ export const IDL: Tensorswap = {
           },
           {
             "name": "Sell"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PayloadTypeLocal",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Pubkey",
+            "fields": [
+              "publicKey"
+            ]
+          },
+          {
+            "name": "Seeds",
+            "fields": [
+              {
+                "defined": "SeedsVecLocal"
+              }
+            ]
+          },
+          {
+            "name": "MerkleProof",
+            "fields": [
+              {
+                "defined": "ProofInfoLocal"
+              }
+            ]
+          },
+          {
+            "name": "Number",
+            "fields": [
+              "u64"
+            ]
           }
         ]
       }
@@ -4152,6 +5001,11 @@ export const IDL: Tensorswap = {
       "code": 6034,
       "name": "MaxTakerSellCountTooSmall",
       "msg": "max taker sell count is too small"
+    },
+    {
+      "code": 6035,
+      "name": "BadRuleSet",
+      "msg": "rule set for programmable nft does not match"
     }
   ]
 };

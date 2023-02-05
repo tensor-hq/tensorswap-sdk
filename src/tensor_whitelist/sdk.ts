@@ -19,28 +19,26 @@ import {
   decodeAcct,
   DiscMap,
   genDiscToDecoderMap,
+  getAccountRent,
   hexCode,
   removeNullBytes,
 } from "../common";
 
 // ---------------------------------------- Versioned IDLs for backwards compat when parsing.
-//v0.1
 import {
   IDL as IDL_v0_1_0,
   TensorWhitelist as TensorWhitelist_v0_1_0,
-} from "./idl/tensor_whitelist_v0.1.0";
+} from "./idl/tensor_whitelist_v0_1_0";
 
-//v0.2 (added cosigner and 3 verification methods)
 import {
   IDL as IDL_latest,
   TensorWhitelist as TensorWhitelist_latest,
 } from "./idl/tensor_whitelist";
 
-// rollout 0.1.0: //todo find tx
 export const TensorWhitelistIDL_v0_1_0 = IDL_v0_1_0;
 export const TensorWhitelistIDL_v0_1_0_EffSlot = 0; //todo find slot
 
-// rollout 0.2.0: //https://solscan.io/tx/55gtoZSTKf96XL6XDD5e9F4nkoiPqXHtP4mJoYNT6eZVwtHw2FRRhVxfg9jHADMLrVS2FmNRh2VAWVCqnTxrX3Ro
+// added 3 types of verification: https://solscan.io/tx/55gtoZSTKf96XL6XDD5e9F4nkoiPqXHtP4mJoYNT6eZVwtHw2FRRhVxfg9jHADMLrVS2FmNRh2VAWVCqnTxrX3Ro
 export const TensorWhitelistIDL_latest = IDL_latest;
 export const TensorWhitelistIDL_latest_EffSlot = 172170872;
 
@@ -425,5 +423,12 @@ export class TensorWhitelistSDK {
 
   genWhitelistUUID() {
     return v4().toString();
+  }
+
+  async getMintProofRent() {
+    return await getAccountRent(
+      this.program.provider.connection,
+      this.program.account.mintProof
+    );
   }
 }

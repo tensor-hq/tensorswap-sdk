@@ -7,7 +7,7 @@ import { IDL, Tensorswap } from "./idl/tensorswap";
 import {
   IDL as IDL_v0_1_32,
   Tensorswap as Tensorswap_v0_1_32,
-} from "./idl/tensorswap_v0.1.32";
+} from "./idl/tensorswap_v0_1_32";
 
 // Versioned IDLs for backwards compat when parsing.
 export const TensorswapIDL_v0_1_32 = IDL_v0_1_32;

@@ -68,7 +68,9 @@ export const decodeAcct = <T extends Idl>(
 
 export const fetchNft = async (conn: Connection, mint: PublicKey) => {
   const mplex = new Metaplex(conn);
-  return await mplex.nfts().findByMint({ mintAddress: mint });
+  return await mplex
+    .nfts()
+    .findByMint({ mintAddress: mint, loadJsonMetadata: true });
 };
 
 //#region Stringify function.
@@ -151,3 +153,10 @@ export const isNullLike = <T>(v: T | null | undefined): v is null | undefined =>
 
 // #endregion
 
+export const SECONDS = 1000;
+export const MINUTES = 60 * SECONDS;
+export const HOURS = 60 * MINUTES;
+export const DAYS = 24 * HOURS;
+
+export { PROGRAM_ID as TMETA_PROG_ID } from "@metaplex-foundation/mpl-token-metadata";
+export { PROGRAM_ID as AUTH_PROG_ID } from "@metaplex-foundation/mpl-token-auth-rules";
