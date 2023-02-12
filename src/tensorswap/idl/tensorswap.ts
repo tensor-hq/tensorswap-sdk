@@ -1,5 +1,5 @@
 export type Tensorswap = {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "name": "tensorswap",
   "constants": [
     {
@@ -1411,48 +1411,7 @@ export type Tensorswap = {
     },
     {
       "name": "setPoolFreeze",
-      "accounts": [
-        {
-          "name": "tswap",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "whitelist",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "solEscrow",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "marginAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "cosigner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
+      "accounts": [],
       "args": [
         {
           "name": "config",
@@ -1468,151 +1427,7 @@ export type Tensorswap = {
     },
     {
       "name": "takeSnipe",
-      "accounts": [
-        {
-          "name": "shared",
-          "accounts": [
-            {
-              "name": "tswap",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "feeVault",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "pool",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "whitelist",
-              "isMut": false,
-              "isSigner": false,
-              "docs": [
-                "Needed for pool seeds derivation, also checked via has_one on pool"
-              ]
-            },
-            {
-              "name": "mintProof",
-              "isMut": false,
-              "isSigner": false,
-              "docs": [
-                "intentionally not deserializing, it would be dummy in the case of VOC/FVC based verification"
-              ]
-            },
-            {
-              "name": "nftSellerAcc",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "nftMint",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "nftMetadata",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "solEscrow",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "owner",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "seller",
-              "isMut": true,
-              "isSigner": true
-            }
-          ]
-        },
-        {
-          "name": "ownerAtaAcc",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "marginAccount",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Snipes are always marginated, hence include as a fixed account"
-          ]
-        },
-        {
-          "name": "cosigner",
-          "isMut": false,
-          "isSigner": true,
-          "docs": [
-            "We have to cosign because the ix skips royalties, hence include as a fixed account",
-            "(!) this doesn't mean that the order itself is cosigned, it might not be, just the same kp"
-          ]
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "nftEdition",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "ownerTokenRecord",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "destTokenRecord",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "pnftShared",
-          "accounts": [
-            {
-              "name": "tokenMetadataProgram",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "instructions",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "authorizationRulesProgram",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        }
-      ],
+      "accounts": [],
       "args": [
         {
           "name": "config",
@@ -1722,6 +1537,385 @@ export type Tensorswap = {
       "args": [
         {
           "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftSource",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftEscrow",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Implicitly checked via transfer. Will fail if wrong account"
+          ]
+        },
+        {
+          "name": "singleListing",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "price",
+          "type": "u64"
+        },
+        {
+          "name": "authorizationData",
+          "type": {
+            "option": {
+              "defined": "AuthorizationDataLocal"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "delist",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftDest",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftEscrow",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Implicitly checked via transfer. Will fail if wrong account",
+            "This is closed below (dest = owner)"
+          ]
+        },
+        {
+          "name": "singleListing",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "authorizationData",
+          "type": {
+            "option": {
+              "defined": "AuthorizationDataLocal"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "buySingleListing",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "singleListing",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftBuyerAcc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftEscrow",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Implicitly checked via transfer. Will fail if wrong account.",
+            "This is closed below (dest = owner)"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "buyer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "maxPrice",
+          "type": "u64"
+        },
+        {
+          "name": "rulesAccPresent",
+          "type": "bool"
+        },
+        {
+          "name": "authorizationData",
+          "type": {
+            "option": {
+              "defined": "AuthorizationDataLocal"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "editSingleListing",
+      "accounts": [
+        {
+          "name": "singleListing",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "price",
           "type": "u64"
         }
       ]
@@ -1949,6 +2143,44 @@ export type Tensorswap = {
           {
             "name": "poolsAttached",
             "type": "u32"
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "singleListing",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "nftMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": {
+              "array": [
+                "u8",
+                1
+              ]
+            }
           },
           {
             "name": "reserved",
@@ -2318,6 +2550,16 @@ export type Tensorswap = {
           "index": true
         }
       ]
+    },
+    {
+      "name": "DelistEvent",
+      "fields": [
+        {
+          "name": "currentPrice",
+          "type": "u64",
+          "index": true
+        }
+      ]
     }
   ],
   "errors": [
@@ -2403,8 +2645,8 @@ export type Tensorswap = {
     },
     {
       "code": 6016,
-      "name": "BadTSwapOwner",
-      "msg": "bad tswap owner"
+      "name": "BadOwner",
+      "msg": "bad owner"
     },
     {
       "code": 6017,
@@ -2505,7 +2747,7 @@ export type Tensorswap = {
 };
 
 export const IDL: Tensorswap = {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "name": "tensorswap",
   "constants": [
     {
@@ -3917,48 +4159,7 @@ export const IDL: Tensorswap = {
     },
     {
       "name": "setPoolFreeze",
-      "accounts": [
-        {
-          "name": "tswap",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "whitelist",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "solEscrow",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "marginAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "cosigner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
+      "accounts": [],
       "args": [
         {
           "name": "config",
@@ -3974,151 +4175,7 @@ export const IDL: Tensorswap = {
     },
     {
       "name": "takeSnipe",
-      "accounts": [
-        {
-          "name": "shared",
-          "accounts": [
-            {
-              "name": "tswap",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "feeVault",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "pool",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "whitelist",
-              "isMut": false,
-              "isSigner": false,
-              "docs": [
-                "Needed for pool seeds derivation, also checked via has_one on pool"
-              ]
-            },
-            {
-              "name": "mintProof",
-              "isMut": false,
-              "isSigner": false,
-              "docs": [
-                "intentionally not deserializing, it would be dummy in the case of VOC/FVC based verification"
-              ]
-            },
-            {
-              "name": "nftSellerAcc",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "nftMint",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "nftMetadata",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "solEscrow",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "owner",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "seller",
-              "isMut": true,
-              "isSigner": true
-            }
-          ]
-        },
-        {
-          "name": "ownerAtaAcc",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "marginAccount",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Snipes are always marginated, hence include as a fixed account"
-          ]
-        },
-        {
-          "name": "cosigner",
-          "isMut": false,
-          "isSigner": true,
-          "docs": [
-            "We have to cosign because the ix skips royalties, hence include as a fixed account",
-            "(!) this doesn't mean that the order itself is cosigned, it might not be, just the same kp"
-          ]
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "nftEdition",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "ownerTokenRecord",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "destTokenRecord",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "pnftShared",
-          "accounts": [
-            {
-              "name": "tokenMetadataProgram",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "instructions",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "authorizationRulesProgram",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        }
-      ],
+      "accounts": [],
       "args": [
         {
           "name": "config",
@@ -4228,6 +4285,385 @@ export const IDL: Tensorswap = {
       "args": [
         {
           "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftSource",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftEscrow",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Implicitly checked via transfer. Will fail if wrong account"
+          ]
+        },
+        {
+          "name": "singleListing",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "price",
+          "type": "u64"
+        },
+        {
+          "name": "authorizationData",
+          "type": {
+            "option": {
+              "defined": "AuthorizationDataLocal"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "delist",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftDest",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftEscrow",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Implicitly checked via transfer. Will fail if wrong account",
+            "This is closed below (dest = owner)"
+          ]
+        },
+        {
+          "name": "singleListing",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "authorizationData",
+          "type": {
+            "option": {
+              "defined": "AuthorizationDataLocal"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "buySingleListing",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "singleListing",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftBuyerAcc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftEscrow",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Implicitly checked via transfer. Will fail if wrong account.",
+            "This is closed below (dest = owner)"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "buyer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destTokenRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pnftShared",
+          "accounts": [
+            {
+              "name": "tokenMetadataProgram",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "instructions",
+              "isMut": false,
+              "isSigner": false
+            },
+            {
+              "name": "authorizationRulesProgram",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "maxPrice",
+          "type": "u64"
+        },
+        {
+          "name": "rulesAccPresent",
+          "type": "bool"
+        },
+        {
+          "name": "authorizationData",
+          "type": {
+            "option": {
+              "defined": "AuthorizationDataLocal"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "editSingleListing",
+      "accounts": [
+        {
+          "name": "singleListing",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "price",
           "type": "u64"
         }
       ]
@@ -4455,6 +4891,44 @@ export const IDL: Tensorswap = {
           {
             "name": "poolsAttached",
             "type": "u32"
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "singleListing",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "nftMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": {
+              "array": [
+                "u8",
+                1
+              ]
+            }
           },
           {
             "name": "reserved",
@@ -4824,6 +5298,16 @@ export const IDL: Tensorswap = {
           "index": true
         }
       ]
+    },
+    {
+      "name": "DelistEvent",
+      "fields": [
+        {
+          "name": "currentPrice",
+          "type": "u64",
+          "index": true
+        }
+      ]
     }
   ],
   "errors": [
@@ -4909,8 +5393,8 @@ export const IDL: Tensorswap = {
     },
     {
       "code": 6016,
-      "name": "BadTSwapOwner",
-      "msg": "bad tswap owner"
+      "name": "BadOwner",
+      "msg": "bad owner"
     },
     {
       "code": 6017,
