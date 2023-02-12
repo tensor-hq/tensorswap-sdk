@@ -722,16 +722,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metaplex-foundation/mpl-token-auth-rules@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@metaplex-foundation/mpl-token-auth-rules@npm:1.1.0"
+"@metaplex-foundation/mpl-token-auth-rules@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@metaplex-foundation/mpl-token-auth-rules@npm:1.2.0"
   dependencies:
     "@metaplex-foundation/beet": ^0.7.1
     "@metaplex-foundation/beet-solana": ^0.4.0
     "@metaplex-foundation/cusper": ^0.0.2
     "@solana/spl-token": ^0.3.6
     "@solana/web3.js": ^1.66.2
-  checksum: c40f4c8c9333fd55508828a58a8f859b138e90a7e112b17c0b30285e0af2ebc6b000a79dc70eacd515140cb25f13a4395a91b8ba81173ef77e9728287ee1275b
+  checksum: 9e6a82b4074079d57ad1a7de430dd70169871a83d814eefddac4507b1e4d425f70086d689c09a05752a4ef0a36d7d1fcdc6daa554f66ad72c0b6e0f161af38c8
   languageName: node
   linkType: hard
 
@@ -750,9 +750,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metaplex-foundation/mpl-token-metadata@npm:^2.8.1":
-  version: 2.8.1
-  resolution: "@metaplex-foundation/mpl-token-metadata@npm:2.8.1"
+"@metaplex-foundation/mpl-token-metadata@npm:^2.8.3":
+  version: 2.8.3
+  resolution: "@metaplex-foundation/mpl-token-metadata@npm:2.8.3"
   dependencies:
     "@metaplex-foundation/beet": ^0.7.1
     "@metaplex-foundation/beet-solana": ^0.4.0
@@ -761,7 +761,7 @@ __metadata:
     "@solana/web3.js": ^1.66.2
     bn.js: ^5.2.0
     debug: ^4.3.4
-  checksum: e4281f66d87734195ff2241f17961b52faae7065199995983751aa77a0f8013f9587b23b242e02903f5576355a86eb8b7936e79439561f9f7b5fb0772fb69f79
+  checksum: c926ec1cbd4f909a8010fcc149f35577cac6e69114138a295e51a9804b8383a4aa6186f786b36c52d62e6f73dc92981b3797bfe7aa326358ffe2b64638e7f08c
   languageName: node
   linkType: hard
 
@@ -976,8 +976,8 @@ __metadata:
     "@ledgerhq/hw-app-solana": ^6.27.2
     "@ledgerhq/hw-transport-node-hid": ^6.27.2
     "@metaplex-foundation/js": ^0.18.0
-    "@metaplex-foundation/mpl-token-auth-rules": ^1.1.0
-    "@metaplex-foundation/mpl-token-metadata": ^2.8.1
+    "@metaplex-foundation/mpl-token-auth-rules": ^1.2.0
+    "@metaplex-foundation/mpl-token-metadata": ^2.8.3
     "@msgpack/msgpack": ^2.8.0
     "@project-serum/anchor": ^0.26.0
     "@saberhq/solana-contrib": ^1.14.11

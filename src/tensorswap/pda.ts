@@ -149,6 +149,19 @@ export const findNftAuthorityPDA = ({
   );
 };
 
+export const findSingleListingPDA = ({
+  program,
+  nftMint,
+}: {
+  program?: PublicKey;
+  nftMint: PublicKey;
+}) => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("single_listing"), nftMint.toBytes()],
+    program ?? TENSORSWAP_ADDR
+  );
+};
+
 // todo temp while mplex adds to sdk
 export const findTokenRecordPDA = (mint: PublicKey, token: PublicKey) => {
   return PublicKey.findProgramAddressSync(
