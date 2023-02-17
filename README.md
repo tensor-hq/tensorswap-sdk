@@ -6,6 +6,17 @@
 
 ## Getting Started
 
+### From npm/yarn (RECOMMENDED)
+
+```
+# yarn
+yarn add @tensor-hq/tensorswap-sdk-public
+# npm
+npm install @tensor-hq/tensorswap-sdk-public
+```
+
+### From source
+
 ```sh
 git clone https://github.com/tensor-hq/tensorswap-sdk.git
 cd tensorswap-sdk/
@@ -18,7 +29,7 @@ yarn tsc
 
 ```ts
 const { AnchorProvider, Wallet } = require("@project-serum/anchor");
-const { Connection, Keypair } = require("@solana/web3.js");
+const { Connection, Keypair, PublicKey } = require("@solana/web3.js");
 const {
   TensorSwapSDK,
   TensorWhitelistSDK,
@@ -26,7 +37,7 @@ const {
   TakerSide,
   castPoolConfigAnchor,
   findWhitelistPDA,
-} = require(".");
+} = require("@tensor-hq/tensorswap-sdk-public");
 
 const conn = new Connection("https://api.mainnet-beta.solana.com");
 const provider = new AnchorProvider(conn, new Wallet(Keypair.generate()));
