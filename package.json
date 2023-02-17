@@ -1,5 +1,5 @@
 {
-  "name": "@tensor-hq/tensorswap-sdk-public",
+  "name": "@tensor-hq/tensorswap-sdk",
   "version": "1.4.4",
   "description": "Anchor/JS SDK for interacting with the tensorswap Solana program.",
   "main": "dist/index.js",
