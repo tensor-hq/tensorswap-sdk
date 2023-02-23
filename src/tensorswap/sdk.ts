@@ -1211,6 +1211,7 @@ export class TensorSwapSDK {
       authDataSerialized,
     } = await this.prepPnftAccounts({
       nftMetadata: metaCreators?.metadata,
+      nftCreators: metaCreators?.creators,
       nftMint,
       destAta: nftBuyerAcc,
       authData,
@@ -1361,6 +1362,7 @@ export class TensorSwapSDK {
       authDataSerialized,
     } = await this.prepPnftAccounts({
       nftMetadata: metaCreators?.metadata,
+      nftCreators: metaCreators?.creators,
       nftMint,
       destAta: type === "token" ? ownerAtaAcc : escrowPda,
       authData,
@@ -2243,6 +2245,7 @@ export class TensorSwapSDK {
       authDataSerialized,
     } = await this.prepPnftAccounts({
       nftMetadata: metaCreators?.metadata,
+      nftCreators: metaCreators?.creators,
       nftMint,
       destAta: nftBuyerAcc,
       authData,
@@ -2405,12 +2408,14 @@ export class TensorSwapSDK {
 
   async prepPnftAccounts({
     nftMetadata,
+    nftCreators,
     nftMint,
     sourceAta,
     destAta,
     authData = null,
   }: {
     nftMetadata?: PublicKey;
+    nftCreators?: PublicKey[];
     nftMint: PublicKey;
     sourceAta: PublicKey;
     destAta: PublicKey;
@@ -2418,8 +2423,9 @@ export class TensorSwapSDK {
   }) {
     let meta;
     let creators: PublicKey[] = [];
-    if (nftMetadata) {
+    if (nftMetadata && nftCreators) {
       meta = nftMetadata;
+      creators = nftCreators;
     } else {
       const nft = await fetchNft(this.program.provider.connection, nftMint);
       meta = nft.metadataAddress;
