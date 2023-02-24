@@ -2425,9 +2425,7 @@ export class TensorSwapSDK {
     let creators: PublicKey[] = [];
     if (nftMetadata) {
       meta = nftMetadata;
-      if (nftCreators) {
-        creators = nftCreators;
-      }
+      if (nftCreators) creators = nftCreators;
     } else {
       const nft = await fetchNft(this.program.provider.connection, nftMint);
       meta = nft.metadataAddress;
