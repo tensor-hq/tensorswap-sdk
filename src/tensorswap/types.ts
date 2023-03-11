@@ -90,7 +90,7 @@ export type PoolConfigAnchor = {
   curveType: CurveTypeAnchor;
   startingPrice: BN;
   delta: BN;
-  honorRoyalties: boolean;
+  mmCompoundFees: boolean;
   mmFeeBps: number | null; // null for non-trade pools
 };
 
@@ -99,7 +99,7 @@ export const castPoolConfigAnchor = (config: PoolConfigAnchor): PoolConfig => ({
   curveType: castCurveTypeAnchor(config.curveType),
   startingPrice: new Big(config.startingPrice.toString()),
   delta: new Big(config.delta.toString()),
-  honorRoyalties: config.honorRoyalties,
+  mmCompoundFees: config.mmCompoundFees,
   mmFeeBps: config.mmFeeBps,
 });
 
@@ -108,7 +108,7 @@ export const castPoolConfig = (config: PoolConfig): PoolConfigAnchor => ({
   curveType: castCurveType(config.curveType),
   startingPrice: new BN(config.startingPrice.round().toString()),
   delta: new BN(config.delta.round().toString()),
-  honorRoyalties: config.honorRoyalties,
+  mmCompoundFees: config.mmCompoundFees,
   mmFeeBps: config.mmFeeBps,
 });
 

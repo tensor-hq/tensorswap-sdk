@@ -24,7 +24,7 @@ export type PoolConfig = {
   // TODO: THESE SHOULD BE BNs, OTHERWISE WE'LL RUN INTO ALL SORTS OF RUN TIME ERRORS.
   startingPrice: Big;
   delta: Big;
-  honorRoyalties: boolean;
+  mmCompoundFees: boolean;
   mmFeeBps: number | null; // null for non-trade pools
 };
 

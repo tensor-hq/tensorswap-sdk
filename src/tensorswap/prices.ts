@@ -12,9 +12,11 @@ export type ComputePriceArgs = {
   takerBuyCount: number;
   takerSide: TakerSide;
 
-  //v1.1: for selling, statsTakerSellCount < maxTakerSellCount (o/w no taking).
+  //v1.1: for selling, (statsTakerSellCount - statsTakerBuyCount) < maxTakerSellCount (o/w no taking).
   maxTakerSellCount: number;
   statsTakerSellCount: number;
+  //for bids this is 0, only relevant for MM orders
+  statsTakerBuyCount: number;
 
   //single "extra" selection field, instead of 2 (nftsSelectedToBuy / nftsSelectedToSell)
   //that's because for Trade pools we don't want user's selection in buy tab to influence price in sell tab and vv
@@ -67,12 +69,16 @@ const computeCurrentPrice = ({
   takerSide,
   maxTakerSellCount,
   statsTakerSellCount,
+  statsTakerBuyCount,
   extraNFTsSelected,
   // Default small tolerance for exponential curves.
   slippage = config.curveType === CurveType.Linear ? 0 : EXPO_SLIPPAGE,
 }: ComputePriceArgs): Big | null => {
   // Cannot sell anymore into capped pool.
-  if (maxTakerSellCount != 0 && statsTakerSellCount >= maxTakerSellCount) {
+  if (
+    maxTakerSellCount != 0 &&
+    statsTakerSellCount - statsTakerBuyCount >= maxTakerSellCount
+  ) {
     return null;
   }
 
@@ -236,9 +242,15 @@ export const computeMakerAmountCount = ({
   const adjustByMaxTakerCount = (allowedCount: number) => {
     if (takerSide !== TakerSide.Sell) return allowedCount;
     if (priceArgs.maxTakerSellCount === 0) return allowedCount;
-    if (priceArgs.statsTakerSellCount >= priceArgs.maxTakerSellCount) return 0;
+
+    // Negative should be fine. Eg taker sold 3, bought 5, adjTakerSellCount for pool is -2
+    // if hook will never trigger, and subtracting a negative gives a positive (capped at allowedCount)
+    const adjMaxTakerSellCount =
+      priceArgs.statsTakerSellCount - (priceArgs.statsTakerBuyCount ?? 0);
+
+    if (adjMaxTakerSellCount >= priceArgs.maxTakerSellCount) return 0;
     return Math.min(
-      priceArgs.maxTakerSellCount - priceArgs.statsTakerSellCount,
+      priceArgs.maxTakerSellCount - adjMaxTakerSellCount,
       allowedCount
     );
   };

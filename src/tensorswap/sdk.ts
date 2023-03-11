@@ -100,6 +100,11 @@ import {
 } from "./idl/tensorswap_v1_3_0";
 
 import {
+  IDL as IDL_v1_4_0,
+  Tensorswap as Tensorswap_v1_4_0,
+} from "./idl/tensorswap_v1_4_0";
+
+import {
   IDL as IDL_latest,
   Tensorswap as Tensorswap_latest,
 } from "./idl/tensorswap";
@@ -135,8 +140,14 @@ export const TensorswapIDL_v1_3_0 = IDL_v1_3_0;
 export const TensorswapIDL_v1_3_0_EffSlot = 176096448;
 
 // add single listing: https://solscan.io/tx/JMWgwm6RdhZzdRoj9tBQHp5ZXstFr3vuFk94uD4qdq6DfQFKL6D9Zb7rj1reRsHBt87QfYcYwVYfKQ4qFyCcs6r
+export const TensorswapIDL_v1_4_0 = IDL_v1_4_0;
+export const TensorswapIDL_v1_4_0_EffSlot = 177428733;
+
+// enable margin for MM pools + make MM profit withdrawable
+// part 1 (everything except edit in place): https://solscan.io/tx/2uZgAZXfeabhqAhQTtWinnHkfJHnfuDzPKJcypxK9L3xuHsVwaz9Arb7EDMU3khbKmwGbigcZsweQEXNj8Pa9tcT
+// part 2 (enabled mmCompoundFee in edit in place): https://solscan.io/tx/44aWhcQNx8a95PGGCFsTskLyJwxGbcvRnmsDaqvxsdD9dmKMP6NPRKzPoAiNiGhNfVMRq1ADg6seHPHxU6r8R7jZ
 export const TensorswapIDL_latest = IDL_latest;
-export const TensorswapIDL_latest_EffSlot = 177428733;
+export const TensorswapIDL_latest_EffSlot = 182023294;
 
 export type TensorswapIDL =
   | Tensorswap_v0_1_32
@@ -146,6 +157,7 @@ export type TensorswapIDL =
   | Tensorswap_v1_0_0
   | Tensorswap_v1_1_0
   | Tensorswap_v1_3_0
+  | Tensorswap_v1_4_0
   | Tensorswap_latest;
 
 // Use this function to figure out which IDL to use based on the slot # of historical txs.
@@ -158,7 +170,8 @@ export const triageIDL = (slot: number | bigint): TensorswapIDL | null => {
   if (slot < TensorswapIDL_v1_0_0_EffSlot) return TensorswapIDL_v0_3_5;
   if (slot < TensorswapIDL_v1_1_0_EffSlot) return TensorswapIDL_v1_0_0;
   if (slot < TensorswapIDL_v1_3_0_EffSlot) return TensorswapIDL_v1_1_0;
-  if (slot < TensorswapIDL_latest_EffSlot) return TensorswapIDL_v1_3_0;
+  if (slot < TensorswapIDL_v1_4_0_EffSlot) return TensorswapIDL_v1_3_0;
+  if (slot < TensorswapIDL_latest_EffSlot) return TensorswapIDL_v1_4_0;
   return TensorswapIDL_latest;
 };
 
@@ -181,6 +194,7 @@ export const SNIPE_MIN_FEE: number = 0.01 * LAMPORTS_PER_SOL;
 
 export const APPROX_SOL_ESCROW_RENT = 946560;
 export const APPROX_SOL_MARGIN_RENT = 1886160;
+export const APPROX_POOL_RENT = 2930160;
 
 // --------------------------------------- pool type
 
@@ -253,7 +267,7 @@ export type PoolConfigAnchor = {
   curveType: CurveTypeAnchor;
   startingPrice: BN;
   delta: BN;
-  honorRoyalties: boolean;
+  mmCompoundFees: boolean;
   mmFeeBps: number | null; // null for non-trade pools
 };
 
@@ -262,7 +276,7 @@ export const castPoolConfigAnchor = (config: PoolConfigAnchor): PoolConfig => ({
   curveType: castCurveTypeAnchor(config.curveType),
   startingPrice: new Big(config.startingPrice.toString()),
   delta: new Big(config.delta.toString()),
-  honorRoyalties: config.honorRoyalties,
+  mmCompoundFees: config.mmCompoundFees,
   mmFeeBps: config.mmFeeBps,
 });
 
@@ -271,7 +285,7 @@ export const castPoolConfig = (config: PoolConfig): PoolConfigAnchor => ({
   curveType: castCurveType(config.curveType),
   startingPrice: new BN(config.startingPrice.round().toString()),
   delta: new BN(config.delta.round().toString()),
-  honorRoyalties: config.honorRoyalties,
+  mmCompoundFees: config.mmCompoundFees,
   mmFeeBps: config.mmFeeBps,
 });
 
@@ -437,6 +451,7 @@ export type EditPoolIxData = {
   newConfig: PoolConfigAnchor;
 };
 export type WithdrawDepositSolData = TSwapIxData & { lamports: BN };
+export type WithdrawTSwapOwnedSplData = TSwapIxData & { amount: BN };
 export type ListEditListingData = TSwapIxData & { price: BN };
 
 //decided to NOT build the tx inside the sdk (too much coupling - should not care about blockhash)
@@ -722,6 +737,7 @@ export class TensorSwapSDK {
     newConfig,
     isCosigned = null,
     maxTakerSellCount,
+    mmCompoundFees = null,
   }: {
     owner: PublicKey;
     whitelist: PublicKey;
@@ -729,6 +745,7 @@ export class TensorSwapSDK {
     newConfig?: PoolConfigAnchor;
     isCosigned?: boolean | null;
     maxTakerSellCount?: number;
+    mmCompoundFees?: boolean | null;
   }) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [oldPoolPda, oldPoolBump] = findPoolPDA({
@@ -751,6 +768,11 @@ export class TensorSwapSDK {
     let newSolEscrowPda = oldSolEscrowPda;
     let newSolEscrowBump = oldSolEscrowBump;
     let builder;
+
+    //in case someone passes this in separately thinking it will affect the pool in full edit ix
+    if (newConfig && !isNullLike(mmCompoundFees)) {
+      newConfig.mmCompoundFees = mmCompoundFees;
+    }
 
     if (!isNullLike(newConfig)) {
       //full edit with pool migration
@@ -791,7 +813,8 @@ export class TensorSwapSDK {
         .editPoolInPlace(
           oldConfig as any,
           isCosigned,
-          maxTakerSellCount ?? null
+          maxTakerSellCount ?? null,
+          mmCompoundFees
         )
         .accounts({
           tswap: tswapPda,
@@ -897,8 +920,8 @@ export class TensorSwapSDK {
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY,
-        mintProof: mintProofPda,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        mintProof: mintProofPda,
         nftEdition: nftEditionPda,
         destTokenRecord: destTokenRecordPda,
         ownerTokenRecord: ownerTokenRecordPda,
@@ -1147,6 +1170,54 @@ export class TensorSwapSDK {
     };
   }
 
+  // main signature: owner
+  async withdrawMmFee({
+    whitelist,
+    owner,
+    config,
+    lamports,
+  }: {
+    whitelist: PublicKey;
+    owner: PublicKey;
+    config: PoolConfigAnchor;
+    //passing null will withdraw all fees
+    lamports: BN;
+  }) {
+    const [tswapPda, tswapBump] = findTSwapPDA({});
+    const [poolPda, poolBump] = findPoolPDA({
+      tswap: tswapPda,
+      owner,
+      whitelist,
+      delta: config.delta,
+      startingPrice: config.startingPrice,
+      poolType: poolTypeU8(config.poolType),
+      curveType: curveTypeU8(config.curveType),
+    });
+    const [solEscrowPda, solEscrowBump] = findSolEscrowPDA({ pool: poolPda });
+
+    const builder = this.program.methods
+      .withdrawMmFee(config as any, lamports)
+      .accounts({
+        tswap: tswapPda,
+        pool: poolPda,
+        whitelist,
+        solEscrow: solEscrowPda,
+        owner,
+        systemProgram: SystemProgram.programId,
+      });
+
+    return {
+      builder,
+      tx: { ixs: [await builder.instruction()], extraSigners: [] },
+      tswapPda,
+      tswapBump,
+      poolPda,
+      poolBump,
+      solEscrowPda,
+      solEscrowBump,
+    };
+  }
+
   // --------------------------------------- trade (buy/sell) methods
 
   //main signature: buyer
@@ -1162,6 +1233,7 @@ export class TensorSwapSDK {
     authData = null,
     compute = DEFAULT_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
+    marginNr = null,
   }: {
     whitelist: PublicKey;
     nftMint: PublicKey;
@@ -1178,6 +1250,7 @@ export class TensorSwapSDK {
     authData?: AuthorizationData | null;
     compute?: number;
     priorityMicroLamports?: number;
+    marginNr?: number | null;
   }) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [poolPda, poolBump] = findPoolPDA({
@@ -1224,7 +1297,19 @@ export class TensorSwapSDK {
       remAcc.push({ pubkey: ruleSet, isSigner: false, isWritable: false });
     }
 
-    //2.optional creators
+    //2.optional margin
+    let marginPda;
+    let marginBump;
+    if (!isNullLike(marginNr)) {
+      [marginPda, marginBump] = findMarginPDA({
+        tswap: tswapPda,
+        owner,
+        marginNr,
+      });
+      remAcc.push({ pubkey: marginPda, isSigner: false, isWritable: true });
+    }
+
+    //3.optional creators
     creators.map((c) => {
       remAcc.push({
         pubkey: c,
@@ -1291,6 +1376,8 @@ export class TensorSwapSDK {
       destTokenRecordPda,
       meta,
       ruleSet,
+      marginBump,
+      marginPda,
     };
   }
 
@@ -2354,6 +2441,13 @@ export class TensorSwapSDK {
 
   // --------------------------------------- helper methods
 
+  async getPoolRent() {
+    return await getAccountRent(
+      this.program.provider.connection,
+      this.program.account.pool
+    );
+  }
+
   async getSolEscrowRent() {
     return await getAccountRent(
       this.program.provider.connection,
@@ -2561,6 +2655,7 @@ export class TensorSwapSDK {
       case "withdrawNft":
       case "depositSol":
       case "withdrawSol":
+      case "withdrawMmFee":
       case "buyNft":
       case "sellNftTokenPool":
       case "sellNftTradePool":
@@ -2588,6 +2683,7 @@ export class TensorSwapSDK {
         return ix.events[0].data.currentPrice;
       case "depositSol":
       case "withdrawSol":
+      case "withdrawMmFee":
       case "depositMarginAccount":
       case "withdrawMarginAccount":
       case "withdrawTswapFees":
@@ -2632,6 +2728,7 @@ export class TensorSwapSDK {
       case "withdrawNft":
       case "depositSol":
       case "withdrawSol":
+      case "withdrawMmFee":
       case "editPool":
       case "editPoolInPlace":
       case "reallocPool":
