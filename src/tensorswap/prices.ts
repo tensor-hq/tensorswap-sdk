@@ -76,6 +76,7 @@ const computeCurrentPrice = ({
 }: ComputePriceArgs): Big | null => {
   // Cannot sell anymore into capped pool.
   if (
+    takerSide === TakerSide.Sell &&
     maxTakerSellCount != 0 &&
     statsTakerSellCount - statsTakerBuyCount >= maxTakerSellCount
   ) {
