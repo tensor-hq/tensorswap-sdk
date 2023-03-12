@@ -969,9 +969,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tensor-hq/tensorswap-ts@workspace:.":
+"@tensor-hq/tensorswap-sdk@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@tensor-hq/tensorswap-ts@workspace:."
+  resolution: "@tensor-hq/tensorswap-sdk@workspace:."
   dependencies:
     "@ledgerhq/hw-app-solana": ^6.27.2
     "@ledgerhq/hw-transport-node-hid": ^6.27.2
