@@ -105,6 +105,11 @@ import {
 } from "./idl/tensorswap_v1_4_0";
 
 import {
+  IDL as IDL_v1_5_0,
+  Tensorswap as Tensorswap_v1_5_0,
+} from "./idl/tensorswap_v1_5_0";
+
+import {
   IDL as IDL_latest,
   Tensorswap as Tensorswap_latest,
 } from "./idl/tensorswap";
@@ -146,8 +151,12 @@ export const TensorswapIDL_v1_4_0_EffSlot = 177428733;
 // enable margin for MM pools + make MM profit withdrawable
 // part 1 (everything except edit in place): https://solscan.io/tx/2uZgAZXfeabhqAhQTtWinnHkfJHnfuDzPKJcypxK9L3xuHsVwaz9Arb7EDMU3khbKmwGbigcZsweQEXNj8Pa9tcT
 // part 2 (enabled mmCompoundFee in edit in place): https://solscan.io/tx/44aWhcQNx8a95PGGCFsTskLyJwxGbcvRnmsDaqvxsdD9dmKMP6NPRKzPoAiNiGhNfVMRq1ADg6seHPHxU6r8R7jZ
+export const TensorswapIDL_v1_5_0 = IDL_v1_5_0;
+export const TensorswapIDL_v1_5_0_EffSlot = 182023294;
+
+// todo
 export const TensorswapIDL_latest = IDL_latest;
-export const TensorswapIDL_latest_EffSlot = 182023294;
+export const TensorswapIDL_latest_EffSlot = 0; //todo
 
 export type TensorswapIDL =
   | Tensorswap_v0_1_32
@@ -158,6 +167,7 @@ export type TensorswapIDL =
   | Tensorswap_v1_1_0
   | Tensorswap_v1_3_0
   | Tensorswap_v1_4_0
+  | Tensorswap_v1_5_0
   | Tensorswap_latest;
 
 // Use this function to figure out which IDL to use based on the slot # of historical txs.
@@ -171,7 +181,8 @@ export const triageIDL = (slot: number | bigint): TensorswapIDL | null => {
   if (slot < TensorswapIDL_v1_1_0_EffSlot) return TensorswapIDL_v1_0_0;
   if (slot < TensorswapIDL_v1_3_0_EffSlot) return TensorswapIDL_v1_1_0;
   if (slot < TensorswapIDL_v1_4_0_EffSlot) return TensorswapIDL_v1_3_0;
-  if (slot < TensorswapIDL_latest_EffSlot) return TensorswapIDL_v1_4_0;
+  if (slot < TensorswapIDL_v1_5_0_EffSlot) return TensorswapIDL_v1_4_0;
+  if (slot < TensorswapIDL_latest_EffSlot) return TensorswapIDL_v1_5_0;
   return TensorswapIDL_latest;
 };
 
@@ -1436,25 +1447,42 @@ export class TensorSwapSDK {
     const [mintProofPda] = findMintProofPDA({ mint: nftMint, whitelist });
     const tSwapAcc = await this.fetchTSwap(tswapPda);
 
-    //pnft
-    const {
-      meta,
-      creators,
-      ownerTokenRecordBump,
-      ownerTokenRecordPda,
-      destTokenRecordBump,
-      destTokenRecordPda,
-      ruleSet,
-      nftEditionPda,
-      authDataSerialized,
-    } = await this.prepPnftAccounts({
-      nftMetadata: metaCreators?.metadata,
-      nftCreators: metaCreators?.creators,
-      nftMint,
-      destAta: type === "token" ? ownerAtaAcc : escrowPda,
-      authData,
-      sourceAta: nftSellerAcc,
-    });
+    //prepare 2 pnft account sets
+    const [
+      {
+        meta,
+        creators,
+        ownerTokenRecordBump,
+        ownerTokenRecordPda,
+        destTokenRecordBump: escrowDestTokenRecordBump,
+        destTokenRecordPda: escrowDestTokenRecordPda,
+        ruleSet,
+        nftEditionPda,
+        authDataSerialized,
+      },
+      {
+        destTokenRecordBump: tokenDestTokenRecordBump,
+        destTokenRecordPda: tokenDestTokenRecordPda,
+      },
+    ] = await Promise.all([
+      this.prepPnftAccounts({
+        nftMetadata: metaCreators?.metadata,
+        nftCreators: metaCreators?.creators,
+        nftMint,
+        destAta: escrowPda,
+        authData,
+        sourceAta: nftSellerAcc,
+      }),
+      this.prepPnftAccounts({
+        nftMetadata: metaCreators?.metadata,
+        nftCreators: metaCreators?.creators,
+        nftMint,
+        destAta: ownerAtaAcc,
+        authData,
+        sourceAta: nftSellerAcc,
+      }),
+    ]);
+
     const remAcc = [];
     //1.optional ruleset
     if (!!ruleSet) {
@@ -1508,12 +1536,16 @@ export class TensorSwapSDK {
             accounts: {
               nftEscrow: escrowPda,
               nftReceipt: receiptPda,
+              destTokenRecord: escrowDestTokenRecordPda,
             },
           }
         : {
             method: this.program.methods.sellNftTokenPool,
             accounts: {
+              nftEscrow: escrowPda,
               ownerAtaAcc,
+              destTokenRecord: tokenDestTokenRecordPda,
+              tempEscrowTokenRecord: escrowDestTokenRecordPda,
             },
           };
 
@@ -1532,7 +1564,6 @@ export class TensorSwapSDK {
         rent: SYSVAR_RENT_PUBKEY,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         nftEdition: nftEditionPda,
-        destTokenRecord: destTokenRecordPda,
         ownerTokenRecord: ownerTokenRecordPda,
         pnftShared: {
           authorizationRulesProgram: AUTH_PROG_ID,
@@ -1569,8 +1600,10 @@ export class TensorSwapSDK {
       marginBump,
       ownerTokenRecordBump,
       ownerTokenRecordPda,
-      destTokenRecordBump,
-      destTokenRecordPda,
+      destTokenRecordBump:
+        type === "trade" ? escrowDestTokenRecordBump : tokenDestTokenRecordBump,
+      destTokenRecordPda:
+        type === "trade" ? escrowDestTokenRecordPda : tokenDestTokenRecordPda,
       meta,
     };
   }
