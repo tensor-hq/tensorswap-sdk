@@ -1,4 +1,3 @@
-import { IDL, TensorWhitelist } from "./idl/tensor_whitelist";
 import {
   AccountInfo,
   Commitment,
@@ -20,7 +19,9 @@ import {
   DiscMap,
   genDiscToDecoderMap,
   getAccountRent,
+  getRentSync,
   hexCode,
+  parseStrFn,
   removeNullBytes,
 } from "../common";
 
@@ -56,6 +57,22 @@ export const triageWhitelistIDL = (
     return TensorWhitelistIDL_v0_1_0;
   return TensorWhitelistIDL_latest;
 };
+
+// --------------------------------------- constants
+
+export const WHITELIST_SIZE: number = parseStrFn(
+  IDL_latest.constants.find((c) => c.name === "WHITELIST_SIZE")!.value
+);
+export const AUTHORITY_SIZE: number = parseStrFn(
+  IDL_latest.constants.find((c) => c.name === "AUTHORITY_SIZE")!.value
+);
+export const MINT_PROOF_SIZE: number = parseStrFn(
+  IDL_latest.constants.find((c) => c.name === "MINT_PROOF_SIZE")!.value
+);
+
+export const APPROX_WHITELIST_RENT = getRentSync(WHITELIST_SIZE);
+export const APPROX_AUTHORITY_RENT = getRentSync(AUTHORITY_SIZE);
+export const APPROX_MINT_PROOF_RENT = getRentSync(MINT_PROOF_SIZE);
 
 // --------------------------------------- state structs
 
@@ -101,11 +118,11 @@ export type TaggedTensorWhitelistPdaAnchor =
 // --------------------------------------- sdk
 
 export class TensorWhitelistSDK {
-  program: Program<TensorWhitelist>;
-  discMap: DiscMap<TensorWhitelist>;
+  program: Program<TensorWhitelistIDL>;
+  discMap: DiscMap<TensorWhitelistIDL>;
 
   constructor({
-    idl = IDL,
+    idl = IDL_latest,
     addr = TLIST_ADDR,
     provider,
     coder,
@@ -115,7 +132,7 @@ export class TensorWhitelistSDK {
     provider?: Provider;
     coder?: Coder;
   }) {
-    this.program = new Program<TensorWhitelist>(idl, addr, provider, coder);
+    this.program = new Program<TensorWhitelistIDL>(idl, addr, provider, coder);
     this.discMap = genDiscToDecoderMap(this.program);
   }
 
@@ -372,13 +389,35 @@ export class TensorWhitelistSDK {
 
   // --------------------------------------- helper methods
 
+  async getWhitelistRent() {
+    return await getAccountRent(
+      this.program.provider.connection,
+      this.program.account.whitelist
+    );
+  }
+
+  async getAuthorityRent() {
+    return await getAccountRent(
+      this.program.provider.connection,
+      this.program.account.authority
+    );
+  }
+
+  async getMintProofRent() {
+    return await getAccountRent(
+      this.program.provider.connection,
+      this.program.account.mintProof
+    );
+  }
+
   getError(
-    name: typeof IDL["errors"][number]["name"]
-  ): typeof IDL["errors"][number] {
+    name: typeof IDL_latest["errors"][number]["name"]
+  ): typeof IDL_latest["errors"][number] {
+    //@ts-ignore (throwing weird ts errors for me)
     return this.program.idl.errors.find((e) => e.name === name)!;
   }
 
-  getErrorCodeHex(name: typeof IDL["errors"][number]["name"]): string {
+  getErrorCodeHex(name: typeof IDL_latest["errors"][number]["name"]): string {
     return hexCode(this.getError(name).code);
   }
 
@@ -423,12 +462,5 @@ export class TensorWhitelistSDK {
 
   genWhitelistUUID() {
     return v4().toString();
-  }
-
-  async getMintProofRent() {
-    return await getAccountRent(
-      this.program.provider.connection,
-      this.program.account.mintProof
-    );
   }
 }

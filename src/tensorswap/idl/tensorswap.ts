@@ -1,5 +1,5 @@
 export type Tensorswap = {
-  "version": "1.6.0",
+  "version": "1.7.0",
   "name": "tensorswap",
   "constants": [
     {
@@ -51,6 +51,53 @@ export type Tensorswap = {
       "name": "SNIPE_PROFIT_SHARE_BPS",
       "type": "u16",
       "value": "2000"
+    },
+    {
+      "name": "TAKER_BROKER_PCT",
+      "type": "u64",
+      "value": "0"
+    },
+    {
+      "name": "TSWAP_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + 1 + 1 + 2 + 32 * 3"
+    },
+    {
+      "name": "POOL_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + (3 * 1) + 8 + (2 * 1) + (2 * 8) + 1 + 3 + (5 * 32) + (3 * 4) + (2 * 4) + 8 + 32 + 1 + 1 + 1 + 8 + 8 + 1 + 8 + 4"
+    },
+    {
+      "name": "MARGIN_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + 32 + 32 + 2 + 1 + 4 + 64"
+    },
+    {
+      "name": "SINGLE_LISTING_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + (32 * 2) + 8 + 1 + 64"
+    },
+    {
+      "name": "DEPOSIT_RECEIPT_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + 1 + 32 * 3"
+    },
+    {
+      "name": "NFT_AUTHORITY_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + 1 + 32 + 32"
     }
   ],
   "instructions": [
@@ -1424,7 +1471,13 @@ export type Tensorswap = {
     },
     {
       "name": "setPoolFreeze",
-      "accounts": [],
+      "accounts": [
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
       "args": [
         {
           "name": "config",
@@ -1440,7 +1493,13 @@ export type Tensorswap = {
     },
     {
       "name": "takeSnipe",
-      "accounts": [],
+      "accounts": [
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
       "args": [
         {
           "name": "config",
@@ -1982,6 +2041,56 @@ export type Tensorswap = {
           "type": {
             "defined": "PoolConfig"
           }
+        },
+        {
+          "name": "lamports",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "withdrawMarginAccountCpi",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bidState",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "destination",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
         },
         {
           "name": "lamports",
@@ -2816,12 +2925,17 @@ export type Tensorswap = {
       "code": 6036,
       "name": "PoolFeesCompounded",
       "msg": "this pool compounds fees and they cannot be withdrawn separately"
+    },
+    {
+      "code": 6037,
+      "name": "BadRoyaltiesPct",
+      "msg": "royalties percentage passed in must be between 0 and 100"
     }
   ]
 };
 
 export const IDL: Tensorswap = {
-  "version": "1.6.0",
+  "version": "1.7.0",
   "name": "tensorswap",
   "constants": [
     {
@@ -2873,6 +2987,53 @@ export const IDL: Tensorswap = {
       "name": "SNIPE_PROFIT_SHARE_BPS",
       "type": "u16",
       "value": "2000"
+    },
+    {
+      "name": "TAKER_BROKER_PCT",
+      "type": "u64",
+      "value": "0"
+    },
+    {
+      "name": "TSWAP_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + 1 + 1 + 2 + 32 * 3"
+    },
+    {
+      "name": "POOL_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + (3 * 1) + 8 + (2 * 1) + (2 * 8) + 1 + 3 + (5 * 32) + (3 * 4) + (2 * 4) + 8 + 32 + 1 + 1 + 1 + 8 + 8 + 1 + 8 + 4"
+    },
+    {
+      "name": "MARGIN_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + 32 + 32 + 2 + 1 + 4 + 64"
+    },
+    {
+      "name": "SINGLE_LISTING_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + (32 * 2) + 8 + 1 + 64"
+    },
+    {
+      "name": "DEPOSIT_RECEIPT_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + 1 + 32 * 3"
+    },
+    {
+      "name": "NFT_AUTHORITY_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + 1 + 32 + 32"
     }
   ],
   "instructions": [
@@ -4246,7 +4407,13 @@ export const IDL: Tensorswap = {
     },
     {
       "name": "setPoolFreeze",
-      "accounts": [],
+      "accounts": [
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
       "args": [
         {
           "name": "config",
@@ -4262,7 +4429,13 @@ export const IDL: Tensorswap = {
     },
     {
       "name": "takeSnipe",
-      "accounts": [],
+      "accounts": [
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
       "args": [
         {
           "name": "config",
@@ -4804,6 +4977,56 @@ export const IDL: Tensorswap = {
           "type": {
             "defined": "PoolConfig"
           }
+        },
+        {
+          "name": "lamports",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "withdrawMarginAccountCpi",
+      "accounts": [
+        {
+          "name": "tswap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bidState",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "destination",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
         },
         {
           "name": "lamports",
@@ -5638,6 +5861,11 @@ export const IDL: Tensorswap = {
       "code": 6036,
       "name": "PoolFeesCompounded",
       "msg": "this pool compounds fees and they cannot be withdrawn separately"
+    },
+    {
+      "code": 6037,
+      "name": "BadRoyaltiesPct",
+      "msg": "royalties percentage passed in must be between 0 and 100"
     }
   ]
 };

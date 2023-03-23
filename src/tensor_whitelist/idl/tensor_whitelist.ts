@@ -1,6 +1,29 @@
 export type TensorWhitelist = {
   "version": "0.2.0",
   "name": "tensor_whitelist",
+  "constants": [
+    {
+      "name": "AUTHORITY_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + 1 + (32 * 2) + 64"
+    },
+    {
+      "name": "WHITELIST_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + 1 + 1 + 1 + (32 * 3) + 1 + (33 * 2) + 64"
+    },
+    {
+      "name": "MINT_PROOF_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + (32 * 28) + 1"
+    }
+  ],
   "instructions": [
     {
       "name": "initUpdateAuthority",
@@ -513,6 +536,29 @@ export type TensorWhitelist = {
 export const IDL: TensorWhitelist = {
   "version": "0.2.0",
   "name": "tensor_whitelist",
+  "constants": [
+    {
+      "name": "AUTHORITY_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + 1 + (32 * 2) + 64"
+    },
+    {
+      "name": "WHITELIST_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + 1 + 1 + 1 + (32 * 3) + 1 + (33 * 2) + 64"
+    },
+    {
+      "name": "MINT_PROOF_SIZE",
+      "type": {
+        "defined": "usize"
+      },
+      "value": "8 + (32 * 28) + 1"
+    }
+  ],
   "instructions": [
     {
       "name": "initUpdateAuthority",

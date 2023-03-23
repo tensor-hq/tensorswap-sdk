@@ -2,6 +2,11 @@ import { Metaplex } from "@metaplex-foundation/js";
 import { AccountClient, BN, Idl, Program, utils } from "@project-serum/anchor";
 import { AllAccountsMap } from "@project-serum/anchor/dist/cjs/program/namespace/types";
 import { AccountInfo, Connection, PublicKey } from "@solana/web3.js";
+import {
+  AuthorizationData,
+  Metadata,
+} from "@metaplex-foundation/mpl-token-metadata";
+import { PREFIX } from "@metaplex-foundation/mpl-token-auth-rules";
 
 export const getAccountRent = (
   conn: Connection,
@@ -68,9 +73,7 @@ export const decodeAcct = <T extends Idl>(
 
 export const fetchNft = async (conn: Connection, mint: PublicKey) => {
   const mplex = new Metaplex(conn);
-  return await mplex
-    .nfts()
-    .findByMint({ mintAddress: mint, loadJsonMetadata: true });
+  return await mplex.nfts().findByMint({ mintAddress: mint });
 };
 
 //#region Stringify function.
@@ -160,3 +163,125 @@ export const DAYS = 24 * HOURS;
 
 export { PROGRAM_ID as TMETA_PROG_ID } from "@metaplex-foundation/mpl-token-metadata";
 export { PROGRAM_ID as AUTH_PROG_ID } from "@metaplex-foundation/mpl-token-auth-rules";
+import { PROGRAM_ID as TMETA_PROG_ID } from "@metaplex-foundation/mpl-token-metadata";
+import { PROGRAM_ID as AUTH_PROG_ID } from "@metaplex-foundation/mpl-token-auth-rules";
+
+export const prepPnftAccounts = async ({
+  connection,
+  nftMetadata,
+  nftCreators,
+  nftMint,
+  sourceAta,
+  destAta,
+  authData = null,
+}: {
+  connection: Connection;
+  nftMetadata?: PublicKey;
+  nftCreators?: PublicKey[];
+  nftMint: PublicKey;
+  sourceAta: PublicKey;
+  destAta: PublicKey;
+  authData?: AuthorizationData | null;
+}) => {
+  let meta;
+  let creators: PublicKey[] = [];
+  if (nftMetadata) {
+    meta = nftMetadata;
+    if (nftCreators) creators = nftCreators;
+  } else {
+    const nft = await fetchNft(connection, nftMint);
+    meta = nft.metadataAddress;
+    creators = nft.creators.map((c) => c.address);
+  }
+
+  const inflatedMeta = await Metadata.fromAccountAddress(connection, meta);
+  const ruleSet = inflatedMeta.programmableConfig?.ruleSet;
+
+  const [ownerTokenRecordPda, ownerTokenRecordBump] = findTokenRecordPDA(
+    nftMint,
+    sourceAta
+  );
+  const [destTokenRecordPda, destTokenRecordBump] = findTokenRecordPDA(
+    nftMint,
+    destAta
+  );
+
+  //retrieve edition PDA
+  const mplex = new Metaplex(connection);
+  const nftEditionPda = mplex.nfts().pdas().edition({ mint: nftMint });
+
+  //have to re-serialize due to anchor limitations
+  const authDataSerialized = authData
+    ? {
+        payload: Object.entries(authData.payload.map).map(([k, v]) => {
+          return { name: k, payload: v };
+        }),
+      }
+    : null;
+
+  return {
+    meta,
+    creators,
+    ownerTokenRecordBump,
+    ownerTokenRecordPda,
+    destTokenRecordBump,
+    destTokenRecordPda,
+    ruleSet,
+    nftEditionPda,
+    authDataSerialized,
+  };
+};
+
+// pNFTs very expensive.
+export const DEFAULT_COMPUTE_UNITS = 800_000;
+export const DEFAULT_MICRO_LAMPORTS = 200_000;
+
+export type AccountSuffix =
+  | "Nft Mint"
+  | "Sol Escrow"
+  | "Old Sol Escrow"
+  | "New Sol Escrow"
+  | "Pool"
+  | "Old Pool"
+  | "New Pool"
+  | "Nft Escrow"
+  | "Whitelist"
+  | "Nft Receipt"
+  | "Buyer"
+  | "Seller"
+  | "Owner"
+  | "Nft Authority"
+  | "Margin Account"
+  | "Single Listing"
+  | "Bid State"
+  | "Bidder";
+
+export const parseStrFn = (str: string) => {
+  return Function(`'use strict'; return (${str})`)();
+};
+
+// based on https://docs.solana.com/developing/programming-model/accounts#:~:text=The%20current%20maximum%20size%20of,per%20account%20and%20per%20instruction.
+export const getRentSync = (dataSize: number) =>
+  Math.trunc(19.055441478439427 * (128 + dataSize) * 365.25);
+
+// todo temp while mplex adds to sdk
+export const findTokenRecordPDA = (mint: PublicKey, token: PublicKey) => {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("metadata"),
+      TMETA_PROG_ID.toBuffer(),
+      mint.toBuffer(),
+      Buffer.from("token_record"),
+      token.toBuffer(),
+    ],
+    TMETA_PROG_ID
+  );
+};
+
+// todo temp while mplex adds to sdk
+export const findRuleSetPDA = async (payer: PublicKey, name: string) => {
+  return await PublicKey.findProgramAddress(
+    [Buffer.from(PREFIX), payer.toBuffer(), Buffer.from(name)],
+    AUTH_PROG_ID
+  );
+};
