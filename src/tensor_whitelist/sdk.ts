@@ -36,6 +36,8 @@ import {
   TensorWhitelist as TensorWhitelist_latest,
 } from "./idl/tensor_whitelist";
 
+//a non-breaking update to migrate account space to exportable constants: https://explorer.solana.com/tx/5czMUGttDttcXwhTTGH8QzyTffwcVfeUAQbY2FzSh8WGxRFBQAmdrYeGBQxfEfS1bog4CfTvqPvXmvxdygQ5aJKE
+
 export const TensorWhitelistIDL_v0_1_0 = IDL_v0_1_0;
 export const TensorWhitelistIDL_v0_1_0_EffSlot = 0; //todo find slot
 

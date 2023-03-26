@@ -55,21 +55,29 @@ import { ParsedAccount } from "../types";
 
 // ---------------------------------------- Versioned IDLs for backwards compat when parsing.
 import {
+  IDL as IDL_v0_1_0,
+  TensorBid as TensorBid_v0_1_0,
+} from "./idl/tensor_bid_v0_1_0";
+
+import {
   IDL as IDL_latest,
   TensorBid as TensorBid_latest,
 } from "./idl/tensor_bid";
 
-// todo
+// initial deployment: https://explorer.solana.com/tx/2pLEU4Bvvd6xtRasDMQa9pRjhEsJKzqRoaQ4oDBG38AWadHUPudi8WjNACrB4neR5ap1GAxK6kvgcMuYYRvSVg11
+export const TensorBidIDL_v0_1_0 = IDL_v0_1_0;
+export const TensorBidIDL_v0_1_0_EffSlot = 183865849;
+
+// remove margin funding during bidding: https://solscan.io/tx/5A7XWvgicH1hDYAPtWhZd2SX7WCvUB2jjKDFqyRr6MwtfnGuTyfPkngTvQ7dFfcSTvjihLuBSETftPo1u5iixpp
 export const TensorBidIDL_latest = IDL_latest;
-export const TensorBidIDL_latest_EffSlot = 0; //todo
+export const TensorBidIDL_latest_EffSlot = 184669012;
 
-//a non-breaking update to migrate account space to exportable constants: https://explorer.solana.com/tx/5czMUGttDttcXwhTTGH8QzyTffwcVfeUAQbY2FzSh8WGxRFBQAmdrYeGBQxfEfS1bog4CfTvqPvXmvxdygQ5aJKE
-
-export type TensorBidIDL = TensorBid_latest;
+export type TensorBidIDL = TensorBid_v0_1_0 | TensorBid_latest;
 
 // Use this function to figure out which IDL to use based on the slot # of historical txs.
 export const triageBidIDL = (slot: number | bigint): TensorBidIDL | null => {
-  if (slot < TensorBidIDL_latest_EffSlot) return null;
+  if (slot < TensorBidIDL_v0_1_0_EffSlot) return null;
+  if (slot < TensorBidIDL_latest_EffSlot) return TensorBidIDL_v0_1_0;
   return TensorBidIDL_latest;
 };
 
@@ -174,15 +182,12 @@ export class TensorBidSDK {
     lamports,
     margin = null,
     expireIn = null,
-    fundMargin = true,
   }: {
     bidder: PublicKey;
     nftMint: PublicKey;
     lamports: BN;
     margin?: PublicKey | null;
     expireIn?: BN | null;
-    //if false, will setup a marginated bid w/o trying to top it up (aka unfunded)
-    fundMargin?: boolean;
   }) {
     const [bidState, bidStateBump] = findBidStatePda({
       mint: nftMint,
@@ -190,18 +195,16 @@ export class TensorBidSDK {
     });
     const [tswapPda, tswapPdaBump] = findTSwapPDA({});
 
-    const builder = this.program.methods
-      .bid(lamports, expireIn, fundMargin)
-      .accounts({
-        nftMint,
-        bidder,
-        bidState,
-        rent: SYSVAR_RENT_PUBKEY,
-        systemProgram: SystemProgram.programId,
-        tswap: tswapPda,
-        //optional, as a default pick another mutable account
-        marginAccount: margin ?? bidder,
-      });
+    const builder = this.program.methods.bid(lamports, expireIn).accounts({
+      nftMint,
+      bidder,
+      bidState,
+      rent: SYSVAR_RENT_PUBKEY,
+      systemProgram: SystemProgram.programId,
+      tswap: tswapPda,
+      //optional, as a default pick another mutable account
+      marginAccount: margin ?? bidder,
+    });
 
     return {
       builder,
@@ -239,8 +242,9 @@ export class TensorBidSDK {
     };
     nftSellerAcc: PublicKey;
     authData?: AuthorizationData | null;
-    compute?: number;
-    priorityMicroLamports?: number;
+    //passing in null or undefined means these ixs are NOT included
+    compute?: number | null;
+    priorityMicroLamports?: number | null;
     //optional % OF full royalty amount, so eg 50% of 10% royalty would be 5%
     optionalRoyaltyPct?: number | null;
     //optional taker broker account
@@ -346,15 +350,12 @@ export class TensorBidSDK {
         }))
       );
 
-    const [modifyComputeUnits, addPriorityFee] = getTotalComputeIxs(
-      compute,
-      priorityMicroLamports
-    );
+    const computeIxs = getTotalComputeIxs(compute, priorityMicroLamports);
 
     return {
       builder,
       tx: {
-        ixs: [modifyComputeUnits, addPriorityFee, await builder.instruction()],
+        ixs: [...computeIxs, await builder.instruction()],
         extraSigners: [],
       },
       bidState,

@@ -1,5 +1,5 @@
 export type TensorBid = {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "tensor_bid",
   "constants": [
     {
@@ -75,10 +75,6 @@ export type TensorBid = {
           "type": {
             "option": "u64"
           }
-        },
-        {
-          "name": "fundMargin",
-          "type": "bool"
         }
       ]
     },
@@ -571,7 +567,7 @@ export type TensorBid = {
 };
 
 export const IDL: TensorBid = {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "tensor_bid",
   "constants": [
     {
@@ -647,10 +643,6 @@ export const IDL: TensorBid = {
           "type": {
             "option": "u64"
           }
-        },
-        {
-          "name": "fundMargin",
-          "type": "bool"
         }
       ]
     },
