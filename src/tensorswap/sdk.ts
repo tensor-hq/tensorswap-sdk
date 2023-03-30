@@ -2800,9 +2800,11 @@ export const getTotalComputeIxs = (
   }
   //optionally include priority fee
   if (!isNullLike(priorityMicroLamports)) {
-    ComputeBudgetProgram.setComputeUnitPrice({
-      microLamports: priorityMicroLamports,
-    });
+    finalIxs.push(
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: priorityMicroLamports,
+      })
+    );
   }
   return finalIxs;
 };
