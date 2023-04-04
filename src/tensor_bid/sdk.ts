@@ -21,7 +21,6 @@ import {
 } from "@project-serum/anchor";
 import {
   AccountSuffix,
-  AUTH_PROG_ID,
   decodeAcct,
   DEFAULT_COMPUTE_UNITS,
   DEFAULT_MICRO_LAMPORTS,
@@ -31,9 +30,13 @@ import {
   getRentSync,
   hexCode,
   parseStrFn,
-  prepPnftAccounts,
-  TMETA_PROG_ID,
 } from "../common";
+import {
+  prepPnftAccounts,
+  AuthorizationData,
+  AUTH_PROG_ID,
+  TMETA_PROG_ID,
+} from "@tensor-hq/tensor-common";
 import BN from "bn.js";
 import { TBID_ADDR } from "./constants";
 import { findBidStatePda, findNftTempPDA } from "./pda";
@@ -44,7 +47,6 @@ import {
   TensorSwapSDK,
   TSWAP_COSIGNER,
 } from "../tensorswap";
-import { AuthorizationData } from "@metaplex-foundation/mpl-token-metadata";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
@@ -171,6 +173,7 @@ export class TensorBidSDK {
   // --------------------------------------- account methods
 
   decode(acct: AccountInfo<Buffer>): TaggedTensorBidPdaAnchor | null {
+    if (!acct.owner.equals(this.program.programId)) return null;
     return decodeAcct(acct, this.discMap);
   }
 
@@ -293,8 +296,7 @@ export class TensorBidSDK {
     ] = await Promise.all([
       prepPnftAccounts({
         connection: this.program.provider.connection,
-        nftMetadata: metaCreators?.metadata,
-        nftCreators: metaCreators?.creators,
+        metaCreators,
         nftMint,
         destAta: tempPda,
         authData,
@@ -302,8 +304,7 @@ export class TensorBidSDK {
       }),
       prepPnftAccounts({
         connection: this.program.provider.connection,
-        nftMetadata: metaCreators?.metadata,
-        nftCreators: metaCreators?.creators,
+        metaCreators,
         nftMint,
         destAta,
         authData,

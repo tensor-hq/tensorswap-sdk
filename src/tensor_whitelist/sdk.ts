@@ -164,6 +164,7 @@ export class TensorWhitelistSDK {
   // --------------------------------------- account methods
 
   decode(acct: AccountInfo<Buffer>): TaggedTensorWhitelistPdaAnchor | null {
+    if (!acct.owner.equals(this.program.programId)) return null;
     return decodeAcct(acct, this.discMap);
   }
 

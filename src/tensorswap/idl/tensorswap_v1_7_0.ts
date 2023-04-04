@@ -1,5 +1,5 @@
 export type Tensorswap = {
-  "version": "1.8.0",
+  "version": "1.7.0",
   "name": "tensorswap",
   "constants": [
     {
@@ -384,11 +384,6 @@ export type Tensorswap = {
               "isSigner": false
             }
           ]
-        },
-        {
-          "name": "authRules",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
@@ -405,10 +400,6 @@ export type Tensorswap = {
               "defined": "AuthorizationDataLocal"
             }
           }
-        },
-        {
-          "name": "rulesAccPresent",
-          "type": "bool"
         }
       ]
     },
@@ -521,11 +512,6 @@ export type Tensorswap = {
               "isSigner": false
             }
           ]
-        },
-        {
-          "name": "authRules",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
@@ -542,10 +528,6 @@ export type Tensorswap = {
               "defined": "AuthorizationDataLocal"
             }
           }
-        },
-        {
-          "name": "rulesAccPresent",
-          "type": "bool"
         }
       ]
     },
@@ -770,21 +752,6 @@ export type Tensorswap = {
               "isSigner": false
             }
           ]
-        },
-        {
-          "name": "authRules",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "marginAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "takerBroker",
-          "isMut": true,
-          "isSigner": false
         }
       ],
       "args": [
@@ -808,12 +775,6 @@ export type Tensorswap = {
             "option": {
               "defined": "AuthorizationDataLocal"
             }
-          }
-        },
-        {
-          "name": "optionalRoyaltyPct",
-          "type": {
-            "option": "u16"
           }
         }
       ]
@@ -959,21 +920,6 @@ export type Tensorswap = {
           "name": "tempEscrowTokenRecord",
           "isMut": true,
           "isSigner": false
-        },
-        {
-          "name": "authRules",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "marginAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "takerBroker",
-          "isMut": true,
-          "isSigner": false
         }
       ],
       "args": [
@@ -997,12 +943,6 @@ export type Tensorswap = {
             "option": {
               "defined": "AuthorizationDataLocal"
             }
-          }
-        },
-        {
-          "name": "optionalRoyaltyPct",
-          "type": {
-            "option": "u16"
           }
         }
       ]
@@ -1143,21 +1083,6 @@ export type Tensorswap = {
               "isSigner": false
             }
           ]
-        },
-        {
-          "name": "authRules",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "marginAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "takerBroker",
-          "isMut": true,
-          "isSigner": false
         }
       ],
       "args": [
@@ -1181,12 +1106,6 @@ export type Tensorswap = {
             "option": {
               "defined": "AuthorizationDataLocal"
             }
-          }
-        },
-        {
-          "name": "optionalRoyaltyPct",
-          "type": {
-            "option": "u16"
           }
         }
       ]
@@ -1795,16 +1714,6 @@ export type Tensorswap = {
               "isSigner": false
             }
           ]
-        },
-        {
-          "name": "authRules",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
         }
       ],
       "args": [
@@ -1819,10 +1728,6 @@ export type Tensorswap = {
               "defined": "AuthorizationDataLocal"
             }
           }
-        },
-        {
-          "name": "rulesAccPresent",
-          "type": "bool"
         }
       ]
     },
@@ -1922,16 +1827,6 @@ export type Tensorswap = {
               "isSigner": false
             }
           ]
-        },
-        {
-          "name": "authRules",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
         }
       ],
       "args": [
@@ -1942,10 +1837,6 @@ export type Tensorswap = {
               "defined": "AuthorizationDataLocal"
             }
           }
-        },
-        {
-          "name": "rulesAccPresent",
-          "type": "bool"
         }
       ]
     },
@@ -2055,16 +1946,6 @@ export type Tensorswap = {
               "isSigner": false
             }
           ]
-        },
-        {
-          "name": "authRules",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "takerBroker",
-          "isMut": true,
-          "isSigner": false
         }
       ],
       "args": [
@@ -2082,12 +1963,6 @@ export type Tensorswap = {
             "option": {
               "defined": "AuthorizationDataLocal"
             }
-          }
-        },
-        {
-          "name": "optionalRoyaltyPct",
-          "type": {
-            "option": "u16"
           }
         }
       ]
@@ -3060,7 +2935,7 @@ export type Tensorswap = {
 };
 
 export const IDL: Tensorswap = {
-  "version": "1.8.0",
+  "version": "1.7.0",
   "name": "tensorswap",
   "constants": [
     {
@@ -3445,11 +3320,6 @@ export const IDL: Tensorswap = {
               "isSigner": false
             }
           ]
-        },
-        {
-          "name": "authRules",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
@@ -3466,10 +3336,6 @@ export const IDL: Tensorswap = {
               "defined": "AuthorizationDataLocal"
             }
           }
-        },
-        {
-          "name": "rulesAccPresent",
-          "type": "bool"
         }
       ]
     },
@@ -3582,11 +3448,6 @@ export const IDL: Tensorswap = {
               "isSigner": false
             }
           ]
-        },
-        {
-          "name": "authRules",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
@@ -3603,10 +3464,6 @@ export const IDL: Tensorswap = {
               "defined": "AuthorizationDataLocal"
             }
           }
-        },
-        {
-          "name": "rulesAccPresent",
-          "type": "bool"
         }
       ]
     },
@@ -3831,21 +3688,6 @@ export const IDL: Tensorswap = {
               "isSigner": false
             }
           ]
-        },
-        {
-          "name": "authRules",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "marginAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "takerBroker",
-          "isMut": true,
-          "isSigner": false
         }
       ],
       "args": [
@@ -3869,12 +3711,6 @@ export const IDL: Tensorswap = {
             "option": {
               "defined": "AuthorizationDataLocal"
             }
-          }
-        },
-        {
-          "name": "optionalRoyaltyPct",
-          "type": {
-            "option": "u16"
           }
         }
       ]
@@ -4020,21 +3856,6 @@ export const IDL: Tensorswap = {
           "name": "tempEscrowTokenRecord",
           "isMut": true,
           "isSigner": false
-        },
-        {
-          "name": "authRules",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "marginAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "takerBroker",
-          "isMut": true,
-          "isSigner": false
         }
       ],
       "args": [
@@ -4058,12 +3879,6 @@ export const IDL: Tensorswap = {
             "option": {
               "defined": "AuthorizationDataLocal"
             }
-          }
-        },
-        {
-          "name": "optionalRoyaltyPct",
-          "type": {
-            "option": "u16"
           }
         }
       ]
@@ -4204,21 +4019,6 @@ export const IDL: Tensorswap = {
               "isSigner": false
             }
           ]
-        },
-        {
-          "name": "authRules",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "marginAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "takerBroker",
-          "isMut": true,
-          "isSigner": false
         }
       ],
       "args": [
@@ -4242,12 +4042,6 @@ export const IDL: Tensorswap = {
             "option": {
               "defined": "AuthorizationDataLocal"
             }
-          }
-        },
-        {
-          "name": "optionalRoyaltyPct",
-          "type": {
-            "option": "u16"
           }
         }
       ]
@@ -4856,16 +4650,6 @@ export const IDL: Tensorswap = {
               "isSigner": false
             }
           ]
-        },
-        {
-          "name": "authRules",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
         }
       ],
       "args": [
@@ -4880,10 +4664,6 @@ export const IDL: Tensorswap = {
               "defined": "AuthorizationDataLocal"
             }
           }
-        },
-        {
-          "name": "rulesAccPresent",
-          "type": "bool"
         }
       ]
     },
@@ -4983,16 +4763,6 @@ export const IDL: Tensorswap = {
               "isSigner": false
             }
           ]
-        },
-        {
-          "name": "authRules",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
         }
       ],
       "args": [
@@ -5003,10 +4773,6 @@ export const IDL: Tensorswap = {
               "defined": "AuthorizationDataLocal"
             }
           }
-        },
-        {
-          "name": "rulesAccPresent",
-          "type": "bool"
         }
       ]
     },
@@ -5116,16 +4882,6 @@ export const IDL: Tensorswap = {
               "isSigner": false
             }
           ]
-        },
-        {
-          "name": "authRules",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "takerBroker",
-          "isMut": true,
-          "isSigner": false
         }
       ],
       "args": [
@@ -5143,12 +4899,6 @@ export const IDL: Tensorswap = {
             "option": {
               "defined": "AuthorizationDataLocal"
             }
-          }
-        },
-        {
-          "name": "optionalRoyaltyPct",
-          "type": {
-            "option": "u16"
           }
         }
       ]

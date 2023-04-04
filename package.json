@@ -1,14 +1,17 @@
 {
-  "name": "@tensor-hq/tensorswap-sdk",
-  "version": "1.7.9",
-  "description": "Anchor/JS SDK for interacting with the tensorswap Solana program.",
+  "name": "@tensor-hq/tensorswap-ts",
+  "version": "1.8.2",
+  "description": "Anchor/JS SDK for interacting with TensorSwap, TensorWhitelist and TensorBid.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "/dist"
   ],
-  "repository": "https://github.com/tensor-hq/tensorswap-sdk.git",
+  "repository": "https://github.com/tensor-hq/tensorswap.git",
   "license": "MIT",
+  "publishConfig": {
+    "@tensor-hq:registry": "https://npm.pkg.github.com"
+  },
   "scripts": {
     "build": "anchor build && bash scripts/cp_idl.sh",
     "build:test": "anchor build -- --features testing && bash scripts/cp_idl.sh",
@@ -16,19 +19,16 @@
     "fast-test": "anchor test --skip-build -- --features testing",
     "push": "git push --atomic",
     "pubpush": "rm -rf ./dist && yarn tsc && yarn npm publish && yarn push",
-    "npmpublish": "rm -rf ./dist && yarn tsc && npm publish --access public",
     "upgrade:tswap": "yarn up @tensor/tensorswap-ts",
     "upgrade:anchor": "yarn up @project-serum/anchor"
   },
   "dependencies": {
-    "@metaplex-foundation/js": "^0.18.0",
-    "@metaplex-foundation/mpl-token-auth-rules": "^1.2.0",
-    "@metaplex-foundation/mpl-token-metadata": "^2.8.3",
     "@msgpack/msgpack": "^2.8.0",
     "@project-serum/anchor": "^0.26.0",
     "@saberhq/solana-contrib": "^1.14.11",
     "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.73.0",
+    "@tensor-hq/tensor-common": "^0.9.6",
     "@types/bn.js": "^5.1.0",
     "big.js": "^6.2.1",
     "bn.js": "^5.2.0",
@@ -38,6 +38,9 @@
   "devDependencies": {
     "@ledgerhq/hw-app-solana": "^6.27.2",
     "@ledgerhq/hw-transport-node-hid": "^6.27.2",
+    "@metaplex-foundation/js": "^0.18.3",
+    "@metaplex-foundation/mpl-token-auth-rules": "^1.2.0",
+    "@metaplex-foundation/mpl-token-metadata": "^2.9.1",
     "@types/big.js": "^6.1.5",
     "@types/chai": "^4.3.0",
     "@types/chai-as-promised": "^7.1.4",
