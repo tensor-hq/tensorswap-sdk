@@ -16,6 +16,7 @@
     "fast-test": "anchor test --skip-build -- --features testing",
     "push": "git push --atomic",
     "pubpush": "rm -rf ./dist && yarn tsc && yarn npm publish && yarn push",
+    "npmpublish": "rm -rf ./dist && yarn tsc && npm publish --access public",
     "upgrade:tswap": "yarn up @tensor/tensorswap-ts",
     "upgrade:anchor": "yarn up @project-serum/anchor"
   },
