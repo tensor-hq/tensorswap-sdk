@@ -163,9 +163,9 @@ export const TensorswapIDL_v1_6_0_EffSlot = 182972833;
 export const TensorswapIDL_v1_7_0 = IDL_v1_7_0;
 export const TensorswapIDL_v1_7_0_EffSlot = 183869296;
 
-// add optional royalties + remove optional accs + add broker + add payer for list/delist - todo
+// add optional royalties + remove optional accs + add broker + add payer for list/delist - https://solscan.io/tx/JtcwNt69DQnJt7622LJwYFBeJbaBLwuabnWLes9YdncxPR3nsSXpH1GqLcZQKVmWQhCqrUKSueirogrBVrTK811
 export const TensorswapIDL_latest = IDL_latest;
-export const TensorswapIDL_latest_EffSlot = 0; //todo
+export const TensorswapIDL_latest_EffSlot = 186744215;
 
 export type TensorswapIDL =
   | Tensorswap_v0_1_32
