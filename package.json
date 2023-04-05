@@ -1,6 +1,6 @@
 {
   "name": "@tensor-hq/tensorswap-sdk",
-  "version": "1.8.2",
+  "version": "1.8.3",
   "description": "Anchor/JS SDK for interacting with TensorSwap, TensorWhitelist and TensorBid.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,15 +9,17 @@
   ],
   "repository": "https://github.com/tensor-hq/tensorswap-sdk.git",
   "license": "MIT",
+  "publishConfig": {
+    "@tensor-hq:registry": "https://registry.npmjs.org"
+  },
   "scripts": {
     "build": "anchor build && bash scripts/cp_idl.sh",
     "build:test": "anchor build -- --features testing && bash scripts/cp_idl.sh",
     "test": "bash scripts/full_test.sh",
     "fast-test": "anchor test --skip-build -- --features testing",
     "push": "git push --atomic",
-    "pubpush": "rm -rf ./dist && yarn tsc && yarn npm publish && yarn push",
     "npmpublish": "rm -rf ./dist && yarn tsc && npm publish --access public",
-    "upgrade:tswap": "yarn up @tensor/tensorswap-ts",
+    "upgrade:tswap": "yarn up @tensor/tensorswap-sdk",
     "upgrade:anchor": "yarn up @project-serum/anchor"
   },
   "dependencies": {
