@@ -28,6 +28,9 @@ export type ComputePriceArgs = {
   // since on-chain and off-chain rounding is not exactly the same.
   // 0.01 = 1%.
   slippage?: number;
+
+  //indicate if the pool is marginated or not
+  marginated: boolean;
 };
 
 // This is what should be displayed to the user ((!) no slippage, since slippage is only used for rounding errors).
@@ -73,10 +76,12 @@ const computeCurrentPrice = ({
   extraNFTsSelected,
   // Default small tolerance for exponential curves.
   slippage = config.curveType === CurveType.Linear ? 0 : EXPO_SLIPPAGE,
+  marginated,
 }: ComputePriceArgs): Big | null => {
   // Cannot sell anymore into capped pool.
   if (
     takerSide === TakerSide.Sell &&
+    marginated &&
     maxTakerSellCount != 0 &&
     statsTakerSellCount - statsTakerBuyCount >= maxTakerSellCount
   ) {
@@ -242,7 +247,8 @@ export const computeMakerAmountCount = ({
   /// Clips allowed count by taking into account maxTakerSellCount cap.
   const adjustByMaxTakerCount = (allowedCount: number) => {
     if (takerSide !== TakerSide.Sell) return allowedCount;
-    if (priceArgs.maxTakerSellCount === 0) return allowedCount;
+    if (!priceArgs.marginated || priceArgs.maxTakerSellCount === 0)
+      return allowedCount;
 
     // Negative should be fine. Eg taker sold 3, bought 5, adjTakerSellCount for pool is -2
     // if hook will never trigger, and subtracting a negative gives a positive (capped at allowedCount)
