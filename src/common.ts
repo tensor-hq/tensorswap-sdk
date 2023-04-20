@@ -151,7 +151,8 @@ export const HOURS = 60 * MINUTES;
 export const DAYS = 24 * HOURS;
 
 // pNFTs very expensive.
-export const DEFAULT_COMPUTE_UNITS = 1_200_000;
+export const DEFAULT_NFT_TRANSFER_COMPUTE_UNITS = 800_000;
+export const DEFAULT_COMPUTE_UNITS = 300_000;
 export const DEFAULT_MICRO_LAMPORTS = 200_000;
 
 export type AccountSuffix =

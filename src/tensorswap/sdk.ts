@@ -37,8 +37,8 @@ import { v4 } from "uuid";
 import {
   AccountSuffix,
   decodeAcct,
-  DEFAULT_COMPUTE_UNITS,
   DEFAULT_MICRO_LAMPORTS,
+  DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
   DiscMap,
   genDiscToDecoderMap,
   getAccountRent,
@@ -883,7 +883,7 @@ export class TensorSwapSDK {
     config,
     metaCreators,
     authData = null,
-    compute = DEFAULT_COMPUTE_UNITS,
+    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
   }: {
     whitelist: PublicKey;
@@ -1048,7 +1048,7 @@ export class TensorSwapSDK {
     config,
     metaCreators,
     authData = null,
-    compute = DEFAULT_COMPUTE_UNITS,
+    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
   }: {
     whitelist: PublicKey;
@@ -1263,7 +1263,7 @@ export class TensorSwapSDK {
     maxPrice,
     metaCreators,
     authData = null,
-    compute = DEFAULT_COMPUTE_UNITS,
+    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
     marginNr = null,
     optionalRoyaltyPct = null,
@@ -1432,7 +1432,7 @@ export class TensorSwapSDK {
     isCosigned = false,
     cosigner = TSWAP_COSIGNER,
     authData = null,
-    compute = DEFAULT_COMPUTE_UNITS,
+    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
     optionalRoyaltyPct = null,
     takerBroker = null,
@@ -2018,7 +2018,7 @@ export class TensorSwapSDK {
     marginNr,
     cosigner = TSWAP_COSIGNER,
     authData = null,
-    compute = DEFAULT_COMPUTE_UNITS,
+    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
   }: {
     whitelist: PublicKey;
@@ -2160,7 +2160,7 @@ export class TensorSwapSDK {
     owner,
     metaCreators,
     authData = null,
-    compute = DEFAULT_COMPUTE_UNITS,
+    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
     price,
     payer = null,
@@ -2263,7 +2263,7 @@ export class TensorSwapSDK {
     owner,
     metaCreators,
     authData = null,
-    compute = DEFAULT_COMPUTE_UNITS,
+    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
     payer = null,
   }: {
@@ -2365,7 +2365,7 @@ export class TensorSwapSDK {
     maxPrice,
     metaCreators,
     authData = null,
-    compute = DEFAULT_COMPUTE_UNITS,
+    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
     optionalRoyaltyPct = null,
     takerBroker = null,

@@ -22,8 +22,8 @@ import {
 import {
   AccountSuffix,
   decodeAcct,
-  DEFAULT_COMPUTE_UNITS,
   DEFAULT_MICRO_LAMPORTS,
+  DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
   DiscMap,
   genDiscToDecoderMap,
   getAccountRent,
@@ -228,7 +228,7 @@ export class TensorBidSDK {
     metaCreators,
     nftSellerAcc,
     authData,
-    compute = DEFAULT_COMPUTE_UNITS,
+    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
     optionalRoyaltyPct = null,
     takerBroker = null,
