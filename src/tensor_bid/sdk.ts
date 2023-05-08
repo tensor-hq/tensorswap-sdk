@@ -525,9 +525,10 @@ export class TensorBidSDK {
 
   getFeeAmount(ix: ParsedTBidIx): BN | null {
     switch (ix.ix.name) {
-      case "takeBid":
+      case "takeBid": {
         const event = ix.events[0].data;
         return event.tswapFee.add(event.creatorsFee);
+      }
       case "bid":
       case "cancelBid":
       case "closeExpiredBid":

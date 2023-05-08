@@ -2652,6 +2652,7 @@ export class TensorSwapSDK {
       case "depositMarginAccount":
       case "withdrawMarginAccount":
       case "withdrawMarginAccountCpi":
+      case "withdrawMarginAccountCpiTcomp":
       case "attachPoolToMargin":
       case "detachPoolFromMargin":
       case "takeSnipe":
@@ -2712,6 +2713,7 @@ export class TensorSwapSDK {
       case "depositMarginAccount":
       case "withdrawMarginAccount":
       case "withdrawMarginAccountCpi":
+      case "withdrawMarginAccountCpiTcomp":
       case "withdrawTswapFees":
       case "detachPoolFromMargin":
         return (ix.ix.data as WithdrawDepositSolData).lamports;
@@ -2767,6 +2769,7 @@ export class TensorSwapSDK {
       case "depositMarginAccount":
       case "withdrawMarginAccount":
       case "withdrawMarginAccountCpi":
+      case "withdrawMarginAccountCpiTcomp":
       case "attachPoolToMargin":
       case "detachPoolFromMargin":
       case "setPoolFreeze":

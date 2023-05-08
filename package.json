@@ -1,6 +1,6 @@
 {
   "name": "@tensor-hq/tensorswap-sdk",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "description": "Anchor/JS SDK for interacting with TensorSwap, TensorWhitelist and TensorBid.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -33,7 +33,8 @@
     "big.js": "^6.2.1",
     "bn.js": "^5.2.0",
     "keccak256": "^1.0.6",
-    "merkletreejs": "^0.2.32"
+    "merkletreejs": "^0.2.32",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@ledgerhq/hw-app-solana": "^6.27.2",
@@ -58,7 +59,6 @@
     "ts-mocha": "^10.0.0",
     "ts-node": "^10.9.1",
     "typescript": "^4.3.5",
-    "uuid": "^8.3.2",
     "yargs": "^17.5.1"
   },
   "packageManager": "yarn@3.3.1"
