@@ -120,7 +120,7 @@ const wlAddr = findWhitelistPDA({uuid: "..."})[0];
 // Step 2: Send sell tx.
 {
   const {
-
+    tx: { ixs },
   } = await swapSdk.sellNft({
     type: "token", // or 'trade' for a trade pool
     whitelist: wlAddr,
