@@ -27,6 +27,8 @@ yarn tsc
 
 ## Example Code
 
+Working examples can be found under `examples/`.
+
 ```ts
 const { AnchorProvider, Wallet } = require("@project-serum/anchor");
 const { Connection, Keypair, PublicKey } = require("@solana/web3.js");

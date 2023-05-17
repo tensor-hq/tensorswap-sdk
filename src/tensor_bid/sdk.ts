@@ -52,8 +52,7 @@ import {
   getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { InstructionDisplay } from "@project-serum/anchor/dist/cjs/coder/borsh/instruction";
-import { ParsedAccount } from "../types";
+import { ParsedAccount, InstructionDisplay } from "../types";
 
 // ---------------------------------------- Versioned IDLs for backwards compat when parsing.
 import {

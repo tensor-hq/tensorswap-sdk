@@ -8,7 +8,6 @@ import {
   Instruction,
   Program,
 } from "@project-serum/anchor";
-import { InstructionDisplay } from "@project-serum/anchor/dist/cjs/coder/borsh/instruction";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
@@ -48,7 +47,13 @@ import {
   parseStrFn,
 } from "../common";
 import { findMintProofPDA } from "../tensor_whitelist";
-import { CurveType, ParsedAccount, PoolConfig, PoolType } from "../types";
+import {
+  CurveType,
+  InstructionDisplay,
+  ParsedAccount,
+  PoolConfig,
+  PoolType,
+} from "../types";
 import { TENSORSWAP_ADDR, TSWAP_COSIGNER, TSWAP_OWNER } from "./constants";
 import {
   findMarginPDA,

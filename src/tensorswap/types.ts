@@ -1,8 +1,7 @@
 import { BN, Event, Instruction } from "@project-serum/anchor";
-import { InstructionDisplay } from "@project-serum/anchor/dist/cjs/coder/borsh/instruction";
 import { PublicKey } from "@solana/web3.js";
 import Big from "big.js";
-import { CurveType, PoolConfig, PoolType } from "../types";
+import { CurveType, PoolConfig, PoolType, InstructionDisplay } from "../types";
 import { IDL, Tensorswap } from "./idl/tensorswap";
 import {
   IDL as IDL_v0_1_32,
