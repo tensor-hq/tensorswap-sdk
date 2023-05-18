@@ -29,7 +29,7 @@ import {
   getAccountRent,
   getRentSync,
   hexCode,
-  parseStrFn,
+  evalMathExpr,
 } from "../common";
 import {
   prepPnftAccounts,
@@ -93,7 +93,7 @@ export const TBID_FEE_BPS: number = +IDL_latest.constants.find(
 export const MAX_EXPIRY_SEC: number = +IDL_latest.constants.find(
   (c) => c.name === "MAX_EXPIRY_SEC"
 )!.value;
-export const BID_STATE_SIZE: number = parseStrFn(
+export const BID_STATE_SIZE: number = evalMathExpr(
   IDL_latest.constants.find((c) => c.name === "BID_STATE_SIZE")!.value
 );
 

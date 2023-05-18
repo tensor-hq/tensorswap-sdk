@@ -44,7 +44,7 @@ import {
   getRentSync,
   hexCode,
   isNullLike,
-  parseStrFn,
+  evalMathExpr,
 } from "../common";
 import { findMintProofPDA } from "../tensor_whitelist";
 import {
@@ -219,22 +219,22 @@ export const TAKER_BROKER_PCT: number = +IDL_latest.constants.find(
   (c) => c.name === "TAKER_BROKER_PCT"
 )!.value;
 export const SNIPE_MIN_FEE: number = 0.01 * LAMPORTS_PER_SOL;
-export const TSWAP_SIZE: number = parseStrFn(
+export const TSWAP_SIZE: number = evalMathExpr(
   IDL_latest.constants.find((c) => c.name === "TSWAP_SIZE")!.value
 );
-export const POOL_SIZE: number = parseStrFn(
+export const POOL_SIZE: number = evalMathExpr(
   IDL_latest.constants.find((c) => c.name === "POOL_SIZE")!.value
 );
-export const MARGIN_SIZE: number = parseStrFn(
+export const MARGIN_SIZE: number = evalMathExpr(
   IDL_latest.constants.find((c) => c.name === "MARGIN_SIZE")!.value
 );
-export const SINGLE_LISTING_SIZE: number = parseStrFn(
+export const SINGLE_LISTING_SIZE: number = evalMathExpr(
   IDL_latest.constants.find((c) => c.name === "SINGLE_LISTING_SIZE")!.value
 );
-export const DEPOSIT_RECEIPT_SIZE: number = parseStrFn(
+export const DEPOSIT_RECEIPT_SIZE: number = evalMathExpr(
   IDL_latest.constants.find((c) => c.name === "DEPOSIT_RECEIPT_SIZE")!.value
 );
-export const NFT_AUTHORITY_SIZE: number = parseStrFn(
+export const NFT_AUTHORITY_SIZE: number = evalMathExpr(
   IDL_latest.constants.find((c) => c.name === "NFT_AUTHORITY_SIZE")!.value
 );
 

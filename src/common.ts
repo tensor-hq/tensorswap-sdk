@@ -1,5 +1,6 @@
 import { AccountClient, BN, Idl, Program, utils } from "@project-serum/anchor";
 import { AccountInfo, Connection, PublicKey } from "@solana/web3.js";
+import Mexp from "math-expression-evaluator";
 
 export const getAccountRent = (
   conn: Connection,
@@ -174,8 +175,9 @@ export type AccountSuffix =
   | "Bid State"
   | "Bidder";
 
-export const parseStrFn = (str: string) => {
-  return Function(`'use strict'; return (${str})`)();
+export const evalMathExpr = (str: string) => {
+  const mexp = new Mexp();
+  return mexp.eval(str, [], {});
 };
 
 // based on https://docs.solana.com/developing/programming-model/accounts#:~:text=The%20current%20maximum%20size%20of,per%20account%20and%20per%20instruction.
