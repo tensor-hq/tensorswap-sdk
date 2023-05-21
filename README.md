@@ -10,9 +10,9 @@
 
 ```
 # yarn
-yarn add @tensor-hq/tensorswap-sdk
+yarn add @tensor-oss/tensorswap-sdk
 # npm
-npm install @tensor-hq/tensorswap-sdk
+npm install @tensor-oss/tensorswap-sdk
 ```
 
 ### From source
@@ -39,7 +39,7 @@ const {
   TakerSide,
   castPoolConfigAnchor,
   findWhitelistPDA,
-} = require("@tensor-hq/tensorswap-sdk");
+} = require("@tensor-oss/tensorswap-sdk");
 
 const conn = new Connection("https://api.mainnet-beta.solana.com");
 const provider = new AnchorProvider(conn, new Wallet(Keypair.generate()));

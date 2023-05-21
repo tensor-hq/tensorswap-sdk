@@ -1,5 +1,5 @@
 {
-  "name": "@tensor-hq/tensorswap-sdk",
+  "name": "@tensor-oss/tensorswap-sdk",
   "version": "1.9.4",
   "description": "Anchor/JS SDK for interacting with TensorSwap, TensorWhitelist and TensorBid.",
   "main": "dist/index.js",
