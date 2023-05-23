@@ -21,7 +21,7 @@ import {
   getAccountRent,
   getRentSync,
   hexCode,
-  parseStrFn,
+  evalMathExpr,
   removeNullBytes,
 } from "../common";
 
@@ -62,13 +62,13 @@ export const triageWhitelistIDL = (
 
 // --------------------------------------- constants
 
-export const WHITELIST_SIZE: number = parseStrFn(
+export const WHITELIST_SIZE: number = evalMathExpr(
   IDL_latest.constants.find((c) => c.name === "WHITELIST_SIZE")!.value
 );
-export const AUTHORITY_SIZE: number = parseStrFn(
+export const AUTHORITY_SIZE: number = evalMathExpr(
   IDL_latest.constants.find((c) => c.name === "AUTHORITY_SIZE")!.value
 );
-export const MINT_PROOF_SIZE: number = parseStrFn(
+export const MINT_PROOF_SIZE: number = evalMathExpr(
   IDL_latest.constants.find((c) => c.name === "MINT_PROOF_SIZE")!.value
 );
 

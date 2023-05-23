@@ -36,3 +36,17 @@ export type ParsedAccount = {
   isSigner: boolean;
   isWritable: boolean;
 };
+
+export type InstructionDisplay = {
+  args: {
+    name: string;
+    type: string;
+    data: string;
+  }[];
+  accounts: {
+    name?: string;
+    pubkey: PublicKey;
+    isSigner: boolean;
+    isWritable: boolean;
+  }[];
+};

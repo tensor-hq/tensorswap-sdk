@@ -10,9 +10,9 @@
 
 ```
 # yarn
-yarn add @tensor-hq/tensorswap-sdk
+yarn add @tensor-oss/tensorswap-sdk
 # npm
-npm install @tensor-hq/tensorswap-sdk
+npm install @tensor-oss/tensorswap-sdk
 ```
 
 ### From source
@@ -27,6 +27,8 @@ yarn tsc
 
 ## Example Code
 
+Working examples can be found under `examples/`.
+
 ```ts
 const { AnchorProvider, Wallet } = require("@project-serum/anchor");
 const { Connection, Keypair, PublicKey } = require("@solana/web3.js");
@@ -37,7 +39,7 @@ const {
   TakerSide,
   castPoolConfigAnchor,
   findWhitelistPDA,
-} = require("@tensor-hq/tensorswap-sdk");
+} = require("@tensor-oss/tensorswap-sdk");
 
 const conn = new Connection("https://api.mainnet-beta.solana.com");
 const provider = new AnchorProvider(conn, new Wallet(Keypair.generate()));

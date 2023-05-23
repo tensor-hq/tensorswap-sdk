@@ -29,7 +29,7 @@ import {
   getAccountRent,
   getRentSync,
   hexCode,
-  parseStrFn,
+  evalMathExpr,
 } from "../common";
 import {
   prepPnftAccounts,
@@ -52,8 +52,7 @@ import {
   getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { InstructionDisplay } from "@project-serum/anchor/dist/cjs/coder/borsh/instruction";
-import { ParsedAccount } from "../types";
+import { ParsedAccount, InstructionDisplay } from "../types";
 
 // ---------------------------------------- Versioned IDLs for backwards compat when parsing.
 import {
@@ -94,7 +93,7 @@ export const TBID_FEE_BPS: number = +IDL_latest.constants.find(
 export const MAX_EXPIRY_SEC: number = +IDL_latest.constants.find(
   (c) => c.name === "MAX_EXPIRY_SEC"
 )!.value;
-export const BID_STATE_SIZE: number = parseStrFn(
+export const BID_STATE_SIZE: number = evalMathExpr(
   IDL_latest.constants.find((c) => c.name === "BID_STATE_SIZE")!.value
 );
 

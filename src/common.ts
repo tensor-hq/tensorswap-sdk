@@ -1,6 +1,6 @@
 import { AccountClient, BN, Idl, Program, utils } from "@project-serum/anchor";
-import { AllAccountsMap } from "@project-serum/anchor/dist/cjs/program/namespace/types";
 import { AccountInfo, Connection, PublicKey } from "@solana/web3.js";
+import Mexp from "math-expression-evaluator";
 
 export const getAccountRent = (
   conn: Connection,
@@ -28,7 +28,7 @@ export const removeNullBytes = (str: string) => {
 type Decoder = (buffer: Buffer) => any;
 export type DiscMap<T extends Idl> = Record<
   string,
-  { decoder: Decoder; name: keyof AllAccountsMap<T> }
+  { decoder: Decoder; name: NonNullable<T["accounts"]>[number]["name"] }
 >;
 
 export const genDiscToDecoderMap = <T extends Idl>(
@@ -36,7 +36,7 @@ export const genDiscToDecoderMap = <T extends Idl>(
 ): DiscMap<T> => {
   return Object.fromEntries(
     program.idl.accounts?.map((acc) => {
-      const name = acc.name as keyof AllAccountsMap<T>;
+      const name = acc.name as NonNullable<T["accounts"]>[number]["name"];
       const capName = name.at(0)!.toUpperCase() + name.slice(1);
 
       return [
@@ -175,8 +175,9 @@ export type AccountSuffix =
   | "Bid State"
   | "Bidder";
 
-export const parseStrFn = (str: string) => {
-  return Function(`'use strict'; return (${str})`)();
+export const evalMathExpr = (str: string) => {
+  const mexp = new Mexp();
+  return mexp.eval(str, [], {});
 };
 
 // based on https://docs.solana.com/developing/programming-model/accounts#:~:text=The%20current%20maximum%20size%20of,per%20account%20and%20per%20instruction.
