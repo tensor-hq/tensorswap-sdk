@@ -87,8 +87,8 @@ export const triageBidIDL = (slot: number | bigint): TensorBidIDL | null => {
 export const CURRENT_TBID_VERSION: number = +IDL_latest.constants.find(
   (c) => c.name === "CURRENT_TBID_VERSION"
 )!.value;
-export const TBID_FEE_BPS: number = +IDL_latest.constants.find(
-  (c) => c.name === "TBID_FEE_BPS"
+export const TBID_TAKER_FEE_BPS: number = +IDL_latest.constants.find(
+  (c) => c.name === "TBID_TAKER_FEE_BPS"
 )!.value;
 export const MAX_EXPIRY_SEC: number = +IDL_latest.constants.find(
   (c) => c.name === "MAX_EXPIRY_SEC"

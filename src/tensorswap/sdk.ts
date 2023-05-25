@@ -206,8 +206,11 @@ export const triageIDL = (slot: number | bigint): TensorswapIDL | null => {
 
 // --------------------------------------- constants
 
-export const STANDARD_FEE_BPS: number = +IDL_latest.constants.find(
-  (c) => c.name === "STANDARD_FEE_BPS"
+export const TSWAP_TAKER_FEE_BPS: number = +IDL_latest.constants.find(
+  (c) => c.name === "TSWAP_TAKER_FEE_BPS"
+)!.value;
+export const MAKER_REBATE_BPS: number = +IDL_latest.constants.find(
+  (c) => c.name === "MAKER_REBATE_BPS"
 )!.value;
 export const SNIPE_FEE_BPS: number = +IDL_latest.constants.find(
   (c) => c.name === "SNIPE_FEE_BPS"

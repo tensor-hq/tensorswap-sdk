@@ -33,9 +33,14 @@ export type Tensorswap = {
       "value": "1"
     },
     {
-      "name": "STANDARD_FEE_BPS",
+      "name": "TSWAP_TAKER_FEE_BPS",
       "type": "u16",
-      "value": "100"
+      "value": "140"
+    },
+    {
+      "name": "MAKER_REBATE_BPS",
+      "type": "u16",
+      "value": "40"
     },
     {
       "name": "SNIPE_FEE_BPS",
@@ -3138,9 +3143,14 @@ export const IDL: Tensorswap = {
       "value": "1"
     },
     {
-      "name": "STANDARD_FEE_BPS",
+      "name": "TSWAP_TAKER_FEE_BPS",
       "type": "u16",
-      "value": "100"
+      "value": "140"
+    },
+    {
+      "name": "MAKER_REBATE_BPS",
+      "type": "u16",
+      "value": "40"
     },
     {
       "name": "SNIPE_FEE_BPS",
