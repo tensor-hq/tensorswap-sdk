@@ -15,6 +15,7 @@ import {
   getAssociatedTokenAddress,
   getMinimumBalanceForRentExemptAccount,
   TOKEN_PROGRAM_ID,
+  Account,
 } from "@solana/spl-token";
 import {
   AccountInfo,
@@ -1410,7 +1411,8 @@ export class TensorSwapSDK {
       tx: {
         ixs: [
           ...computeIxs,
-          ...(await this.clearDelegate(nftBuyerAcc, buyer)),
+          // TODO: not including as it would incur an extra RPC call on every buy tx (slower). Let's see if needed.
+          // ...(await this.clearDelegate(nftBuyerAcc, buyer)),
           await builder.instruction(),
         ],
         extraSigners: [],
@@ -2488,7 +2490,8 @@ export class TensorSwapSDK {
       tx: {
         ixs: [
           ...computeIxs,
-          ...(await this.clearDelegate(nftBuyerAcc, buyer)),
+          // TODO: not including as it would incur an extra RPC call on every buy tx (slower). Let's see if needed.
+          // ...(await this.clearDelegate(nftBuyerAcc, buyer)),
           await builder.instruction(),
         ],
         extraSigners: [],
@@ -2547,11 +2550,12 @@ export class TensorSwapSDK {
     nftDest: PublicKey,
     owner: PublicKey
   ): Promise<TransactionInstruction[]> {
-    const destAtaInfo = await getAccount(
-      this.program.provider.connection,
-      nftDest
-    );
-    if (!!destAtaInfo.delegate) {
+    let destAtaInfo: Account | null = null;
+    // putting inside a try statement because a token account might not exist onchain and this would lead to errors
+    try {
+      destAtaInfo = await getAccount(this.program.provider.connection, nftDest);
+    } catch {}
+    if (!!destAtaInfo?.delegate) {
       return [createRevokeInstruction(nftDest, owner)];
     }
     return [];
