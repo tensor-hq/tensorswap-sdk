@@ -10,6 +10,8 @@ import {
 } from "@project-serum/anchor";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  createRevokeInstruction,
+  getAccount,
   getAssociatedTokenAddress,
   getMinimumBalanceForRentExemptAccount,
   TOKEN_PROGRAM_ID,
@@ -23,11 +25,12 @@ import {
   SystemProgram,
   SYSVAR_INSTRUCTIONS_PUBKEY,
   SYSVAR_RENT_PUBKEY,
+  TransactionInstruction,
   TransactionResponse,
 } from "@solana/web3.js";
 import {
-  AuthorizationData,
   AUTH_PROG_ID,
+  AuthorizationData,
   prepPnftAccounts,
   TMETA_PROG_ID,
 } from "@tensor-hq/tensor-common";
@@ -39,12 +42,12 @@ import {
   DEFAULT_MICRO_LAMPORTS,
   DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
   DiscMap,
+  evalMathExpr,
   genDiscToDecoderMap,
   getAccountRent,
   getRentSync,
   hexCode,
   isNullLike,
-  evalMathExpr,
 } from "../common";
 import { findMintProofPDA } from "../tensor_whitelist";
 import {
@@ -1144,7 +1147,11 @@ export class TensorSwapSDK {
     return {
       builder,
       tx: {
-        ixs: [...computeIxs, await builder.instruction()],
+        ixs: [
+          ...computeIxs,
+          ...(await this.clearDelegate(nftDest, owner)),
+          await builder.instruction(),
+        ],
         extraSigners: [],
       },
       tswapPda,
@@ -1401,7 +1408,11 @@ export class TensorSwapSDK {
     return {
       builder,
       tx: {
-        ixs: [...computeIxs, await builder.instruction()],
+        ixs: [
+          ...computeIxs,
+          ...(await this.clearDelegate(nftBuyerAcc, buyer)),
+          await builder.instruction(),
+        ],
         extraSigners: [],
       },
       tswapPda,
@@ -2347,7 +2358,11 @@ export class TensorSwapSDK {
     return {
       builder,
       tx: {
-        ixs: [...computeIxs, await builder.instruction()],
+        ixs: [
+          ...computeIxs,
+          ...(await this.clearDelegate(nftDest, owner)),
+          await builder.instruction(),
+        ],
         extraSigners: [],
       },
       tswapPda,
@@ -2471,7 +2486,11 @@ export class TensorSwapSDK {
     return {
       builder,
       tx: {
-        ixs: [...computeIxs, await builder.instruction()],
+        ixs: [
+          ...computeIxs,
+          ...(await this.clearDelegate(nftBuyerAcc, buyer)),
+          await builder.instruction(),
+        ],
         extraSigners: [],
       },
       tswapPda,
@@ -2522,6 +2541,21 @@ export class TensorSwapSDK {
   }
 
   // --------------------------------------- helper methods
+
+  // remove delegate if set, else a pNFT transfer will fail
+  async clearDelegate(
+    nftDest: PublicKey,
+    owner: PublicKey
+  ): Promise<TransactionInstruction[]> {
+    const destAtaInfo = await getAccount(
+      this.program.provider.connection,
+      nftDest
+    );
+    if (!!destAtaInfo.delegate) {
+      return [createRevokeInstruction(nftDest, owner)];
+    }
+    return [];
+  }
 
   async getTswapRent() {
     return await getAccountRent(
