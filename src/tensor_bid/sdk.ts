@@ -409,24 +409,18 @@ export class TensorBidSDK {
   async closeExpiredBid({
     bidder,
     nftMint,
-    cosigner = TSWAP_COSIGNER,
   }: {
     bidder: PublicKey;
     nftMint: PublicKey;
-    cosigner?: PublicKey;
   }) {
     const [bidState, bidStateBump] = findBidStatePda({
       mint: nftMint,
       owner: bidder,
     });
-    const [tswapPda, tswapPdaBump] = findTSwapPDA({});
-
     const builder = this.program.methods.closeExpiredBid().accounts({
       nftMint,
       bidder,
       bidState,
-      tswap: tswapPda,
-      cosigner,
       rent: SYSVAR_RENT_PUBKEY,
       systemProgram: SystemProgram.programId,
     });
@@ -436,8 +430,6 @@ export class TensorBidSDK {
       tx: { ixs: [await builder.instruction()], extraSigners: [] },
       bidState,
       bidStateBump,
-      tswapPda,
-      tswapPdaBump,
     };
   }
 

@@ -287,16 +287,6 @@ export type TensorBid = {
           "isSigner": false
         },
         {
-          "name": "tswap",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "cosigner",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -853,16 +843,6 @@ export const IDL: TensorBid = {
           "name": "bidder",
           "isMut": true,
           "isSigner": false
-        },
-        {
-          "name": "tswap",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "cosigner",
-          "isMut": false,
-          "isSigner": true
         },
         {
           "name": "systemProgram",
