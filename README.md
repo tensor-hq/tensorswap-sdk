@@ -107,7 +107,7 @@ const wlAddr = findWhitelistPDA({uuid: "..."})[0];
 
     const {
       tx: { ixs },
-    } = await wlSDK.initUpdateMintProof({
+    } = await wlSdk.initUpdateMintProof({
       // User signing the tx (the seller)
       user,
       whitelist: wlAddr,
