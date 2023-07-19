@@ -98,7 +98,7 @@ const wlAddr = findWhitelistPDA({uuid: "..."})[0];
 
 // Step 1: Prepare the mint proof PDA (if required).
 {
-  const wl = await swapSdk.fetchWhitelist(wlAddr);
+  const wl = await wlSdk.fetchWhitelist(wlAddr);
 
   // Proof is only required if rootHash is NOT a 0 array, o/w not necessary!
   if(JSON.stringify(wl.rootHash) !== JSON.stringify(Array(32).fill(0))) {
