@@ -1,7 +1,7 @@
 import { AnchorProvider, BN, Wallet } from "@project-serum/anchor";
 import { LAMPORTS_PER_SOL, Transaction } from "@solana/web3.js";
 import { TensorSwapSDK } from "@tensor-hq/tensorswap-sdk";
-import { conn, keypair, nftMint, nftSource } from "./common";
+import { conn, keypair, nftMint, /*nftSource*/ } from "./common";
 
 const provider = new AnchorProvider(conn, new Wallet(keypair), {
   commitment: "confirmed",
@@ -9,6 +9,8 @@ const provider = new AnchorProvider(conn, new Wallet(keypair), {
 const swapSdk = new TensorSwapSDK({ provider });
 
 (async () => {
+  let nftSource = await token.getAssociatedTokenAddress(nftMint, keypair.publicKey);
+
   // List the NFT.
   {
     const data = await swapSdk.list({
