@@ -1,4 +1,4 @@
-import { AccountClient, BN, Idl, Program, utils } from "@project-serum/anchor";
+import { AccountClient, BN, Idl, Program, utils } from "@coral-xyz/anchor";
 import { AccountInfo, Connection, PublicKey } from "@solana/web3.js";
 import Mexp from "math-expression-evaluator";
 
@@ -152,6 +152,7 @@ export const DAYS = 24 * HOURS;
 
 // pNFTs very expensive.
 export const DEFAULT_NFT_TRANSFER_COMPUTE_UNITS = 800_000;
+export const DEFAULT_RULESET_ADDN_COMPUTE_UNITS = 400_000;
 export const DEFAULT_COMPUTE_UNITS = 300_000;
 export const DEFAULT_MICRO_LAMPORTS = 200_000;
 

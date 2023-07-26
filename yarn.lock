@@ -50,6 +50,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@coral-xyz/anchor@npm:^0.26.0":
+  version: 0.26.0
+  resolution: "@coral-xyz/anchor@npm:0.26.0"
+  dependencies:
+    "@coral-xyz/borsh": ^0.26.0
+    "@solana/web3.js": ^1.68.0
+    base64-js: ^1.5.1
+    bn.js: ^5.1.2
+    bs58: ^4.0.1
+    buffer-layout: ^1.2.2
+    camelcase: ^6.3.0
+    cross-fetch: ^3.1.5
+    crypto-hash: ^1.3.0
+    eventemitter3: ^4.0.7
+    js-sha256: ^0.9.0
+    pako: ^2.0.3
+    snake-case: ^3.0.4
+    superstruct: ^0.15.4
+    toml: ^3.0.0
+  checksum: 1e637b28181a42ce0aa4ed2853b7c563d4763f01e330cd12572b70d5dc830956e33d19a83afba09846b265db615f8ef1dc4a67d77865418c44ca8839d375a56f
+  languageName: node
+  linkType: hard
+
 "@coral-xyz/borsh@npm:^0.26.0":
   version: 0.26.0
   resolution: "@coral-xyz/borsh@npm:0.26.0"
@@ -763,6 +786,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@metaplex-foundation/mpl-token-auth-rules@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@metaplex-foundation/mpl-token-auth-rules@npm:2.0.0"
+  dependencies:
+    "@metaplex-foundation/beet": ^0.7.1
+    "@metaplex-foundation/beet-solana": ^0.4.0
+    "@metaplex-foundation/cusper": ^0.0.2
+    "@msgpack/msgpack": ^2.8.0
+    "@solana/spl-token": ^0.3.6
+    "@solana/web3.js": ^1.66.2
+    bn.js: ^5.2.1
+  checksum: 968bcd743568b07fc5b04207e73e2ac6cf20adb8b93cf226e3e130f66a1f1dbfc8702da18a129da9bfa75868811b9cfe18a8cdcec9593e6a96710c70626035bf
+  languageName: node
+  linkType: hard
+
 "@metaplex-foundation/mpl-token-metadata@npm:^2.8.1, @metaplex-foundation/mpl-token-metadata@npm:^2.8.6, @metaplex-foundation/mpl-token-metadata@npm:^2.9.1":
   version: 2.9.1
   resolution: "@metaplex-foundation/mpl-token-metadata@npm:2.9.1"
@@ -1195,12 +1233,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tensor-hq/tensor-common@npm:^0.9.6":
-  version: 0.9.6
-  resolution: "@tensor-hq/tensor-common@npm:0.9.6::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40tensor-hq%2Ftensor-common%2F0.9.6%2F3869c66c987bfffd2791dad0251e1c2bfbd308a2"
+"@tensor-hq/tensor-common@npm:^0.15.0":
+  version: 0.15.0
+  resolution: "@tensor-hq/tensor-common@npm:0.15.0::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40tensor-hq%2Ftensor-common%2F0.15.0%2F950053ac54d4f584cef219d9fe6668c70db3ac09"
   dependencies:
+    "@coral-xyz/anchor": ^0.26.0
     "@metaplex-foundation/mpl-auction-house": ^2.1.1
-    "@metaplex-foundation/mpl-token-auth-rules": ^1.2.0
+    "@metaplex-foundation/mpl-token-auth-rules": ^2.0.0
     "@metaplex-foundation/mpl-token-metadata": ^2.8.1
     "@solana/spl-token": ^0.3.6
     "@solana/web3.js": ^1.73.0
@@ -1209,26 +1248,28 @@ __metadata:
     bn.js: ^5.2.1
     bs58: ^5.0.0
     hadeswap-sdk: ^0.8.25
+    semaphore: ^1.1.0
     typescript: ^4.7.4
-  checksum: 8280ee1c3fe935a07ed652dbd2959438e6b116c00cae7e8e430d16838ed365df4e99f7974f621cc29f50a80a0e78c627bbcbd09267c685c8199e4a4d072db913
+    yup: ^1.1.1
+  checksum: 547ae6d4f85980663ee3561b12d23c1ccbca85160ded985f8257b92d81188fd76b1c8386d5c2583da3507c2b044c504ede82e0288cccd51f681bbe267dfb2600
   languageName: node
   linkType: hard
 
-"@tensor-hq/tensorswap-sdk@workspace:.":
+"@tensor-oss/tensorswap-sdk@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@tensor-hq/tensorswap-sdk@workspace:."
+  resolution: "@tensor-oss/tensorswap-sdk@workspace:."
   dependencies:
+    "@coral-xyz/anchor": ^0.26.0
     "@ledgerhq/hw-app-solana": ^6.27.2
     "@ledgerhq/hw-transport-node-hid": ^6.27.2
     "@metaplex-foundation/js": ^0.18.3
     "@metaplex-foundation/mpl-token-auth-rules": ^1.2.0
     "@metaplex-foundation/mpl-token-metadata": ^2.9.1
     "@msgpack/msgpack": ^2.8.0
-    "@project-serum/anchor": ^0.26.0
     "@saberhq/solana-contrib": ^1.14.11
     "@solana/spl-token": ^0.3.7
     "@solana/web3.js": ^1.73.0
-    "@tensor-hq/tensor-common": ^0.9.6
+    "@tensor-hq/tensor-common": ^0.15.0
     "@types/big.js": ^6.1.5
     "@types/bn.js": ^5.1.0
     "@types/chai": ^4.3.0
@@ -5416,6 +5457,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"property-expr@npm:^2.0.5":
+  version: 2.0.5
+  resolution: "property-expr@npm:2.0.5"
+  checksum: 4ebe82ce45aaf1527e96e2ab84d75d25217167ec3ff6378cf83a84fb4abc746e7c65768a79d275881602ae82f168f9a6dfaa7f5e331d0fcc83d692770bcce5f1
+  languageName: node
+  linkType: hard
+
 "proxy-from-env@npm:^1.1.0":
   version: 1.1.0
   resolution: "proxy-from-env@npm:1.1.0"
@@ -5720,6 +5768,13 @@ __metadata:
     node-gyp: latest
     node-gyp-build: ^4.2.0
   checksum: 21e219adc0024fbd75021001358780a3cc6ac21273c3fcaef46943af73969729709b03f1df7c012a0baab0830fb9a06ccc6b42f8d50050c665cb98078eab477b
+  languageName: node
+  linkType: hard
+
+"semaphore@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "semaphore@npm:1.1.0"
+  checksum: d2445d232ad9959048d4748ef54eb01bc7b60436be2b42fb7de20c4cffacf70eafeeecd3772c1baf408cfdce3805fa6618a4389590335671f18cde54ef3cfae4
   languageName: node
   linkType: hard
 
@@ -6135,6 +6190,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tiny-case@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "tiny-case@npm:1.0.3"
+  checksum: 3f7a30c39d5b0e1bc097b0b271bec14eb5b836093db034f35a0de26c14422380b50dc12bfd37498cf35b192f5df06f28a710712c87ead68872a9e37ad6f6049d
+  languageName: node
+  linkType: hard
+
 "tiny-invariant@npm:^1.3.1":
   version: 1.3.1
   resolution: "tiny-invariant@npm:1.3.1"
@@ -6196,6 +6258,13 @@ __metadata:
   version: 3.0.0
   resolution: "toml@npm:3.0.0"
   checksum: 5d7f1d8413ad7780e9bdecce8ea4c3f5130dd53b0a4f2e90b93340979a137739879d7b9ce2ce05c938b8cc828897fe9e95085197342a1377dd8850bf5125f15f
+  languageName: node
+  linkType: hard
+
+"toposort@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "toposort@npm:2.0.2"
+  checksum: d64c74b570391c9432873f48e231b439ee56bc49f7cb9780b505cfdf5cb832f808d0bae072515d93834dd6bceca5bb34448b5b4b408335e4d4716eaf68195dcb
   languageName: node
   linkType: hard
 
@@ -6356,6 +6425,13 @@ __metadata:
   version: 0.21.3
   resolution: "type-fest@npm:0.21.3"
   checksum: e6b32a3b3877f04339bae01c193b273c62ba7bfc9e325b8703c4ee1b32dc8fe4ef5dfa54bf78265e069f7667d058e360ae0f37be5af9f153b22382cd55a9afe0
+  languageName: node
+  linkType: hard
+
+"type-fest@npm:^2.19.0":
+  version: 2.19.0
+  resolution: "type-fest@npm:2.19.0"
+  checksum: a4ef07ece297c9fba78fc1bd6d85dff4472fe043ede98bd4710d2615d15776902b595abf62bd78339ed6278f021235fb28a96361f8be86ed754f778973a0d278
   languageName: node
   linkType: hard
 
@@ -6800,5 +6876,17 @@ __metadata:
   version: 0.1.0
   resolution: "yocto-queue@npm:0.1.0"
   checksum: f77b3d8d00310def622123df93d4ee654fc6a0096182af8bd60679ddcdfb3474c56c6c7190817c84a2785648cdee9d721c0154eb45698c62176c322fb46fc700
+  languageName: node
+  linkType: hard
+
+"yup@npm:^1.1.1":
+  version: 1.2.0
+  resolution: "yup@npm:1.2.0"
+  dependencies:
+    property-expr: ^2.0.5
+    tiny-case: ^1.0.3
+    toposort: ^2.0.2
+    type-fest: ^2.19.0
+  checksum: f0cdceb144e358c6155670f3e27404b65b090cc12594fde6db2699523661e13542aaf87ebe8e542b67f29a5f3f9bc5f23a3a3bb09e17f10d125353d35b841fac
   languageName: node
   linkType: hard

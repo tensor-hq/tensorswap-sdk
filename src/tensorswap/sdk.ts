@@ -7,12 +7,12 @@ import {
   EventParser,
   Instruction,
   Program,
-} from "@project-serum/anchor";
+} from "@coral-xyz/anchor";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createRevokeInstruction,
   getAccount,
-  getAssociatedTokenAddress,
+  getAssociatedTokenAddressSync,
   getMinimumBalanceForRentExemptAccount,
   TOKEN_PROGRAM_ID,
   Account,
@@ -42,6 +42,7 @@ import {
   decodeAcct,
   DEFAULT_MICRO_LAMPORTS,
   DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+  DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
   DiscMap,
   evalMathExpr,
   genDiscToDecoderMap,
@@ -495,6 +496,20 @@ export type WithdrawDepositSolData = TSwapIxData & { lamports: BN };
 export type WithdrawTSwapOwnedSplData = TSwapIxData & { amount: BN };
 export type ListEditListingData = TSwapIxData & { price: BN };
 
+type PnftArgs = {
+  /** If provided, skips RPC call to fetch on-chain metadata + creators. */
+  metaCreators?: {
+    metadata: PublicKey;
+    creators: PublicKey[];
+  };
+  authData?: AuthorizationData | null;
+  /** passing in null or undefined means these ixs are NOT included */
+  compute?: number | null;
+  /** If a ruleSet is present, we add this many additional */
+  ruleSetAddnCompute?: number | null;
+  priorityMicroLamports?: number | null;
+};
+
 //decided to NOT build the tx inside the sdk (too much coupling - should not care about blockhash)
 export class TensorSwapSDK {
   program: Program<TensorswapIDL>;
@@ -603,16 +618,15 @@ export class TensorSwapSDK {
   }) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
 
-    const builder = this.program.methods
-      .initUpdateTswap(newOwner, config)
-      .accounts({
-        tswap: tswapPda,
-        owner,
-        cosigner,
-        //tswap itself is the default fee vault
-        feeVault: feeVault ?? tswapPda,
-        systemProgram: SystemProgram.programId,
-      });
+    const builder = this.program.methods.initUpdateTswap(config).accounts({
+      tswap: tswapPda,
+      owner,
+      cosigner,
+      newOwner,
+      //tswap itself is the default fee vault
+      feeVault: feeVault ?? tswapPda,
+      systemProgram: SystemProgram.programId,
+    });
 
     return {
       builder,
@@ -893,9 +907,11 @@ export class TensorSwapSDK {
     nftSource,
     owner,
     config,
+    /** pnft args */
     metaCreators,
     authData = null,
     compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+    ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
   }: {
     whitelist: PublicKey;
@@ -903,17 +919,7 @@ export class TensorSwapSDK {
     nftSource: PublicKey;
     owner: PublicKey;
     config: PoolConfigAnchor;
-    /// If provided, skips RPC call to fetch on-chain metadata + creators.
-    metaCreators?: {
-      metadata: PublicKey;
-      /// Not used: can pass empty array.
-      creators: PublicKey[];
-    };
-    authData?: AuthorizationData | null;
-    //passing in null or undefined means these ixs are NOT included
-    compute?: number | null;
-    priorityMicroLamports?: number | null;
-  }) {
+  } & PnftArgs) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [poolPda, poolBump] = findPoolPDA({
       tswap: tswapPda,
@@ -978,7 +984,13 @@ export class TensorSwapSDK {
         authRules: ruleSet ?? SystemProgram.programId,
       });
 
-    const computeIxs = getTotalComputeIxs(compute, priorityMicroLamports);
+    const ruleSetCompute = ruleSet ? ruleSetAddnCompute : null;
+    const computeIxs = getTotalComputeIxs(
+      isNullLike(compute) && isNullLike(ruleSetCompute)
+        ? null
+        : (compute ?? 0) + (ruleSetCompute ?? 0),
+      priorityMicroLamports
+    );
 
     return {
       builder,
@@ -1058,9 +1070,11 @@ export class TensorSwapSDK {
     nftDest,
     owner,
     config,
+    /** pnft args */
     metaCreators,
     authData = null,
     compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+    ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
   }: {
     whitelist: PublicKey;
@@ -1068,19 +1082,7 @@ export class TensorSwapSDK {
     nftDest: PublicKey;
     owner: PublicKey;
     config: PoolConfigAnchor;
-    /// If provided, skips RPC call to fetch on-chain metadata + creators.
-    metaCreators?: {
-      metadata: PublicKey;
-      /// Not used: can pass empty array.
-      creators: PublicKey[];
-    };
-    /// If provided, skips RPC call to fetch on-chain metadata.
-    nftRuleSet?: PublicKey;
-    authData?: AuthorizationData | null;
-    //passing in null or undefined means these ixs are NOT included
-    compute?: number | null;
-    priorityMicroLamports?: number | null;
-  }) {
+  } & PnftArgs) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [poolPda, poolBump] = findPoolPDA({
       tswap: tswapPda,
@@ -1143,7 +1145,13 @@ export class TensorSwapSDK {
         authRules: ruleSet ?? SystemProgram.programId,
       });
 
-    const computeIxs = getTotalComputeIxs(compute, priorityMicroLamports);
+    const ruleSetCompute = ruleSet ? ruleSetAddnCompute : null;
+    const computeIxs = getTotalComputeIxs(
+      isNullLike(compute) && isNullLike(ruleSetCompute)
+        ? null
+        : (compute ?? 0) + (ruleSetCompute ?? 0),
+      priorityMicroLamports
+    );
 
     return {
       builder,
@@ -1277,13 +1285,15 @@ export class TensorSwapSDK {
     buyer,
     config,
     maxPrice,
-    metaCreators,
-    authData = null,
-    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
-    priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
     marginNr = null,
     optionalRoyaltyPct = null,
     takerBroker = null,
+    /** pnft args */
+    metaCreators,
+    authData = null,
+    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+    ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
+    priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
   }: {
     whitelist: PublicKey;
     nftMint: PublicKey;
@@ -1292,21 +1302,12 @@ export class TensorSwapSDK {
     buyer: PublicKey;
     config: PoolConfigAnchor;
     maxPrice: BN;
-    /// If provided, skips RPC call to fetch on-chain metadata + creators.
-    metaCreators?: {
-      metadata: PublicKey;
-      creators: PublicKey[];
-    };
-    authData?: AuthorizationData | null;
-    //passing in null or undefined means these ixs are NOT included
-    compute?: number | null;
-    priorityMicroLamports?: number | null;
     marginNr?: number | null;
     //optional % OF full royalty amount, so eg 50% of 10% royalty would be 5%
     optionalRoyaltyPct?: number | null;
     //optional taker broker account
     takerBroker?: PublicKey | null;
-  }) {
+  } & PnftArgs) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [poolPda, poolBump] = findPoolPDA({
       tswap: tswapPda,
@@ -1404,7 +1405,13 @@ export class TensorSwapSDK {
         })
       );
 
-    const computeIxs = getTotalComputeIxs(compute, priorityMicroLamports);
+    const ruleSetCompute = ruleSet ? ruleSetAddnCompute : null;
+    const computeIxs = getTotalComputeIxs(
+      isNullLike(compute) && isNullLike(ruleSetCompute)
+        ? null
+        : (compute ?? 0) + (ruleSetCompute ?? 0),
+      priorityMicroLamports
+    );
 
     return {
       builder,
@@ -1448,15 +1455,17 @@ export class TensorSwapSDK {
     seller,
     config,
     minPrice,
-    metaCreators,
     marginNr = null,
     isCosigned = false,
     cosigner = TSWAP_COSIGNER,
-    authData = null,
-    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
-    priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
     optionalRoyaltyPct = null,
     takerBroker = null,
+    /** pnft args */
+    metaCreators,
+    authData = null,
+    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+    ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
+    priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
   }: {
     type: "trade" | "token";
     whitelist: PublicKey;
@@ -1466,23 +1475,14 @@ export class TensorSwapSDK {
     seller: PublicKey;
     config: PoolConfigAnchor;
     minPrice: BN;
-    /// If provided, skips RPC call to fetch on-chain metadata + creators.
-    metaCreators?: {
-      metadata: PublicKey;
-      creators: PublicKey[];
-    };
     marginNr?: number | null;
     isCosigned?: boolean;
     cosigner?: PublicKey;
-    authData?: AuthorizationData | null;
-    //passing in null or undefined means these ixs are NOT included
-    compute?: number | null;
-    priorityMicroLamports?: number | null;
-    //optional % OF full royalty amount, so eg 50% of 10% royalty would be 5%
+    /** optional % OF full royalty amount, so eg 50% of 10% royalty would be 5% */
     optionalRoyaltyPct?: number | null;
-    //optional taker broker account
+    /** optional taker broker account */
     takerBroker?: PublicKey | null;
-  }) {
+  } & PnftArgs) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [poolPda, poolBump] = findPoolPDA({
       tswap: tswapPda,
@@ -1494,7 +1494,7 @@ export class TensorSwapSDK {
       curveType: curveTypeU8(config.curveType),
     });
     const [solEscrowPda, solEscrowBump] = findSolEscrowPDA({ pool: poolPda });
-    const ownerAtaAcc = await getAssociatedTokenAddress(nftMint, owner);
+    const ownerAtaAcc = getAssociatedTokenAddressSync(nftMint, owner, true);
     const [escrowPda, escrowBump] = findNftEscrowPDA({ nftMint });
     const [receiptPda, receiptBump] = findNftDepositReceiptPDA({ nftMint });
     const [mintProofPda] = findMintProofPDA({ mint: nftMint, whitelist });
@@ -1624,7 +1624,13 @@ export class TensorSwapSDK {
       })
       .remainingAccounts(remAcc);
 
-    const computeIxs = getTotalComputeIxs(compute, priorityMicroLamports);
+    const ruleSetCompute = ruleSet ? ruleSetAddnCompute : null;
+    const computeIxs = getTotalComputeIxs(
+      isNullLike(compute) && isNullLike(ruleSetCompute)
+        ? null
+        : (compute ?? 0) + (ruleSetCompute ?? 0),
+      priorityMicroLamports
+    );
 
     return {
       builder,
@@ -2035,11 +2041,13 @@ export class TensorSwapSDK {
     seller,
     config,
     actualPrice,
-    metaCreators,
     marginNr,
     cosigner = TSWAP_COSIGNER,
+    /** pnft args */
+    metaCreators,
     authData = null,
     compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+    ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
   }: {
     whitelist: PublicKey;
@@ -2049,19 +2057,9 @@ export class TensorSwapSDK {
     seller: PublicKey;
     config: PoolConfigAnchor;
     actualPrice: BN;
-    /// If provided, skips RPC call to fetch on-chain metadata + creators.
-    metaCreators?: {
-      metadata: PublicKey;
-      /// Not used: can pass empty array.
-      creators: PublicKey[];
-    };
     marginNr: number;
     cosigner?: PublicKey;
-    authData?: AuthorizationData | null;
-    //passing in null or undefined means these ixs are NOT included
-    compute?: number | null;
-    priorityMicroLamports?: number | null;
-  }) {
+  } & PnftArgs) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [poolPda, poolBump] = findPoolPDA({
       tswap: tswapPda,
@@ -2073,7 +2071,7 @@ export class TensorSwapSDK {
       curveType: curveTypeU8(config.curveType),
     });
     const [solEscrowPda, solEscrowBump] = findSolEscrowPDA({ pool: poolPda });
-    const ownerAtaAcc = await getAssociatedTokenAddress(nftMint, owner);
+    const ownerAtaAcc = getAssociatedTokenAddressSync(nftMint, owner, true);
     const [escrowPda, escrowBump] = findNftEscrowPDA({ nftMint });
     const [receiptPda, receiptBump] = findNftDepositReceiptPDA({ nftMint });
     const [mintProofPda] = findMintProofPDA({ mint: nftMint, whitelist });
@@ -2142,7 +2140,13 @@ export class TensorSwapSDK {
       })
       .remainingAccounts(remAcc);
 
-    const computeIxs = getTotalComputeIxs(compute, priorityMicroLamports);
+    const ruleSetCompute = ruleSet ? ruleSetAddnCompute : null;
+    const computeIxs = getTotalComputeIxs(
+      isNullLike(compute) && isNullLike(ruleSetCompute)
+        ? null
+        : (compute ?? 0) + (ruleSetCompute ?? 0),
+      priorityMicroLamports
+    );
 
     return {
       builder,
@@ -2179,30 +2183,22 @@ export class TensorSwapSDK {
     nftMint,
     nftSource,
     owner,
+    price,
+    payer = null,
+    /** pnft args */
     metaCreators,
     authData = null,
     compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+    ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
-    price,
-    payer = null,
   }: {
     nftMint: PublicKey;
     nftSource: PublicKey;
     owner: PublicKey;
-    /// If provided, skips RPC call to fetch on-chain metadata + creators.
-    metaCreators?: {
-      metadata: PublicKey;
-      /// Not used: can pass empty array.
-      creators: PublicKey[];
-    };
-    authData?: AuthorizationData | null;
-    //passing in null or undefined means these ixs are NOT included
-    compute?: number | null;
-    priorityMicroLamports?: number | null;
     price: BN;
     //optional separate payer account (useful when you want the listing to be done by another program)
     payer?: PublicKey | null;
-  }) {
+  } & PnftArgs) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [singleListing, singleListingBump] = findSingleListingPDA({
       nftMint,
@@ -2254,7 +2250,13 @@ export class TensorSwapSDK {
         payer: payer ?? owner,
       });
 
-    const computeIxs = getTotalComputeIxs(compute, priorityMicroLamports);
+    const ruleSetCompute = ruleSet ? ruleSetAddnCompute : null;
+    const computeIxs = getTotalComputeIxs(
+      isNullLike(compute) && isNullLike(ruleSetCompute)
+        ? null
+        : (compute ?? 0) + (ruleSetCompute ?? 0),
+      priorityMicroLamports
+    );
 
     return {
       builder,
@@ -2282,28 +2284,20 @@ export class TensorSwapSDK {
     nftMint,
     nftDest,
     owner,
+    payer = null,
+    /** pnft args */
     metaCreators,
     authData = null,
     compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+    ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
-    payer = null,
   }: {
     nftMint: PublicKey;
     nftDest: PublicKey;
     owner: PublicKey;
-    /// If provided, skips RPC call to fetch on-chain metadata + creators.
-    metaCreators?: {
-      metadata: PublicKey;
-      /// Not used: can pass empty array.
-      creators: PublicKey[];
-    };
-    authData?: AuthorizationData | null;
-    //passing in null or undefined means these ixs are NOT included
-    compute?: number | null;
-    priorityMicroLamports?: number | null;
     //optional separate payer account (useful when you want the listing to be done by another program)
     payer?: PublicKey | null;
-  }) {
+  } & PnftArgs) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [singleListing, singleListingBump] = findSingleListingPDA({
       nftMint,
@@ -2355,7 +2349,13 @@ export class TensorSwapSDK {
         payer: payer ?? owner,
       });
 
-    const computeIxs = getTotalComputeIxs(compute, priorityMicroLamports);
+    const ruleSetCompute = ruleSet ? ruleSetAddnCompute : null;
+    const computeIxs = getTotalComputeIxs(
+      isNullLike(compute) && isNullLike(ruleSetCompute)
+        ? null
+        : (compute ?? 0) + (ruleSetCompute ?? 0),
+      priorityMicroLamports
+    );
 
     return {
       builder,
@@ -2388,32 +2388,25 @@ export class TensorSwapSDK {
     owner,
     buyer,
     maxPrice,
+    optionalRoyaltyPct = null,
+    takerBroker = null,
+    /** pnft args */
     metaCreators,
     authData = null,
     compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+    ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
-    optionalRoyaltyPct = null,
-    takerBroker = null,
   }: {
     nftMint: PublicKey;
     nftBuyerAcc: PublicKey;
     owner: PublicKey;
     buyer: PublicKey;
     maxPrice: BN;
-    /// If provided, skips RPC call to fetch on-chain metadata + creators.
-    metaCreators?: {
-      metadata: PublicKey;
-      creators: PublicKey[];
-    };
-    authData?: AuthorizationData | null;
-    //passing in null or undefined means these ixs are NOT included
-    compute?: number | null;
-    priorityMicroLamports?: number | null;
     //optional % OF full royalty amount, so eg 50% of 10% royalty would be 5%
     optionalRoyaltyPct?: number | null;
     //optional taker broker account
     takerBroker?: PublicKey | null;
-  }) {
+  } & PnftArgs) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [singleListing, singleListingBump] = findSingleListingPDA({
       nftMint,
@@ -2483,7 +2476,13 @@ export class TensorSwapSDK {
         })
       );
 
-    const computeIxs = getTotalComputeIxs(compute, priorityMicroLamports);
+    const ruleSetCompute = ruleSet ? ruleSetAddnCompute : null;
+    const computeIxs = getTotalComputeIxs(
+      isNullLike(compute) && isNullLike(ruleSetCompute)
+        ? null
+        : (compute ?? 0) + (ruleSetCompute ?? 0),
+      priorityMicroLamports
+    );
 
     return {
       builder,

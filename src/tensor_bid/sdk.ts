@@ -1,4 +1,20 @@
 import {
+  AnchorProvider,
+  BorshCoder,
+  Coder,
+  Event,
+  EventParser,
+  Instruction,
+  Program,
+  Provider,
+  Wallet,
+} from "@coral-xyz/anchor";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import {
   AccountInfo,
   Commitment,
   Keypair,
@@ -9,50 +25,33 @@ import {
   TransactionResponse,
 } from "@solana/web3.js";
 import {
-  AnchorProvider,
-  BorshCoder,
-  Coder,
-  Event,
-  EventParser,
-  Instruction,
-  Program,
-  Provider,
-  Wallet,
-} from "@project-serum/anchor";
+  AuthorizationData,
+  AUTH_PROG_ID,
+  prepPnftAccounts,
+  TMETA_PROG_ID,
+} from "@tensor-hq/tensor-common";
+import BN from "bn.js";
 import {
   AccountSuffix,
   decodeAcct,
   DEFAULT_MICRO_LAMPORTS,
   DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
   DiscMap,
+  evalMathExpr,
   genDiscToDecoderMap,
   getAccountRent,
   getRentSync,
   hexCode,
-  evalMathExpr,
 } from "../common";
-import {
-  prepPnftAccounts,
-  AuthorizationData,
-  AUTH_PROG_ID,
-  TMETA_PROG_ID,
-} from "@tensor-hq/tensor-common";
-import BN from "bn.js";
-import { TBID_ADDR } from "./constants";
-import { findBidStatePda, findNftTempPDA } from "./pda";
 import {
   findTSwapPDA,
   getTotalComputeIxs,
-  TENSORSWAP_ADDR,
   TensorSwapSDK,
-  TSWAP_COSIGNER,
+  TENSORSWAP_ADDR,
 } from "../tensorswap";
-import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  getAssociatedTokenAddress,
-  TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
-import { ParsedAccount, InstructionDisplay } from "../types";
+import { InstructionDisplay, ParsedAccount } from "../types";
+import { TBID_ADDR } from "./constants";
+import { findBidStatePda, findNftTempPDA } from "./pda";
 
 // ---------------------------------------- Versioned IDLs for backwards compat when parsing.
 import {
@@ -273,7 +272,7 @@ export class TensorBidSDK {
     const tSwapAcc = await swapSdk.fetchTSwap(tswapPda);
     const [tempPda, tempPdaBump] = findNftTempPDA({ nftMint });
 
-    const destAta = await getAssociatedTokenAddress(nftMint, bidder);
+    const destAta = getAssociatedTokenAddressSync(nftMint, bidder, true);
 
     //prepare 2 pnft account sets
     const [

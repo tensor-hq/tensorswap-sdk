@@ -1,4 +1,4 @@
-import { BN, Event, Instruction } from "@project-serum/anchor";
+import { BN, Event, Instruction } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import Big from "big.js";
 import { CurveType, PoolConfig, PoolType, InstructionDisplay } from "../types";

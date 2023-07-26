@@ -136,13 +136,14 @@ export type Tensorswap = {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "newOwner",
+          "isMut": false,
+          "isSigner": true
         }
       ],
       "args": [
-        {
-          "name": "newOwner",
-          "type": "publicKey"
-        },
         {
           "name": "config",
           "type": {
@@ -3104,6 +3105,11 @@ export type Tensorswap = {
       "code": 6037,
       "name": "BadRoyaltiesPct",
       "msg": "royalties percentage passed in must be between 0 and 100"
+    },
+    {
+      "code": 6038,
+      "name": "StartingPriceTooSmall",
+      "msg": "starting price can't be smaller than 1 lamport"
     }
   ]
 };
@@ -3246,13 +3252,14 @@ export const IDL: Tensorswap = {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "newOwner",
+          "isMut": false,
+          "isSigner": true
         }
       ],
       "args": [
-        {
-          "name": "newOwner",
-          "type": "publicKey"
-        },
         {
           "name": "config",
           "type": {
@@ -6214,6 +6221,11 @@ export const IDL: Tensorswap = {
       "code": 6037,
       "name": "BadRoyaltiesPct",
       "msg": "royalties percentage passed in must be between 0 and 100"
+    },
+    {
+      "code": 6038,
+      "name": "StartingPriceTooSmall",
+      "msg": "starting price can't be smaller than 1 lamport"
     }
   ]
 };

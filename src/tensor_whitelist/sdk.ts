@@ -4,7 +4,7 @@ import {
   PublicKey,
   SystemProgram,
 } from "@solana/web3.js";
-import { Coder, Program, Provider } from "@project-serum/anchor";
+import { Coder, Program, Provider } from "@coral-xyz/anchor";
 import { TLIST_ADDR, TLIST_COSIGNER, TLIST_OWNER } from "./constants";
 import {
   findMintProofPDA,
