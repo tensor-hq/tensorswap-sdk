@@ -1,6 +1,6 @@
 {
   "name": "@tensor-oss/tensorswap-sdk",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "description": "Anchor/JS SDK for interacting with TensorSwap, TensorWhitelist and TensorBid.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -19,7 +19,7 @@
     "test": "bash scripts/full_test.sh",
     "fast-test": "bash scripts/fast_test.sh",
     "push": "git push --atomic",
-    "npmpublish": "rm -rf ./dist && yarn tsc && npm publish --access public"
+    "publish:public": "rm -rf ./dist && yarn tsc && npm publish --access public --registry https://registry.npmjs.org"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.26.0",
@@ -27,7 +27,7 @@
     "@saberhq/solana-contrib": "^1.14.11",
     "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.73.0",
-    "@tensor-hq/tensor-common": "^0.15.0",
+    "@tensor-hq/tensor-common": "^0.17.1",
     "@types/bn.js": "^5.1.0",
     "big.js": "^6.2.1",
     "bn.js": "^5.2.0",
