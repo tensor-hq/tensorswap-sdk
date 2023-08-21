@@ -1,6 +1,6 @@
 {
   "name": "@tensor-oss/tensorswap-sdk",
-  "version": "1.13.0",
+  "version": "1.14.0",
   "description": "Anchor/JS SDK for interacting with TensorSwap, TensorWhitelist and TensorBid.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,12 +14,12 @@
   },
   "scripts": {
     "build": "anchor build && bash scripts/cp_idl.sh",
-    "build:all": "bash scripts/build_all.sh",
-    "build:test": "anchor build -- --features testing && bash scripts/cp_idl.sh",
-    "test": "bash scripts/full_test.sh",
-    "fast-test": "bash scripts/fast_test.sh",
+    "build:test": "bash scripts/test_build.sh",
+    "fast-test": "anchor test --skip-build -- --features testing",
+    "test": "yarn build:test && yarn fast-test",
     "push": "git push --atomic",
-    "publish:public": "rm -rf ./dist && yarn tsc && npm publish --access public --registry https://registry.npmjs.org"
+    "build:ts": "rm -rf ./dist && yarn tsc",
+    "publish:public": "yarn build:ts && npm publish --access public --registry https://registry.npmjs.org"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.26.0",
@@ -27,7 +27,7 @@
     "@saberhq/solana-contrib": "^1.14.11",
     "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.73.0",
-    "@tensor-hq/tensor-common": "^0.17.1",
+    "@tensor-hq/tensor-common": "^0.18.0",
     "@types/bn.js": "^5.1.0",
     "big.js": "^6.2.1",
     "bn.js": "^5.2.0",
@@ -41,7 +41,7 @@
     "@ledgerhq/hw-transport-node-hid": "^6.27.2",
     "@metaplex-foundation/js": "^0.18.3",
     "@metaplex-foundation/mpl-token-auth-rules": "^1.2.0",
-    "@metaplex-foundation/mpl-token-metadata": "^2.9.1",
+    "@metaplex-foundation/mpl-token-metadata": "^2.13.0",
     "@types/big.js": "^6.1.5",
     "@types/chai": "^4.3.0",
     "@types/chai-as-promised": "^7.1.4",

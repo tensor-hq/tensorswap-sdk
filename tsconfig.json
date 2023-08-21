@@ -1,15 +1,8 @@
 {
   "compilerOptions": {
-    "types": [
-      "mocha",
-      "chai"
-    ],
-    "typeRoots": [
-      "./node_modules/@types"
-    ],
-    "lib": [
-      "esnext"
-    ],
+    "types": ["mocha", "chai"],
+    "typeRoots": ["./node_modules/@types"],
+    "lib": ["esnext"],
     "module": "commonjs",
     "target": "esnext",
     "esModuleInterop": true,
@@ -21,12 +14,12 @@
     "declaration": true
   },
   "include": [
-    "src/*",
+    "src/*"
   ],
   "exclude": [
     "node_modules",
     "target",
-    "tests",
-    "migrations"
+    "migrations",
+    "tests"
   ]
 }

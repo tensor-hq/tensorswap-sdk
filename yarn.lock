@@ -826,7 +826,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metaplex-foundation/mpl-token-metadata@npm:^2.5.2":
+"@metaplex-foundation/mpl-token-metadata@npm:^2.13.0, @metaplex-foundation/mpl-token-metadata@npm:^2.5.2":
   version: 2.13.0
   resolution: "@metaplex-foundation/mpl-token-metadata@npm:2.13.0"
   dependencies:
@@ -841,7 +841,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metaplex-foundation/mpl-token-metadata@npm:^2.8.1, @metaplex-foundation/mpl-token-metadata@npm:^2.8.6, @metaplex-foundation/mpl-token-metadata@npm:^2.9.1":
+"@metaplex-foundation/mpl-token-metadata@npm:^2.8.1, @metaplex-foundation/mpl-token-metadata@npm:^2.8.6":
   version: 2.9.1
   resolution: "@metaplex-foundation/mpl-token-metadata@npm:2.9.1"
   dependencies:
@@ -1342,15 +1342,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tensor-hq/tensor-common@npm:^0.17.1":
-  version: 0.17.1
-  resolution: "@tensor-hq/tensor-common@npm:0.17.1::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40tensor-hq%2Ftensor-common%2F0.17.1%2F4079cc97eb3721dc3b0edba71779518e7704e987"
+"@tensor-hq/tensor-common@npm:^0.18.0":
+  version: 0.18.0
+  resolution: "@tensor-hq/tensor-common@npm:0.18.0::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40tensor-hq%2Ftensor-common%2F0.18.0%2F6762a619736862c6f4ee077c4faca9fc9638876c"
   dependencies:
     "@coral-xyz/anchor": ^0.26.0
     "@metaplex-foundation/mpl-auction-house": ^2.1.1
     "@metaplex-foundation/mpl-bubblegum": ^0.7.0
     "@metaplex-foundation/mpl-token-auth-rules": ^2.0.0
-    "@metaplex-foundation/mpl-token-metadata": ^2.8.1
+    "@metaplex-foundation/mpl-token-metadata": ^2.13.0
     "@solana/spl-token": ^0.3.6
     "@solana/web3.js": ^1.73.0
     axios: ^0.27.2
@@ -1359,8 +1359,9 @@ __metadata:
     bs58: ^5.0.0
     exponential-backoff: ^3.1.1
     hadeswap-sdk: ^0.8.25
+    js-sha3: ^0.8.0
     semaphore: ^1.1.0
-  checksum: 300357de617d5ee211670039b212ee1a64b4fae6cf578d187f0d6508f2f3c8d2ea3c8aca38fba6479d8745cafe91e24f5ab6e6eb0d29b916b2230ee8ce64f010
+  checksum: 84baf5ca07a202a30d2af675f9ae78b67557b38c3a997982dbaa26fab1b25e692c2d0955a7a6c037717e29737de3d77a3600a52fe068d9c144c8a2b4539c7bd5
   languageName: node
   linkType: hard
 
@@ -1373,12 +1374,12 @@ __metadata:
     "@ledgerhq/hw-transport-node-hid": ^6.27.2
     "@metaplex-foundation/js": ^0.18.3
     "@metaplex-foundation/mpl-token-auth-rules": ^1.2.0
-    "@metaplex-foundation/mpl-token-metadata": ^2.9.1
+    "@metaplex-foundation/mpl-token-metadata": ^2.13.0
     "@msgpack/msgpack": ^2.8.0
     "@saberhq/solana-contrib": ^1.14.11
     "@solana/spl-token": ^0.3.7
     "@solana/web3.js": ^1.73.0
-    "@tensor-hq/tensor-common": ^0.17.1
+    "@tensor-hq/tensor-common": ^0.18.0
     "@types/big.js": ^6.1.5
     "@types/bn.js": ^5.1.0
     "@types/chai": ^4.3.0

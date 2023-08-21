@@ -1549,7 +1549,11 @@ export class TensorSwapSDK {
     //1.optional cosigner
     const remAcc = [];
     if (isCosigned && type === "token") {
-      remAcc.push({ pubkey: cosigner, isSigner: true, isWritable: false });
+      remAcc.push({
+        pubkey: cosigner,
+        isSigner: true,
+        isWritable: false,
+      });
     }
 
     //2.optional creators (last)
