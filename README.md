@@ -93,8 +93,14 @@ const price = computeTakerPrice({
 
 // ========= Selling
 
-// Whitelist PDA address where uuid = Tensor collection ID (see "Collection UUID" API endpoint below)
-const wlAddr = findWhitelistPDA({uuid: "..."})[0];
+// uuid = Tensor collection ID (see "Collection UUID" API endpoint below)
+const uuid = "..."
+
+// Remove "-" symbols from uuid, so it's within the 32 seed length limit. Additionally convert the uuid to a Uint8Array
+const uuidArray = Buffer.from(uuid.replaceAll("-", "")).toJSON().data;
+
+// Finding the PDA address
+const wlAddr = findWhitelistPDA({uuid: uuidArray})[0];
 
 // Step 1: Prepare the mint proof PDA (if required).
 {
