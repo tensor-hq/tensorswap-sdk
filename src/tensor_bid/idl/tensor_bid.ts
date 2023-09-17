@@ -15,7 +15,7 @@ export type TensorBid = {
     {
       "name": "MAX_EXPIRY_SEC",
       "type": "i64",
-      "value": "5184000"
+      "value": "31_536_000"
     },
     {
       "name": "BID_STATE_SIZE",
@@ -573,7 +573,7 @@ export const IDL: TensorBid = {
     {
       "name": "MAX_EXPIRY_SEC",
       "type": "i64",
-      "value": "5184000"
+      "value": "31_536_000"
     },
     {
       "name": "BID_STATE_SIZE",

@@ -41,7 +41,7 @@ import {
   AccountSuffix,
   decodeAcct,
   DEFAULT_MICRO_LAMPORTS,
-  DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+  DEFAULT_XFER_COMPUTE_UNITS,
   DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
   DiscMap,
   evalMathExpr,
@@ -910,7 +910,7 @@ export class TensorSwapSDK {
     /** pnft args */
     metaCreators,
     authData = null,
-    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+    compute = DEFAULT_XFER_COMPUTE_UNITS,
     ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
   }: {
@@ -1073,7 +1073,7 @@ export class TensorSwapSDK {
     /** pnft args */
     metaCreators,
     authData = null,
-    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+    compute = DEFAULT_XFER_COMPUTE_UNITS,
     ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
   }: {
@@ -1291,7 +1291,7 @@ export class TensorSwapSDK {
     /** pnft args */
     metaCreators,
     authData = null,
-    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+    compute = DEFAULT_XFER_COMPUTE_UNITS,
     ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
   }: {
@@ -1463,7 +1463,7 @@ export class TensorSwapSDK {
     /** pnft args */
     metaCreators,
     authData = null,
-    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+    compute = DEFAULT_XFER_COMPUTE_UNITS,
     ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
   }: {
@@ -2050,7 +2050,7 @@ export class TensorSwapSDK {
     /** pnft args */
     metaCreators,
     authData = null,
-    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+    compute = DEFAULT_XFER_COMPUTE_UNITS,
     ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
   }: {
@@ -2192,7 +2192,7 @@ export class TensorSwapSDK {
     /** pnft args */
     metaCreators,
     authData = null,
-    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+    compute = DEFAULT_XFER_COMPUTE_UNITS,
     ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
   }: {
@@ -2292,7 +2292,7 @@ export class TensorSwapSDK {
     /** pnft args */
     metaCreators,
     authData = null,
-    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+    compute = DEFAULT_XFER_COMPUTE_UNITS,
     ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
   }: {
@@ -2397,7 +2397,7 @@ export class TensorSwapSDK {
     /** pnft args */
     metaCreators,
     authData = null,
-    compute = DEFAULT_NFT_TRANSFER_COMPUTE_UNITS,
+    compute = DEFAULT_XFER_COMPUTE_UNITS,
     ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
   }: {
