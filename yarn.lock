@@ -1365,9 +1365,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tensor-oss/tensorswap-sdk@workspace:.":
+"@tensor-hq/tensorswap-sdk@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@tensor-oss/tensorswap-sdk@workspace:."
+  resolution: "@tensor-hq/tensorswap-sdk@workspace:."
   dependencies:
     "@coral-xyz/anchor": ^0.26.0
     "@ledgerhq/hw-app-solana": ^6.27.2
@@ -2161,6 +2161,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"borsh@npm:*, borsh@npm:^0.7.0":
+  version: 0.7.0
+  resolution: "borsh@npm:0.7.0"
+  dependencies:
+    bn.js: ^5.2.0
+    bs58: ^4.0.0
+    text-encoding-utf-8: ^1.0.2
+  checksum: e98bfb5f7cfb820819c2870b884dac58dd4b4ce6a86c286c8fbf5c9ca582e73a8c6094df67e81a28c418ff07a309c6b118b2e27fdfea83fd92b8100c741da0b5
+  languageName: node
+  linkType: hard
+
 "borsh@npm:^0.6.0":
   version: 0.6.0
   resolution: "borsh@npm:0.6.0"
@@ -2169,17 +2180,6 @@ __metadata:
     bs58: ^4.0.0
     text-encoding-utf-8: ^1.0.2
   checksum: 633986769e931dd9d156c0d52a315cd3bb0546c24df84e28fa04859cccbebd9107f1621bd594d4a63ba23c7cda2931a8d97e54952ee766a097d3c2434f80b009
-  languageName: node
-  linkType: hard
-
-"borsh@npm:^0.7.0":
-  version: 0.7.0
-  resolution: "borsh@npm:0.7.0"
-  dependencies:
-    bn.js: ^5.2.0
-    bs58: ^4.0.0
-    text-encoding-utf-8: ^1.0.2
-  checksum: e98bfb5f7cfb820819c2870b884dac58dd4b4ce6a86c286c8fbf5c9ca582e73a8c6094df67e81a28c418ff07a309c6b118b2e27fdfea83fd92b8100c741da0b5
   languageName: node
   linkType: hard
 
@@ -2816,7 +2816,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:4, debug@npm:4.3.4, debug@npm:^4.1.0, debug@npm:^4.3.3, debug@npm:^4.3.4":
+"debug@npm:*, debug@npm:4, debug@npm:4.3.4, debug@npm:^4.1.0, debug@npm:^4.3.3, debug@npm:^4.3.4":
   version: 4.3.4
   resolution: "debug@npm:4.3.4"
   dependencies:

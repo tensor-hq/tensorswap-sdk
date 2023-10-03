@@ -15,14 +15,14 @@ export type TensorBid = {
     {
       "name": "MAX_EXPIRY_SEC",
       "type": "i64",
-      "value": "31_536_000"
+      "value": "31536000"
     },
     {
       "name": "BID_STATE_SIZE",
       "type": {
         "defined": "usize"
       },
-      "value": "8 + 1 + 8 + (32 * 2) + 1 + 8 + 33 + 64"
+      "value": "8 + 1 + 8 + (32 * 2) + 1 + 8 + 33 + 8 + 56"
     }
   ],
   "instructions": [
@@ -342,11 +342,33 @@ export type TensorBid = {
             }
           },
           {
+            "name": "updatedAt",
+            "type": "i64"
+          },
+          {
             "name": "reserved",
             "type": {
               "array": [
                 "u8",
-                64
+                8
+              ]
+            }
+          },
+          {
+            "name": "reserved1",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "reserved2",
+            "type": {
+              "array": [
+                "u8",
+                32
               ]
             }
           }
@@ -573,14 +595,14 @@ export const IDL: TensorBid = {
     {
       "name": "MAX_EXPIRY_SEC",
       "type": "i64",
-      "value": "31_536_000"
+      "value": "31536000"
     },
     {
       "name": "BID_STATE_SIZE",
       "type": {
         "defined": "usize"
       },
-      "value": "8 + 1 + 8 + (32 * 2) + 1 + 8 + 33 + 64"
+      "value": "8 + 1 + 8 + (32 * 2) + 1 + 8 + 33 + 8 + 56"
     }
   ],
   "instructions": [
@@ -900,11 +922,33 @@ export const IDL: TensorBid = {
             }
           },
           {
+            "name": "updatedAt",
+            "type": "i64"
+          },
+          {
             "name": "reserved",
             "type": {
               "array": [
                 "u8",
-                64
+                8
+              ]
+            }
+          },
+          {
+            "name": "reserved1",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "reserved2",
+            "type": {
+              "array": [
+                "u8",
+                32
               ]
             }
           }

@@ -108,6 +108,7 @@ export type BidStateAnchor = {
   bump: number[];
   expiry: BN;
   margin: PublicKey | null;
+  updatedAt: BN;
 };
 
 export type TensorBidPdaAnchor = BidStateAnchor;
