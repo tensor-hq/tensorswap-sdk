@@ -27,6 +27,8 @@ import {
 import {
   AuthorizationData,
   AUTH_PROG_ID,
+  parseAnchorIxs,
+  ParsedAnchorIx,
   prepPnftAccounts,
   TMETA_PROG_ID,
 } from "@tensor-hq/tensor-common";
@@ -118,21 +120,11 @@ export type TaggedTensorBidPdaAnchor = {
   account: BidStateAnchor;
 };
 
-export type TensorBidEventAnchor = Event<typeof IDL_latest["events"][number]>;
-
 // ------------- Types for parsed ixs from raw tx.
 
 export type TBidIxName = typeof IDL_latest["instructions"][number]["name"];
 export type TBidIx = Omit<Instruction, "name"> & { name: TBidIxName };
-export type ParsedTBidIx = {
-  ixIdx: number;
-  ix: TBidIx;
-  events: TensorBidEventAnchor[];
-  // FYI: accounts under InstructioNDisplay is the space-separated capitalized
-  // version of the fields for the corresponding #[Accounts].
-  // eg sol_escrow -> "Sol Escrow', or tswap -> "Tswap"
-  formatted: InstructionDisplay | null;
-};
+export type ParsedTBidIx = ParsedAnchorIx<TensorBid_latest>;
 export type TBidPricedIx = { lamports: BN };
 
 // --------------------------------------- sdk
@@ -455,63 +447,14 @@ export class TensorBidSDK {
 
   // --------------------------------------- parsing raw txs
 
-  // Stolen from https://github.com/saber-hq/saber-common/blob/4b533d77af8ad5c26f033fd5e69bace96b0e1840/packages/anchor-contrib/src/utils/coder.ts#L171-L185
-  parseEvents = (logs: string[] | undefined | null) => {
-    if (!logs) {
-      return [];
-    }
-
-    const events: TensorBidEventAnchor[] = [];
-    const parsedLogsIter = this.eventParser.parseLogs(logs ?? []);
-    let parsedEvent = parsedLogsIter.next();
-    while (!parsedEvent.done) {
-      events.push(parsedEvent.value as unknown as TensorBidEventAnchor);
-      parsedEvent = parsedLogsIter.next();
-    }
-
-    return events;
-  };
-
+  /** This only works for the latest IDL. This is intentional: otherwise we'll need to switch/case all historical deprecated ixs downstream. */
   parseIxs(tx: TransactionResponse): ParsedTBidIx[] {
-    const message = tx.transaction.message;
-    const logs = tx.meta?.logMessages;
-
-    const programIdIndex = message.accountKeys.findIndex((k) =>
-      k.equals(this.program.programId)
-    );
-
-    const ixs: ParsedTBidIx[] = [];
-    [
-      // Top-level ixs.
-      ...message.instructions.map((rawIx, ixIdx) => ({ rawIx, ixIdx })),
-      // Inner ixs (eg in CPI calls).
-      ...(tx.meta?.innerInstructions?.flatMap(({ instructions, index }) =>
-        instructions.map((rawIx) => ({ rawIx, ixIdx: index }))
-      ) ?? []),
-    ].forEach(({ rawIx, ixIdx }) => {
-      // Ignore ixs that are not from our program.
-      if (rawIx.programIdIndex !== programIdIndex) return;
-
-      // Instruction data.
-      const ix = this.coder.instruction.decode(rawIx.data, "base58");
-      if (!ix) return;
-      const accountMetas = rawIx.accounts.map((acctIdx) => {
-        const pubkey = message.accountKeys[acctIdx];
-        return {
-          pubkey,
-          isSigner: message.isAccountSigner(acctIdx),
-          isWritable: message.isAccountWritable(acctIdx),
-        };
-      });
-      const formatted = this.coder.instruction.format(ix, accountMetas);
-
-      // Events data.
-
-      const events = this.parseEvents(logs);
-      ixs.push({ ixIdx, ix: ix as TBidIx, events, formatted });
+    return parseAnchorIxs<TensorBid_latest>({
+      tx,
+      coder: this.coder,
+      eventParser: this.eventParser,
+      programId: this.program.programId,
     });
-
-    return ixs;
   }
 
   getFeeAmount(ix: ParsedTBidIx): BN | null {

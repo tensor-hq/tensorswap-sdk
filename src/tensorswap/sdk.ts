@@ -9,13 +9,13 @@ import {
   Program,
 } from "@coral-xyz/anchor";
 import {
+  Account,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createRevokeInstruction,
   getAccount,
   getAssociatedTokenAddressSync,
   getMinimumBalanceForRentExemptAccount,
   TOKEN_PROGRAM_ID,
-  Account,
 } from "@solana/spl-token";
 import {
   AccountInfo,
@@ -30,8 +30,10 @@ import {
   TransactionResponse,
 } from "@solana/web3.js";
 import {
-  AUTH_PROG_ID,
   AuthorizationData,
+  AUTH_PROG_ID,
+  parseAnchorIxs,
+  ParsedAnchorIx,
   prepPnftAccounts,
   TMETA_PROG_ID,
 } from "@tensor-hq/tensor-common";
@@ -41,8 +43,8 @@ import {
   AccountSuffix,
   decodeAcct,
   DEFAULT_MICRO_LAMPORTS,
-  DEFAULT_XFER_COMPUTE_UNITS,
   DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
+  DEFAULT_XFER_COMPUTE_UNITS,
   DiscMap,
   evalMathExpr,
   genDiscToDecoderMap,
@@ -76,6 +78,10 @@ import {
 Guide for protocol rollout: https://www.notion.so/tensor-hq/Protocol-Deployment-playbook-d345244ec21e48fb8a1f37277b38e38e
  */
 // ---------------------------------------- Versioned IDLs for backwards compat when parsing.
+import {
+  IDL as IDL_latest,
+  Tensorswap as Tensorswap_latest,
+} from "./idl/tensorswap";
 import {
   IDL as IDL_v0_1_32,
   Tensorswap as Tensorswap_v0_1_32,
@@ -120,10 +126,6 @@ import {
   IDL as IDL_v1_7_0,
   Tensorswap as Tensorswap_v1_7_0,
 } from "./idl/tensorswap_v1_7_0";
-import {
-  IDL as IDL_latest,
-  Tensorswap as Tensorswap_latest,
-} from "./idl/tensorswap";
 
 // https://solscan.io/tx/5ZWevmR3TLzUEVsPyE9bdUBqseeBdVMuELG45L15dx8rnXVCQZE2n1V1EbqEuGEaF6q4fND7rT7zwW8ZXjP1uC5s
 export const TensorswapIDL_v0_1_32 = IDL_v0_1_32;
@@ -470,7 +472,6 @@ export type TaggedTensorSwapPdaAnchor =
       account: SingleListingAnchor;
     };
 
-export type TensorSwapEventAnchor = Event<typeof IDL_latest["events"][number]>;
 type BuySellEventAnchor = Event<typeof IDL_latest["events"][0]>;
 type DelistEventAnchor = Event<typeof IDL_latest["events"][1]>;
 
@@ -478,15 +479,7 @@ type DelistEventAnchor = Event<typeof IDL_latest["events"][1]>;
 
 export type TSwapIxName = typeof IDL_latest["instructions"][number]["name"];
 export type TSwapIx = Omit<Instruction, "name"> & { name: TSwapIxName };
-export type ParsedTSwapIx = {
-  ixIdx: number;
-  ix: TSwapIx;
-  events: TensorSwapEventAnchor[];
-  // FYI: accounts under InstructioNDisplay is the space-separated capitalized
-  // version of the fields for the corresponding #[Accounts].
-  // eg sol_escrow -> "Sol Escrow', or tswap -> "Tswap"
-  formatted: InstructionDisplay | null;
-};
+export type ParsedTSwapIx = ParsedAnchorIx<Tensorswap_latest>;
 export type TSwapIxData = { config: PoolConfigAnchor };
 export type EditPoolIxData = {
   oldConfig: PoolConfigAnchor;
@@ -2632,63 +2625,14 @@ export class TensorSwapSDK {
 
   // --------------------------------------- parsing raw transactions
 
-  // Stolen from https://github.com/saber-hq/saber-common/blob/4b533d77af8ad5c26f033fd5e69bace96b0e1840/packages/anchor-contrib/src/utils/coder.ts#L171-L185
-  parseEvents = (logs: string[] | undefined | null) => {
-    if (!logs) {
-      return [];
-    }
-
-    const events: TensorSwapEventAnchor[] = [];
-    const parsedLogsIter = this.eventParser.parseLogs(logs ?? []);
-    let parsedEvent = parsedLogsIter.next();
-    while (!parsedEvent.done) {
-      events.push(parsedEvent.value as unknown as TensorSwapEventAnchor);
-      parsedEvent = parsedLogsIter.next();
-    }
-
-    return events;
-  };
-
+  /** This only works for the latest IDL. This is intentional: otherwise we'll need to switch/case all historical deprecated ixs downstream. */
   parseIxs(tx: TransactionResponse): ParsedTSwapIx[] {
-    const message = tx.transaction.message;
-    const logs = tx.meta?.logMessages;
-
-    const programIdIndex = message.accountKeys.findIndex((k) =>
-      k.equals(this.program.programId)
-    );
-
-    const ixs: ParsedTSwapIx[] = [];
-    [
-      // Top-level ixs.
-      ...message.instructions.map((rawIx, ixIdx) => ({ rawIx, ixIdx })),
-      // Inner ixs (eg in CPI calls).
-      ...(tx.meta?.innerInstructions?.flatMap(({ instructions, index }) =>
-        instructions.map((rawIx) => ({ rawIx, ixIdx: index }))
-      ) ?? []),
-    ].forEach(({ rawIx, ixIdx }) => {
-      // Ignore ixs that are not from our program.
-      if (rawIx.programIdIndex !== programIdIndex) return;
-
-      // Instruction data.
-      const ix = this.coder.instruction.decode(rawIx.data, "base58");
-      if (!ix) return;
-      const accountMetas = rawIx.accounts.map((acctIdx) => {
-        const pubkey = message.accountKeys[acctIdx];
-        return {
-          pubkey,
-          isSigner: message.isAccountSigner(acctIdx),
-          isWritable: message.isAccountWritable(acctIdx),
-        };
-      });
-      const formatted = this.coder.instruction.format(ix, accountMetas);
-
-      // Events data.
-
-      const events = this.parseEvents(logs);
-      ixs.push({ ixIdx, ix: ix as TSwapIx, events, formatted });
+    return parseAnchorIxs<Tensorswap_latest>({
+      tx,
+      coder: this.coder,
+      eventParser: this.eventParser,
+      programId: this.program.programId,
     });
-
-    return ixs;
   }
 
   getPoolConfig(ix: ParsedTSwapIx): PoolConfig | null {
@@ -2741,7 +2685,6 @@ export class TensorSwapSDK {
       case "sellNftTokenPool":
       case "takeSnipe":
       case "buySingleListing": {
-        // TODO: Think of a better way to handle multiple events.
         // NB: the actual sell price includes the "MM fee" (really a spread).
         const event = ix.events.find((e) => e.name === "BuySellEvent") as
           | BuySellEventAnchor

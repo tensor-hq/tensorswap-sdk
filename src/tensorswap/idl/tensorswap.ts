@@ -50,7 +50,7 @@ export type Tensorswap = {
     {
       "name": "SNIPE_MIN_FEE",
       "type": "u64",
-      "value": "10_000_000"
+      "value": "10000000"
     },
     {
       "name": "SNIPE_PROFIT_SHARE_BPS",
@@ -3166,7 +3166,7 @@ export const IDL: Tensorswap = {
     {
       "name": "SNIPE_MIN_FEE",
       "type": "u64",
-      "value": "10_000_000"
+      "value": "10000000"
     },
     {
       "name": "SNIPE_PROFIT_SHARE_BPS",
