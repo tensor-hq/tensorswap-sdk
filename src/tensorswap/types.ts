@@ -1,22 +1,7 @@
-import { BN, Event, Instruction } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import Big from "big.js";
-import { CurveType, PoolConfig, PoolType, InstructionDisplay } from "../types";
-import { IDL, Tensorswap } from "./idl/tensorswap";
-import {
-  IDL as IDL_v0_1_32,
-  Tensorswap as Tensorswap_v0_1_32,
-} from "./idl/tensorswap_v0_1_32";
-
-// Versioned IDLs for backwards compat when parsing.
-export const TensorswapIDL_v0_1_32 = IDL_v0_1_32;
-// https://solscan.io/tx/5ZWevmR3TLzUEVsPyE9bdUBqseeBdVMuELG45L15dx8rnXVCQZE2n1V1EbqEuGEaF6q4fND7rT7zwW8ZXjP1uC5s
-// TODO: find exact slot + ix when the upgrade happened
-export const TensorswapIDL_v0_1_32_EffSlot = 150855169;
-export const TensorswapIDL_latest = IDL;
-// https://solscan.io/tx/5aswB2admCErRwPNgM3DeaYcbVYjAjpHuKVFAZenaSGEm8PKL8R2BmqsGFWdGfMR25NPrVSNKix18ZgLtVpHyXUJ
-export const TensorswapIDL_latest_EffSlot = 153016663;
-export type TensorswapIDL = Tensorswap_v0_1_32 | Tensorswap;
+import BN from "bn.js";
+import { CurveType, PoolConfig, PoolType } from "../types";
 
 // --------------------------------------- pool type
 
@@ -113,6 +98,22 @@ export const castPoolConfig = (config: PoolConfig): PoolConfigAnchor => ({
 
 // --------------------------------------- rest
 
+export enum OrderType {
+  Standard = 0,
+  Sniping = 1,
+}
+
+export type Frozen = {
+  amount: BN;
+  time: BN;
+};
+
+export type PoolStatsAnchor = {
+  takerSellCount: number;
+  takerBuyCount: number;
+  accumulatedMmProfit: BN;
+};
+
 export type PoolAnchor = {
   version: number;
   bump: number[];
@@ -126,6 +127,16 @@ export type PoolAnchor = {
   takerSellCount: number;
   takerBuyCount: number;
   nftsHeld: number;
+  //v0.3
+  nftAuthority: PublicKey;
+  stats: PoolStatsAnchor;
+  //v1.0
+  margin: PublicKey | null;
+  isCosigned: boolean;
+  orderType: OrderType;
+  frozen: Frozen | null;
+  lastTransactedSeconds: BN;
+  maxTakerSellCount: number;
 };
 
 export type SolEscrowAnchor = {};
@@ -140,16 +151,44 @@ export type TSwapAnchor = {
 
 export type NftDepositReceiptAnchor = {
   bump: number;
-  pool: PublicKey;
+  nftAuthority: PublicKey;
   nftMint: PublicKey;
   nftEscrow: PublicKey;
 };
+
+// --------------------------------------- state accounts
+
+export type NftAuthorityAnchor = {
+  randomSeed: number[];
+  bump: number[];
+  pool: PublicKey;
+};
+
+export type MarginAccountAnchor = {
+  owner: PublicKey;
+  name: number[];
+  nr: number;
+  bump: number[];
+  poolsAttached: number;
+};
+
+export type SingleListingAnchor = {
+  owner: PublicKey;
+  nftMint: PublicKey;
+  price: BN;
+  bump: number[];
+};
+
+// ----------- together
 
 export type TensorSwapPdaAnchor =
   | PoolAnchor
   | SolEscrowAnchor
   | TSwapAnchor
-  | NftDepositReceiptAnchor;
+  | NftDepositReceiptAnchor
+  | NftAuthorityAnchor
+  | MarginAccountAnchor
+  | SingleListingAnchor;
 
 export type TaggedTensorSwapPdaAnchor =
   | {
@@ -167,22 +206,16 @@ export type TaggedTensorSwapPdaAnchor =
   | {
       name: "nftDepositReceipt";
       account: NftDepositReceiptAnchor;
+    }
+  | {
+      name: "nftAuthority";
+      account: NftAuthorityAnchor;
+    }
+  | {
+      name: "marginAccount";
+      account: MarginAccountAnchor;
+    }
+  | {
+      name: "singleListing";
+      account: SingleListingAnchor;
     };
-
-export type TensorSwapEventAnchor = Event<typeof IDL["events"][number]>;
-
-// ------------- Types for parsed ixs from raw tx.
-
-export type TSwapIxName = typeof IDL["instructions"][number]["name"];
-export type TSwapIx = Omit<Instruction, "name"> & { name: TSwapIxName };
-export type ParsedTSwapIx = {
-  ixIdx: number;
-  ix: TSwapIx;
-  events: TensorSwapEventAnchor[];
-  // FYI: accounts under InstructioNDisplay is the space-separated capitalized
-  // version of the fields for the corresponding #[Accounts].
-  // eg sol_escrow -> "Sol Escrow', or tswap -> "Tswap"
-  formatted: InstructionDisplay | null;
-};
-export type TSwapIxData = { config: PoolConfigAnchor };
-export type WithdrawDepositSolData = TSwapIxData & { lamports: BN };

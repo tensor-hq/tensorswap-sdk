@@ -1,6 +1,6 @@
 import { AccountInfo, Connection, PublicKey } from "@solana/web3.js";
+import BN from "bn.js";
 import { TENSORSWAP_ADDR } from "./constants";
-import { BN } from "@coral-xyz/anchor";
 
 export const findPoolPDA = ({
   program,

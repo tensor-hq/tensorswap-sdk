@@ -1,5 +1,5 @@
 export type TensorBid = {
-  "version": "0.2.0",
+  "version": "1.0.0",
   "name": "tensor_bid",
   "constants": [
     {
@@ -579,7 +579,7 @@ export type TensorBid = {
 };
 
 export const IDL: TensorBid = {
-  "version": "0.2.0",
+  "version": "1.0.0",
   "name": "tensor_bid",
   "constants": [
     {

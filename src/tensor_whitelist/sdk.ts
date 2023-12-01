@@ -14,16 +14,7 @@ import {
 import { v4 } from "uuid";
 import MerkleTree from "merkletreejs";
 import keccak256 from "keccak256";
-import {
-  decodeAcct,
-  DiscMap,
-  genDiscToDecoderMap,
-  getAccountRent,
-  getRentSync,
-  hexCode,
-  evalMathExpr,
-  removeNullBytes,
-} from "../common";
+import { evalMathExpr } from "../common";
 
 // ---------------------------------------- Versioned IDLs for backwards compat when parsing.
 import {
@@ -35,6 +26,15 @@ import {
   IDL as IDL_latest,
   TensorWhitelist as TensorWhitelist_latest,
 } from "./idl/tensor_whitelist";
+import {
+  AnchorDiscMap,
+  decodeAnchorAcct,
+  genDiscToDecoderMap,
+  getRent,
+  getRentSync,
+  hexCode,
+  removeNullBytes,
+} from "@tensor-hq/tensor-common";
 
 //a non-breaking update to migrate account space to exportable constants: https://explorer.solana.com/tx/5czMUGttDttcXwhTTGH8QzyTffwcVfeUAQbY2FzSh8WGxRFBQAmdrYeGBQxfEfS1bog4CfTvqPvXmvxdygQ5aJKE
 
@@ -121,7 +121,7 @@ export type TaggedTensorWhitelistPdaAnchor =
 
 export class TensorWhitelistSDK {
   program: Program<TensorWhitelistIDL>;
-  discMap: DiscMap<TensorWhitelistIDL>;
+  discMap: AnchorDiscMap<TensorWhitelistIDL>;
 
   constructor({
     idl = IDL_latest,
@@ -165,7 +165,7 @@ export class TensorWhitelistSDK {
 
   decode(acct: AccountInfo<Buffer>): TaggedTensorWhitelistPdaAnchor | null {
     if (!acct.owner.equals(this.program.programId)) return null;
-    return decodeAcct(acct, this.discMap);
+    return decodeAnchorAcct(acct, this.discMap);
   }
 
   // --------------------------------------- authority methods
@@ -393,21 +393,21 @@ export class TensorWhitelistSDK {
   // --------------------------------------- helper methods
 
   async getWhitelistRent() {
-    return await getAccountRent(
+    return await getRent(
       this.program.provider.connection,
       this.program.account.whitelist
     );
   }
 
   async getAuthorityRent() {
-    return await getAccountRent(
+    return await getRent(
       this.program.provider.connection,
       this.program.account.authority
     );
   }
 
   async getMintProofRent() {
-    return await getAccountRent(
+    return await getRent(
       this.program.provider.connection,
       this.program.account.mintProof
     );
