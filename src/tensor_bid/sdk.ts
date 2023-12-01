@@ -2,12 +2,9 @@ import {
   AnchorProvider,
   BorshCoder,
   Coder,
-  Event,
   EventParser,
   Instruction,
   Program,
-  Provider,
-  Wallet,
 } from "@coral-xyz/anchor";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -17,7 +14,6 @@ import {
 import {
   AccountInfo,
   Commitment,
-  Keypair,
   PublicKey,
   SystemProgram,
   SYSVAR_INSTRUCTIONS_PUBKEY,
@@ -25,33 +21,29 @@ import {
   TransactionResponse,
 } from "@solana/web3.js";
 import {
+  AnchorDiscMap,
   AuthorizationData,
   AUTH_PROG_ID,
+  decodeAnchorAcct,
+  genDiscToDecoderMap,
+  getRent,
+  getRentSync,
+  hexCode,
   parseAnchorIxs,
   ParsedAnchorIx,
+  prependComputeIxs,
   prepPnftAccounts,
   TMETA_PROG_ID,
 } from "@tensor-hq/tensor-common";
 import BN from "bn.js";
 import {
   AccountSuffix,
-  decodeAcct,
   DEFAULT_MICRO_LAMPORTS,
   DEFAULT_XFER_COMPUTE_UNITS,
-  DiscMap,
   evalMathExpr,
-  genDiscToDecoderMap,
-  getAccountRent,
-  getRentSync,
-  hexCode,
 } from "../common";
-import {
-  findTSwapPDA,
-  getTotalComputeIxs,
-  TensorSwapSDK,
-  TENSORSWAP_ADDR,
-} from "../tensorswap";
-import { InstructionDisplay, ParsedAccount } from "../types";
+import { findTSwapPDA, TensorSwapSDK, TENSORSWAP_ADDR } from "../tensorswap";
+import { ParsedAccount } from "../types";
 import { TBID_ADDR } from "./constants";
 import { findBidStatePda, findNftTempPDA } from "./pda";
 
@@ -131,7 +123,7 @@ export type TBidPricedIx = { lamports: BN };
 
 export class TensorBidSDK {
   program: Program<TensorBidIDL>;
-  discMap: DiscMap<TensorBidIDL>;
+  discMap: AnchorDiscMap<TensorBidIDL>;
   coder: BorshCoder;
   eventParser: EventParser;
 
@@ -143,7 +135,7 @@ export class TensorBidSDK {
   }: {
     idl?: any; //todo better typing
     addr?: PublicKey;
-    provider?: Provider;
+    provider?: AnchorProvider;
     coder?: Coder;
   }) {
     this.program = new Program<TensorBidIDL>(idl, addr, provider, coder);
@@ -165,7 +157,7 @@ export class TensorBidSDK {
 
   decode(acct: AccountInfo<Buffer>): TaggedTensorBidPdaAnchor | null {
     if (!acct.owner.equals(this.program.programId)) return null;
-    return decodeAcct(acct, this.discMap);
+    return decodeAnchorAcct(acct, this.discMap);
   }
 
   // --------------------------------------- ixs
@@ -250,18 +242,9 @@ export class TensorBidSDK {
     });
     const [tswapPda, tswapPdaBump] = findTSwapPDA({});
 
-    //figure out fee wallet
-    const wallet = new Wallet(Keypair.generate());
-    const provider = new AnchorProvider(
-      this.program.provider.connection,
-      wallet,
-      {
-        commitment: "confirmed",
-        preflightCommitment: "confirmed",
-        skipPreflight: true,
-      }
-    );
-    const swapSdk = new TensorSwapSDK({ provider });
+    const swapSdk = new TensorSwapSDK({
+      provider: this.program.provider as AnchorProvider,
+    });
     const tSwapAcc = await swapSdk.fetchTSwap(tswapPda);
     const [tempPda, tempPdaBump] = findNftTempPDA({ nftMint });
 
@@ -342,12 +325,14 @@ export class TensorBidSDK {
         }))
       );
 
-    const computeIxs = getTotalComputeIxs(compute, priorityMicroLamports);
-
     return {
       builder,
       tx: {
-        ixs: [...computeIxs, await builder.instruction()],
+        ixs: prependComputeIxs(
+          [await builder.instruction()],
+          compute,
+          priorityMicroLamports
+        ),
         extraSigners: [],
       },
       bidState,
@@ -428,7 +413,7 @@ export class TensorBidSDK {
   // --------------------------------------- helpers
 
   async getBidStateRent() {
-    return await getAccountRent(
+    return await getRent(
       this.program.provider.connection,
       this.program.account.bidState
     );

@@ -1,11 +1,14 @@
 {
   "name": "@tensor-oss/tensorswap-sdk",
-  "version": "1.15.1",
+  "version": "2.0.3",
   "description": "Anchor/JS SDK for interacting with TensorSwap, TensorWhitelist and TensorBid.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "module": "./dist/esm/index.js",
+  "main": "./dist/cjs/index.js",
+  "types": "dist/cjs/index.d.ts",
   "files": [
-    "/dist"
+    "/dist/esm/**/*",
+    "/dist/cjs/**/*"
   ],
   "repository": "https://github.com/tensor-hq/tensorswap-sdk.git",
   "license": "MIT",
@@ -15,11 +18,13 @@
   "scripts": {
     "build": "anchor build && bash scripts/cp_idl.sh",
     "build:test": "bash scripts/test_build.sh",
+    "build:ts": "rm -rf ./dist && yarn tsc && yarn tsc -p tsconfig.cjs.json",
     "fast-test": "anchor test --skip-build -- --features testing",
     "test": "yarn build:test && yarn fast-test",
     "push": "git push --atomic",
-    "build:ts": "rm -rf ./dist && yarn tsc",
-    "publish:public": "yarn build:ts && npm publish --access public --registry https://registry.npmjs.org"
+    "publish:private": "yarn build:ts && yarn npm publish",
+    "publish:public": "yarn build:ts && npm publish --access public --registry https://registry.npmjs.org",
+    "upgrade": "yarn add @tensor-hq/tensor-common"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.26.0",
@@ -27,26 +32,25 @@
     "@saberhq/solana-contrib": "^1.14.11",
     "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.73.0",
-    "@tensor-hq/tensor-common": "^0.19.1",
+    "@tensor-hq/tensor-common": "^1.0.3",
     "@types/bn.js": "^5.1.0",
     "big.js": "^6.2.1",
     "bn.js": "^5.2.0",
+    "js-sha256": "^0.9.0",
     "keccak256": "^1.0.6",
-    "math-expression-evaluator": "^2.0.2",
+    "math-expression-evaluator": "^2.0.4",
     "merkletreejs": "^0.2.32",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@ledgerhq/hw-app-solana": "^6.27.2",
     "@ledgerhq/hw-transport-node-hid": "^6.27.2",
-    "@metaplex-foundation/js": "^0.18.3",
-    "@metaplex-foundation/mpl-token-auth-rules": "^1.2.0",
+    "@metaplex-foundation/mpl-token-auth-rules": "^2.0.0",
     "@metaplex-foundation/mpl-token-metadata": "^2.13.0",
     "@types/big.js": "^6.1.5",
-    "@types/chai": "^4.3.0",
+    "@types/chai": "^4.3.10",
     "@types/chai-as-promised": "^7.1.4",
-    "@types/mocha": "^9.1.0",
-    "@types/node": "^18.7.11",
+    "@types/mocha": "^10.0.4",
     "@types/uuid": "^8.3.4",
     "@types/yargs": "^17.0.12",
     "chai": "^4.3.6",

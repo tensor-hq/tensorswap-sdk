@@ -1,6 +1,5 @@
 import {
   AnchorProvider,
-  BN,
   BorshCoder,
   Coder,
   Event,
@@ -8,6 +7,7 @@ import {
   Instruction,
   Program,
 } from "@coral-xyz/anchor";
+import BN from "bn.js";
 import {
   Account,
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -19,6 +19,7 @@ import {
 } from "@solana/spl-token";
 import {
   AccountInfo,
+  AccountMeta,
   Commitment,
   ComputeBudgetProgram,
   LAMPORTS_PER_SOL,
@@ -30,37 +31,32 @@ import {
   TransactionResponse,
 } from "@solana/web3.js";
 import {
+  AnchorDiscMap,
   AuthorizationData,
   AUTH_PROG_ID,
-  parseAnchorIxs,
-  ParsedAnchorIx,
-  prepPnftAccounts,
-  TMETA_PROG_ID,
-} from "@tensor-hq/tensor-common";
-import Big from "big.js";
-import { v4 } from "uuid";
-import {
-  AccountSuffix,
-  decodeAcct,
-  DEFAULT_MICRO_LAMPORTS,
-  DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
-  DEFAULT_XFER_COMPUTE_UNITS,
-  DiscMap,
-  evalMathExpr,
+  decodeAnchorAcct,
   genDiscToDecoderMap,
-  getAccountRent,
+  getRent,
   getRentSync,
   hexCode,
   isNullLike,
+  parseAnchorIxs,
+  ParsedAnchorIx,
+  PnftArgs,
+  prependComputeIxs,
+  prepPnftAccounts,
+  TMETA_PROG_ID,
+} from "@tensor-hq/tensor-common";
+import { v4 } from "uuid";
+import {
+  AccountSuffix,
+  DEFAULT_MICRO_LAMPORTS,
+  DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
+  DEFAULT_XFER_COMPUTE_UNITS,
+  evalMathExpr,
 } from "../common";
 import { findMintProofPDA } from "../tensor_whitelist";
-import {
-  CurveType,
-  InstructionDisplay,
-  ParsedAccount,
-  PoolConfig,
-  PoolType,
-} from "../types";
+import { ParsedAccount, PoolConfig } from "../types";
 import { TENSORSWAP_ADDR, TSWAP_COSIGNER, TSWAP_OWNER } from "./constants";
 import {
   findMarginPDA,
@@ -126,6 +122,22 @@ import {
   IDL as IDL_v1_7_0,
   Tensorswap as Tensorswap_v1_7_0,
 } from "./idl/tensorswap_v1_7_0";
+import {
+  castPoolConfigAnchor,
+  curveTypeU8,
+  MarginAccountAnchor,
+  NftAuthorityAnchor,
+  NftDepositReceiptAnchor,
+  OrderType,
+  PoolAnchor,
+  PoolConfigAnchor,
+  poolTypeU8,
+  SingleListingAnchor,
+  SolEscrowAnchor,
+  TaggedTensorSwapPdaAnchor,
+  TSwapAnchor,
+  TSwapConfigAnchor,
+} from "./types";
 
 // https://solscan.io/tx/5ZWevmR3TLzUEVsPyE9bdUBqseeBdVMuELG45L15dx8rnXVCQZE2n1V1EbqEuGEaF6q4fND7rT7zwW8ZXjP1uC5s
 export const TensorswapIDL_v0_1_32 = IDL_v0_1_32;
@@ -213,9 +225,6 @@ export const triageIDL = (slot: number | bigint): TensorswapIDL | null => {
 
 // --------------------------------------- constants
 
-export const TSWAP_TAKER_FEE_BPS: number = +IDL_latest.constants.find(
-  (c) => c.name === "TSWAP_TAKER_FEE_BPS"
-)!.value;
 export const MAKER_REBATE_BPS: number = +IDL_latest.constants.find(
   (c) => c.name === "MAKER_REBATE_BPS"
 )!.value;
@@ -256,224 +265,8 @@ export const APPROX_DEPOSIT_RECEIPT_RENT = getRentSync(DEPOSIT_RECEIPT_SIZE);
 export const APPROX_NFT_AUTHORITY_RENT = getRentSync(NFT_AUTHORITY_SIZE);
 export const APPROX_SOL_ESCROW_RENT = 946560; //token account owned by the program, keep hardcoded
 
-// --------------------------------------- pool type
-
-export const PoolTypeAnchor = {
-  Token: { token: {} },
-  NFT: { nft: {} },
-  Trade: { trade: {} },
-};
-type PoolTypeAnchor = typeof PoolTypeAnchor[keyof typeof PoolTypeAnchor];
-
-export const poolTypeU8 = (poolType: PoolTypeAnchor): 0 | 1 | 2 => {
-  const order: Record<string, 0 | 1 | 2> = {
-    token: 0,
-    nft: 1,
-    trade: 2,
-  };
-  return order[Object.keys(poolType)[0]];
-};
-
-export const castPoolTypeAnchor = (poolType: PoolTypeAnchor): PoolType =>
-  ({
-    0: PoolType.Token,
-    1: PoolType.NFT,
-    2: PoolType.Trade,
-  }[poolTypeU8(poolType)]);
-
-export const castPoolType = (poolType: PoolType): PoolTypeAnchor =>
-  poolType === PoolType.NFT
-    ? PoolTypeAnchor.NFT
-    : poolType === PoolType.Token
-    ? PoolTypeAnchor.Token
-    : PoolTypeAnchor.Trade;
-
-// --------------------------------------- curve type
-
-export const CurveTypeAnchor = {
-  Linear: { linear: {} },
-  Exponential: { exponential: {} },
-};
-
-type CurveTypeAnchor = typeof CurveTypeAnchor[keyof typeof CurveTypeAnchor];
-
-export const curveTypeU8 = (curveType: CurveTypeAnchor): 0 | 1 => {
-  const order: Record<string, 0 | 1> = {
-    linear: 0,
-    exponential: 1,
-  };
-  return order[Object.keys(curveType)[0]];
-};
-
-export const castCurveTypeAnchor = (curveType: CurveTypeAnchor): CurveType =>
-  ({
-    0: CurveType.Linear,
-    1: CurveType.Exponential,
-  }[curveTypeU8(curveType)]);
-
-export const castCurveType = (curveType: CurveType): CurveTypeAnchor =>
-  curveType === CurveType.Linear
-    ? CurveTypeAnchor.Linear
-    : CurveTypeAnchor.Exponential;
-
-// --------------------------------------- config
-
-export type TSwapConfigAnchor = {
-  feeBps: number;
-};
-
-export type PoolConfigAnchor = {
-  poolType: PoolTypeAnchor;
-  curveType: CurveTypeAnchor;
-  startingPrice: BN;
-  delta: BN;
-  mmCompoundFees: boolean;
-  mmFeeBps: number | null; // null for non-trade pools
-};
-
-export const castPoolConfigAnchor = (config: PoolConfigAnchor): PoolConfig => ({
-  poolType: castPoolTypeAnchor(config.poolType),
-  curveType: castCurveTypeAnchor(config.curveType),
-  startingPrice: new Big(config.startingPrice.toString()),
-  delta: new Big(config.delta.toString()),
-  mmCompoundFees: config.mmCompoundFees,
-  mmFeeBps: config.mmFeeBps,
-});
-
-export const castPoolConfig = (config: PoolConfig): PoolConfigAnchor => ({
-  poolType: castPoolType(config.poolType),
-  curveType: castCurveType(config.curveType),
-  startingPrice: new BN(config.startingPrice.round().toString()),
-  delta: new BN(config.delta.round().toString()),
-  mmCompoundFees: config.mmCompoundFees,
-  mmFeeBps: config.mmFeeBps,
-});
-
-// --------------------------------------- state accounts
-
-export enum OrderType {
-  Standard = 0,
-  Sniping = 1,
-}
-
-export type Frozen = {
-  amount: BN;
-  time: BN;
-};
-
-export type PoolStatsAnchor = {
-  takerSellCount: number;
-  takerBuyCount: number;
-  accumulatedMmProfit: BN;
-};
-
-export type PoolAnchor = {
-  version: number;
-  bump: number[];
-  solEscrowBump: number[];
-  createdUnixSeconds: BN;
-  config: PoolConfigAnchor;
-  tswap: PublicKey;
-  owner: PublicKey;
-  whitelist: PublicKey;
-  solEscrow: PublicKey;
-  takerSellCount: number;
-  takerBuyCount: number;
-  nftsHeld: number;
-  //v0.3
-  nftAuthority: PublicKey;
-  stats: PoolStatsAnchor;
-  //v1.0
-  margin: PublicKey | null;
-  isCosigned: boolean;
-  orderType: OrderType;
-  frozen: Frozen | null;
-  lastTransactedSeconds: BN;
-  maxTakerSellCount: number;
-};
-
-export type SolEscrowAnchor = {};
-
-export type TSwapAnchor = {
-  version: number;
-  bump: number[];
-  config: TSwapConfigAnchor;
-  owner: PublicKey;
-  feeVault: PublicKey;
-  cosigner: PublicKey;
-};
-
-export type NftDepositReceiptAnchor = {
-  bump: number;
-  nftAuthority: PublicKey;
-  nftMint: PublicKey;
-  nftEscrow: PublicKey;
-};
-
-export type NftAuthorityAnchor = {
-  randomSeed: number[];
-  bump: number[];
-  pool: PublicKey;
-};
-
-export type MarginAccountAnchor = {
-  owner: PublicKey;
-  name: number[];
-  nr: number;
-  bump: number[];
-  poolsAttached: number;
-};
-
-export type SingleListingAnchor = {
-  owner: PublicKey;
-  nftMint: PublicKey;
-  price: BN;
-  bump: number[];
-};
-
-// ----------- together
-
-export type TensorSwapPdaAnchor =
-  | PoolAnchor
-  | SolEscrowAnchor
-  | TSwapAnchor
-  | NftDepositReceiptAnchor
-  | NftAuthorityAnchor
-  | MarginAccountAnchor
-  | SingleListingAnchor;
-
-export type TaggedTensorSwapPdaAnchor =
-  | {
-      name: "pool";
-      account: PoolAnchor;
-    }
-  | {
-      name: "solEscrow";
-      account: SolEscrowAnchor;
-    }
-  | {
-      name: "tSwap";
-      account: TSwapAnchor;
-    }
-  | {
-      name: "nftDepositReceipt";
-      account: NftDepositReceiptAnchor;
-    }
-  | {
-      name: "nftAuthority";
-      account: NftAuthorityAnchor;
-    }
-  | {
-      name: "marginAccount";
-      account: MarginAccountAnchor;
-    }
-  | {
-      name: "singleListing";
-      account: SingleListingAnchor;
-    };
-
-type BuySellEventAnchor = Event<typeof IDL_latest["events"][0]>;
-type DelistEventAnchor = Event<typeof IDL_latest["events"][1]>;
+export type BuySellEventAnchor = Event<typeof IDL_latest["events"][0]>;
+export type DelistEventAnchor = Event<typeof IDL_latest["events"][1]>;
 
 // ------------- Types for parsed ixs from raw tx.
 
@@ -489,28 +282,13 @@ export type WithdrawDepositSolData = TSwapIxData & { lamports: BN };
 export type WithdrawTSwapOwnedSplData = TSwapIxData & { amount: BN };
 export type ListEditListingData = TSwapIxData & { price: BN };
 
-type PnftArgs = {
-  /** If provided, skips RPC call to fetch on-chain metadata + creators. */
-  metaCreators?: {
-    metadata: PublicKey;
-    creators: PublicKey[];
-  };
-  authData?: AuthorizationData | null;
-  /** passing in null or undefined means these ixs are NOT included */
-  compute?: number | null;
-  /** If a ruleSet is present, we add this many additional */
-  ruleSetAddnCompute?: number | null;
-  priorityMicroLamports?: number | null;
-};
-
 //decided to NOT build the tx inside the sdk (too much coupling - should not care about blockhash)
 export class TensorSwapSDK {
   program: Program<TensorswapIDL>;
-  discMap: DiscMap<TensorswapIDL>;
+  discMap: AnchorDiscMap<TensorswapIDL>;
   coder: BorshCoder;
   eventParser: EventParser;
 
-  //can build ixs without provider, but need provider for
   constructor({
     idl = IDL_latest,
     addr = TENSORSWAP_ADDR,
@@ -522,13 +300,7 @@ export class TensorSwapSDK {
     provider?: AnchorProvider;
     coder?: Coder;
   }) {
-    this.program = new Program<TensorswapIDL>(
-      // yucky but w/e
-      idl as typeof IDL_latest,
-      addr,
-      provider,
-      coder
-    );
+    this.program = new Program<TensorswapIDL>(idl, addr, provider, coder);
     this.discMap = genDiscToDecoderMap(this.program);
     this.coder = new BorshCoder(idl);
     this.eventParser = new EventParser(addr, this.coder);
@@ -589,7 +361,7 @@ export class TensorSwapSDK {
 
   decode(acct: AccountInfo<Buffer>): TaggedTensorSwapPdaAnchor | null {
     if (!acct.owner.equals(this.program.programId)) return null;
-    return decodeAcct(acct, this.discMap);
+    return decodeAnchorAcct(acct, this.discMap);
   }
 
   // --------------------------------------- tswap methods
@@ -978,7 +750,8 @@ export class TensorSwapSDK {
       });
 
     const ruleSetCompute = ruleSet ? ruleSetAddnCompute : null;
-    const computeIxs = getTotalComputeIxs(
+    const ixs = prependComputeIxs(
+      [await builder.instruction()],
       isNullLike(compute) && isNullLike(ruleSetCompute)
         ? null
         : (compute ?? 0) + (ruleSetCompute ?? 0),
@@ -988,7 +761,7 @@ export class TensorSwapSDK {
     return {
       builder,
       tx: {
-        ixs: [...computeIxs, await builder.instruction()],
+        ixs,
         extraSigners: [],
       },
       tswapPda,
@@ -1139,7 +912,11 @@ export class TensorSwapSDK {
       });
 
     const ruleSetCompute = ruleSet ? ruleSetAddnCompute : null;
-    const computeIxs = getTotalComputeIxs(
+    const ixs = prependComputeIxs(
+      [
+        ...(await this.clearDelegate(nftDest, owner)),
+        await builder.instruction(),
+      ],
       isNullLike(compute) && isNullLike(ruleSetCompute)
         ? null
         : (compute ?? 0) + (ruleSetCompute ?? 0),
@@ -1149,11 +926,7 @@ export class TensorSwapSDK {
     return {
       builder,
       tx: {
-        ixs: [
-          ...computeIxs,
-          ...(await this.clearDelegate(nftDest, owner)),
-          await builder.instruction(),
-        ],
+        ixs,
         extraSigners: [],
       },
       tswapPda,
@@ -1399,7 +1172,12 @@ export class TensorSwapSDK {
       );
 
     const ruleSetCompute = ruleSet ? ruleSetAddnCompute : null;
-    const computeIxs = getTotalComputeIxs(
+    const ixs = prependComputeIxs(
+      [
+        // TODO: not including as it would incur an extra RPC call on every buy tx (slower). Let's see if needed.
+        // ...(await this.clearDelegate(nftBuyerAcc, buyer)),
+        await builder.instruction(),
+      ],
       isNullLike(compute) && isNullLike(ruleSetCompute)
         ? null
         : (compute ?? 0) + (ruleSetCompute ?? 0),
@@ -1409,12 +1187,7 @@ export class TensorSwapSDK {
     return {
       builder,
       tx: {
-        ixs: [
-          ...computeIxs,
-          // TODO: not including as it would incur an extra RPC call on every buy tx (slower). Let's see if needed.
-          // ...(await this.clearDelegate(nftBuyerAcc, buyer)),
-          await builder.instruction(),
-        ],
+        ixs,
         extraSigners: [],
       },
       tswapPda,
@@ -1540,7 +1313,7 @@ export class TensorSwapSDK {
     }
 
     //1.optional cosigner
-    const remAcc = [];
+    const remAcc: AccountMeta[] = [];
     if (isCosigned && type === "token") {
       remAcc.push({
         pubkey: cosigner,
@@ -1622,7 +1395,8 @@ export class TensorSwapSDK {
       .remainingAccounts(remAcc);
 
     const ruleSetCompute = ruleSet ? ruleSetAddnCompute : null;
-    const computeIxs = getTotalComputeIxs(
+    const ixs = prependComputeIxs(
+      [await builder.instruction()],
       isNullLike(compute) && isNullLike(ruleSetCompute)
         ? null
         : (compute ?? 0) + (ruleSetCompute ?? 0),
@@ -1632,7 +1406,7 @@ export class TensorSwapSDK {
     return {
       builder,
       tx: {
-        ixs: [...computeIxs, await builder.instruction()],
+        ixs,
         extraSigners: [],
       },
       tswapPda,
@@ -2097,7 +1871,7 @@ export class TensorSwapSDK {
       authData,
       sourceAta: nftSellerAcc,
     });
-    const remAcc = [];
+    const remAcc: AccountMeta[] = [];
     //1.optional ruleset
     if (!!ruleSet) {
       remAcc.push({ pubkey: ruleSet, isSigner: false, isWritable: false });
@@ -2138,7 +1912,8 @@ export class TensorSwapSDK {
       .remainingAccounts(remAcc);
 
     const ruleSetCompute = ruleSet ? ruleSetAddnCompute : null;
-    const computeIxs = getTotalComputeIxs(
+    const ixs = prependComputeIxs(
+      [await builder.instruction()],
       isNullLike(compute) && isNullLike(ruleSetCompute)
         ? null
         : (compute ?? 0) + (ruleSetCompute ?? 0),
@@ -2148,7 +1923,7 @@ export class TensorSwapSDK {
     return {
       builder,
       tx: {
-        ixs: [...computeIxs, await builder.instruction()],
+        ixs,
         extraSigners: [],
       },
       tswapPda,
@@ -2248,7 +2023,8 @@ export class TensorSwapSDK {
       });
 
     const ruleSetCompute = ruleSet ? ruleSetAddnCompute : null;
-    const computeIxs = getTotalComputeIxs(
+    const ixs = prependComputeIxs(
+      [await builder.instruction()],
       isNullLike(compute) && isNullLike(ruleSetCompute)
         ? null
         : (compute ?? 0) + (ruleSetCompute ?? 0),
@@ -2258,7 +2034,7 @@ export class TensorSwapSDK {
     return {
       builder,
       tx: {
-        ixs: [...computeIxs, await builder.instruction()],
+        ixs,
         extraSigners: [],
       },
       tswapPda,
@@ -2347,7 +2123,11 @@ export class TensorSwapSDK {
       });
 
     const ruleSetCompute = ruleSet ? ruleSetAddnCompute : null;
-    const computeIxs = getTotalComputeIxs(
+    const ixs = prependComputeIxs(
+      [
+        ...(await this.clearDelegate(nftDest, owner)),
+        await builder.instruction(),
+      ],
       isNullLike(compute) && isNullLike(ruleSetCompute)
         ? null
         : (compute ?? 0) + (ruleSetCompute ?? 0),
@@ -2357,11 +2137,7 @@ export class TensorSwapSDK {
     return {
       builder,
       tx: {
-        ixs: [
-          ...computeIxs,
-          ...(await this.clearDelegate(nftDest, owner)),
-          await builder.instruction(),
-        ],
+        ixs,
         extraSigners: [],
       },
       tswapPda,
@@ -2474,7 +2250,12 @@ export class TensorSwapSDK {
       );
 
     const ruleSetCompute = ruleSet ? ruleSetAddnCompute : null;
-    const computeIxs = getTotalComputeIxs(
+    const ixs = prependComputeIxs(
+      [
+        // TODO: not including as it would incur an extra RPC call on every buy tx (slower). Let's see if needed.
+        // ...(await this.clearDelegate(nftBuyerAcc, buyer)),
+        await builder.instruction(),
+      ],
       isNullLike(compute) && isNullLike(ruleSetCompute)
         ? null
         : (compute ?? 0) + (ruleSetCompute ?? 0),
@@ -2484,12 +2265,7 @@ export class TensorSwapSDK {
     return {
       builder,
       tx: {
-        ixs: [
-          ...computeIxs,
-          // TODO: not including as it would incur an extra RPC call on every buy tx (slower). Let's see if needed.
-          // ...(await this.clearDelegate(nftBuyerAcc, buyer)),
-          await builder.instruction(),
-        ],
+        ixs,
         extraSigners: [],
       },
       tswapPda,
@@ -2558,42 +2334,42 @@ export class TensorSwapSDK {
   }
 
   async getTswapRent() {
-    return await getAccountRent(
+    return await getRent(
       this.program.provider.connection,
       this.program.account.tSwap
     );
   }
 
   async getPoolRent() {
-    return await getAccountRent(
+    return await getRent(
       this.program.provider.connection,
       this.program.account.pool
     );
   }
 
   async getMarginAccountRent() {
-    return await getAccountRent(
+    return await getRent(
       this.program.provider.connection,
       this.program.account.marginAccount
     );
   }
 
   async getSingleListingRent() {
-    return await getAccountRent(
+    return await getRent(
       this.program.provider.connection,
       this.program.account.singleListing
     );
   }
 
   async getNftDepositReceiptRent() {
-    return await getAccountRent(
+    return await getRent(
       this.program.provider.connection,
       this.program.account.nftDepositReceipt
     );
   }
 
   async getNftAuthorityRent() {
-    return await getAccountRent(
+    return await getRent(
       this.program.provider.connection,
       this.program.account.nftAuthority
     );
@@ -2606,7 +2382,7 @@ export class TensorSwapSDK {
   }
 
   async getSolEscrowRent() {
-    return await getAccountRent(
+    return await getRent(
       this.program.provider.connection,
       this.program.account.solEscrow
     );
@@ -2646,6 +2422,7 @@ export class TensorSwapSDK {
       case "withdrawMarginAccount":
       case "withdrawMarginAccountCpi":
       case "withdrawMarginAccountCpiTcomp":
+      case "withdrawMarginAccountCpiTlock":
       case "attachPoolToMargin":
       case "detachPoolFromMargin":
       case "takeSnipe":
@@ -2678,7 +2455,6 @@ export class TensorSwapSDK {
   }
 
   getSolAmount(ix: ParsedTSwapIx): BN | null {
-    // No "default": this ensures we explicitly think about how to handle new ixs.
     switch (ix.ix.name) {
       case "buyNft":
       case "sellNftTradePool":
@@ -2706,6 +2482,7 @@ export class TensorSwapSDK {
       case "withdrawMarginAccount":
       case "withdrawMarginAccountCpi":
       case "withdrawMarginAccountCpiTcomp":
+      case "withdrawMarginAccountCpiTlock":
       case "withdrawTswapFees":
       case "detachPoolFromMargin":
         return (ix.ix.data as WithdrawDepositSolData).lamports;
@@ -2762,6 +2539,7 @@ export class TensorSwapSDK {
       case "withdrawMarginAccount":
       case "withdrawMarginAccountCpi":
       case "withdrawMarginAccountCpiTcomp":
+      case "withdrawMarginAccountCpiTlock":
       case "attachPoolToMargin":
       case "detachPoolFromMargin":
       case "setPoolFreeze":
@@ -2787,27 +2565,3 @@ export class TensorSwapSDK {
     return Buffer.from(uuid.replaceAll("-", "")).toJSON().data;
   };
 }
-
-export const getTotalComputeIxs = (
-  compute: number | null,
-  priorityMicroLamports: number | null
-) => {
-  const finalIxs = [];
-  //optionally include extra compute]
-  if (!isNullLike(compute)) {
-    finalIxs.push(
-      ComputeBudgetProgram.setComputeUnitLimit({
-        units: compute,
-      })
-    );
-  }
-  //optionally include priority fee
-  if (!isNullLike(priorityMicroLamports)) {
-    finalIxs.push(
-      ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: priorityMicroLamports,
-      })
-    );
-  }
-  return finalIxs;
-};

@@ -1,5 +1,5 @@
 export type TensorWhitelist = {
-  "version": "0.2.0",
+  "version": "0.2.1",
   "name": "tensor_whitelist",
   "constants": [
     {
@@ -534,7 +534,7 @@ export type TensorWhitelist = {
 };
 
 export const IDL: TensorWhitelist = {
-  "version": "0.2.0",
+  "version": "0.2.1",
   "name": "tensor_whitelist",
   "constants": [
     {
