@@ -27,9 +27,9 @@ import {
   TensorWhitelist as TensorWhitelist_latest,
 } from "./idl/tensor_whitelist";
 import {
-  AnchorDiscMap,
+  AcctDiscHexMap,
   decodeAnchorAcct,
-  genDiscToDecoderMap,
+  genAcctDiscHexMap,
   getRent,
   getRentSync,
   hexCode,
@@ -121,7 +121,7 @@ export type TaggedTensorWhitelistPdaAnchor =
 
 export class TensorWhitelistSDK {
   program: Program<TensorWhitelistIDL>;
-  discMap: AnchorDiscMap<TensorWhitelistIDL>;
+  discMap: AcctDiscHexMap<TensorWhitelistIDL>;
 
   constructor({
     idl = IDL_latest,
@@ -135,7 +135,7 @@ export class TensorWhitelistSDK {
     coder?: Coder;
   }) {
     this.program = new Program<TensorWhitelistIDL>(idl, addr, provider, coder);
-    this.discMap = genDiscToDecoderMap(this.program);
+    this.discMap = genAcctDiscHexMap(idl);
   }
 
   // --------------------------------------- fetchers

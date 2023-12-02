@@ -505,9 +505,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tensor-hq/tensor-common@npm:^1.0.3":
-  version: 1.0.3
-  resolution: "@tensor-hq/tensor-common@npm:1.0.3::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40tensor-hq%2Ftensor-common%2F1.0.3%2Ff20c6d7696d9a78b961951b7dd284183d97dc554"
+"@tensor-hq/tensor-common@npm:^1.2.2":
+  version: 1.2.2
+  resolution: "@tensor-hq/tensor-common@npm:1.2.2::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40tensor-hq%2Ftensor-common%2F1.2.2%2F94a32a6e2f0e615f809c2fd09025967f7aa99115"
   dependencies:
     "@coral-xyz/anchor": ^0.26.0
     "@metaplex-foundation/mpl-auction-house": ^2.1.1
@@ -522,7 +522,7 @@ __metadata:
     exponential-backoff: ^3.1.1
     js-sha3: ^0.8.0
     semaphore: ^1.1.0
-  checksum: 13896470193b9f1d91086ba71571d56126007c8beab809b052c10c94cd3ecd3250206a926769c200a6c864efb4a94386f81d0b0379ebe579a3f95cc79ea73f1f
+  checksum: 55b3678a837717bd4bfe794039409528cf98e42f977dcc1f6f6de0ed2c01a352e522ef1758aa855814fce9dbeeaa7498de817529e949cc0c0fbd8f69c0d038ae
   languageName: node
   linkType: hard
 
@@ -539,7 +539,7 @@ __metadata:
     "@saberhq/solana-contrib": ^1.14.11
     "@solana/spl-token": ^0.3.7
     "@solana/web3.js": ^1.73.0
-    "@tensor-hq/tensor-common": ^1.0.3
+    "@tensor-hq/tensor-common": ^1.2.2
     "@types/big.js": ^6.1.5
     "@types/bn.js": ^5.1.0
     "@types/chai": ^4.3.10
