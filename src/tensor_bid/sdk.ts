@@ -21,11 +21,11 @@ import {
   TransactionResponse,
 } from "@solana/web3.js";
 import {
-  AnchorDiscMap,
+  AcctDiscHexMap,
   AuthorizationData,
   AUTH_PROG_ID,
   decodeAnchorAcct,
-  genDiscToDecoderMap,
+  genAcctDiscHexMap,
   getRent,
   getRentSync,
   hexCode,
@@ -123,7 +123,7 @@ export type TBidPricedIx = { lamports: BN };
 
 export class TensorBidSDK {
   program: Program<TensorBidIDL>;
-  discMap: AnchorDiscMap<TensorBidIDL>;
+  discMap: AcctDiscHexMap<TensorBidIDL>;
   coder: BorshCoder;
   eventParser: EventParser;
 
@@ -139,7 +139,7 @@ export class TensorBidSDK {
     coder?: Coder;
   }) {
     this.program = new Program<TensorBidIDL>(idl, addr, provider, coder);
-    this.discMap = genDiscToDecoderMap(this.program);
+    this.discMap = genAcctDiscHexMap(idl);
     this.coder = new BorshCoder(idl);
     this.eventParser = new EventParser(addr, this.coder);
   }

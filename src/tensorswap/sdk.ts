@@ -21,7 +21,6 @@ import {
   AccountInfo,
   AccountMeta,
   Commitment,
-  ComputeBudgetProgram,
   LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
@@ -31,11 +30,10 @@ import {
   TransactionResponse,
 } from "@solana/web3.js";
 import {
-  AnchorDiscMap,
-  AuthorizationData,
+  AcctDiscHexMap,
   AUTH_PROG_ID,
   decodeAnchorAcct,
-  genDiscToDecoderMap,
+  genAcctDiscHexMap,
   getRent,
   getRentSync,
   hexCode,
@@ -285,7 +283,7 @@ export type ListEditListingData = TSwapIxData & { price: BN };
 //decided to NOT build the tx inside the sdk (too much coupling - should not care about blockhash)
 export class TensorSwapSDK {
   program: Program<TensorswapIDL>;
-  discMap: AnchorDiscMap<TensorswapIDL>;
+  discMap: AcctDiscHexMap<TensorswapIDL>;
   coder: BorshCoder;
   eventParser: EventParser;
 
@@ -301,7 +299,7 @@ export class TensorSwapSDK {
     coder?: Coder;
   }) {
     this.program = new Program<TensorswapIDL>(idl, addr, provider, coder);
-    this.discMap = genDiscToDecoderMap(this.program);
+    this.discMap = genAcctDiscHexMap(idl);
     this.coder = new BorshCoder(idl);
     this.eventParser = new EventParser(addr, this.coder);
   }
