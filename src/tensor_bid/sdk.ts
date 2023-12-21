@@ -23,7 +23,8 @@ import {
 import {
   AcctDiscHexMap,
   AuthorizationData,
-  AUTH_PROG_ID,
+  AUTH_PROGRAM_ID,
+  Cluster,
   decodeAnchorAcct,
   genAcctDiscHexMap,
   getRent,
@@ -33,7 +34,7 @@ import {
   ParsedAnchorIx,
   prependComputeIxs,
   prepPnftAccounts,
-  TMETA_PROG_ID,
+  TMETA_PROGRAM_ID,
 } from "@tensor-hq/tensor-common";
 import BN from "bn.js";
 import {
@@ -50,29 +51,36 @@ import { findBidStatePda, findNftTempPDA } from "./pda";
 // ---------------------------------------- Versioned IDLs for backwards compat when parsing.
 import {
   IDL as IDL_v0_1_0,
-  TensorBid as TensorBid_v0_1_0,
+  TensorBid as TBid_v0_1_0,
 } from "./idl/tensor_bid_v0_1_0";
 
-import {
-  IDL as IDL_latest,
-  TensorBid as TensorBid_latest,
-} from "./idl/tensor_bid";
+import { IDL as IDL_latest, TensorBid as TBid_latest } from "./idl/tensor_bid";
 
 // initial deployment: https://explorer.solana.com/tx/2pLEU4Bvvd6xtRasDMQa9pRjhEsJKzqRoaQ4oDBG38AWadHUPudi8WjNACrB4neR5ap1GAxK6kvgcMuYYRvSVg11
-export const TensorBidIDL_v0_1_0 = IDL_v0_1_0;
-export const TensorBidIDL_v0_1_0_EffSlot = 183865849;
+export const TBidIDL_v0_1_0 = IDL_v0_1_0;
+export const TBidIDL_v0_1_0_EffSlot_Mainnet = 183865849;
 
 // remove margin funding during bidding: https://solscan.io/tx/5A7XWvgicH1hDYAPtWhZd2SX7WCvUB2jjKDFqyRr6MwtfnGuTyfPkngTvQ7dFfcSTvjihLuBSETftPo1u5iixpp
-export const TensorBidIDL_latest = IDL_latest;
-export const TensorBidIDL_latest_EffSlot = 184669012;
+export const TBidIDL_latest = IDL_latest;
+export const TBidIDL_latest_EffSlot_Mainnet = 184669012;
+export const TBidIDL_latest_EffSlot_Devnet = 203536603;
 
-export type TensorBidIDL = TensorBid_v0_1_0 | TensorBid_latest;
+export type TBidIDL = TBid_v0_1_0 | TBid_latest;
 
 // Use this function to figure out which IDL to use based on the slot # of historical txs.
-export const triageBidIDL = (slot: number | bigint): TensorBidIDL | null => {
-  if (slot < TensorBidIDL_v0_1_0_EffSlot) return null;
-  if (slot < TensorBidIDL_latest_EffSlot) return TensorBidIDL_v0_1_0;
-  return TensorBidIDL_latest;
+export const triageBidIDL = (
+  slot: number | bigint,
+  cluster: Cluster
+): TBidIDL | null => {
+  switch (cluster) {
+    case Cluster.Mainnet:
+      if (slot < TBidIDL_v0_1_0_EffSlot_Mainnet) return null;
+      if (slot < TBidIDL_latest_EffSlot_Mainnet) return TBidIDL_v0_1_0;
+      return TBidIDL_latest;
+    case Cluster.Devnet:
+      if (slot < TBidIDL_latest_EffSlot_Devnet) return null;
+      return TBidIDL_latest;
+  }
 };
 
 // --------------------------------------- constants
@@ -116,14 +124,14 @@ export type TaggedTensorBidPdaAnchor = {
 
 export type TBidIxName = typeof IDL_latest["instructions"][number]["name"];
 export type TBidIx = Omit<Instruction, "name"> & { name: TBidIxName };
-export type ParsedTBidIx = ParsedAnchorIx<TensorBid_latest>;
+export type ParsedTBidIx = ParsedAnchorIx<TBid_latest>;
 export type TBidPricedIx = { lamports: BN };
 
 // --------------------------------------- sdk
 
 export class TensorBidSDK {
-  program: Program<TensorBidIDL>;
-  discMap: AcctDiscHexMap<TensorBidIDL>;
+  program: Program<TBidIDL>;
+  discMap: AcctDiscHexMap<TBidIDL>;
   coder: BorshCoder;
   eventParser: EventParser;
 
@@ -138,7 +146,7 @@ export class TensorBidSDK {
     provider?: AnchorProvider;
     coder?: Coder;
   }) {
-    this.program = new Program<TensorBidIDL>(idl, addr, provider, coder);
+    this.program = new Program<TBidIDL>(idl, addr, provider, coder);
     this.discMap = genAcctDiscHexMap(idl);
     this.coder = new BorshCoder(idl);
     this.eventParser = new EventParser(addr, this.coder);
@@ -312,8 +320,8 @@ export class TensorBidSDK {
         authRules: ruleSet ?? SystemProgram.programId,
         takerBroker: takerBroker ?? tSwapAcc.feeVault,
         pnftShared: {
-          authorizationRulesProgram: AUTH_PROG_ID,
-          tokenMetadataProgram: TMETA_PROG_ID,
+          authorizationRulesProgram: AUTH_PROGRAM_ID,
+          tokenMetadataProgram: TMETA_PROGRAM_ID,
           instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
         },
       })
@@ -434,7 +442,7 @@ export class TensorBidSDK {
 
   /** This only works for the latest IDL. This is intentional: otherwise we'll need to switch/case all historical deprecated ixs downstream. */
   parseIxs(tx: TransactionResponse): ParsedTBidIx[] {
-    return parseAnchorIxs<TensorBid_latest>({
+    return parseAnchorIxs<TBid_latest>({
       tx,
       coder: this.coder,
       eventParser: this.eventParser,

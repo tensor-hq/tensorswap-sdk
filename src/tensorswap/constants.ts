@@ -3,7 +3,8 @@ import { PublicKey } from "@solana/web3.js";
 // constants separated from sdk.ts, used by the frontend
 
 //(!) Keep in sync with Tensorswap contract and TBID_FEE_BPS
-export const TSWAP_TAKER_FEE_BPS: number = 140;
+export const TSWAP_TAKER_FEE_BPS: number = 150;
+export const MAKER_REBATE_BPS: number = 25;
 
 export const TENSORSWAP_ADDR = new PublicKey(
   process.env.TENSORSWAP_ADDR || "TSWAPaqyCSx2KABk68Shruf4rp7CxcNi8hAsbdwmHbN"
@@ -20,8 +21,4 @@ export const TSWAP_COSIGNER = new PublicKey(
 
 export const TSWAP_OWNER = new PublicKey(
   process.env.TSWAP_OWNER || "99cmWwQMqMFzMPx85rvZYKwusGSjZUDsu6mqYV4iisiz"
-);
-
-export const TSWAP_CORE_LUT = new PublicKey(
-  "9Ses4wW9Mj3nemRJmcZgF81RgLENC6yGUFiMQBPDp5Uk"
 );

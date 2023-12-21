@@ -10,7 +10,7 @@ export type TensorBid = {
     {
       "name": "TBID_TAKER_FEE_BPS",
       "type": "u16",
-      "value": "140"
+      "value": "150"
     },
     {
       "name": "MAX_EXPIRY_SEC",
@@ -590,7 +590,7 @@ export const IDL: TensorBid = {
     {
       "name": "TBID_TAKER_FEE_BPS",
       "type": "u16",
-      "value": "140"
+      "value": "150"
     },
     {
       "name": "MAX_EXPIRY_SEC",

@@ -28,6 +28,7 @@ import {
 } from "./idl/tensor_whitelist";
 import {
   AcctDiscHexMap,
+  Cluster,
   decodeAnchorAcct,
   genAcctDiscHexMap,
   getRent,
@@ -37,13 +38,13 @@ import {
 } from "@tensor-hq/tensor-common";
 
 //a non-breaking update to migrate account space to exportable constants: https://explorer.solana.com/tx/5czMUGttDttcXwhTTGH8QzyTffwcVfeUAQbY2FzSh8WGxRFBQAmdrYeGBQxfEfS1bog4CfTvqPvXmvxdygQ5aJKE
-
 export const TensorWhitelistIDL_v0_1_0 = IDL_v0_1_0;
 export const TensorWhitelistIDL_v0_1_0_EffSlot = 0; //todo find slot
 
 // added 3 types of verification: https://solscan.io/tx/55gtoZSTKf96XL6XDD5e9F4nkoiPqXHtP4mJoYNT6eZVwtHw2FRRhVxfg9jHADMLrVS2FmNRh2VAWVCqnTxrX3Ro
 export const TensorWhitelistIDL_latest = IDL_latest;
-export const TensorWhitelistIDL_latest_EffSlot = 172170872;
+export const TensorWhitelistIDL_latest_EffSlot_Mainnet = 172170872;
+export const TensorWhitelistIDL_latest_EffSlot_Devnet = 203539290;
 
 export type TensorWhitelistIDL =
   | TensorWhitelist_v0_1_0
@@ -51,13 +52,21 @@ export type TensorWhitelistIDL =
 
 // Use this function to figure out which IDL to use based on the slot # of historical txs.
 export const triageWhitelistIDL = (
-  slot: number | bigint
+  slot: number | bigint,
+  cluster: Cluster
 ): TensorWhitelistIDL | null => {
-  //cba to parse really old txs, this was before public launch
-  if (slot < TensorWhitelistIDL_v0_1_0_EffSlot) return null;
-  if (slot < TensorWhitelistIDL_latest_EffSlot)
-    return TensorWhitelistIDL_v0_1_0;
-  return TensorWhitelistIDL_latest;
+  switch (cluster) {
+    case Cluster.Mainnet:
+      //cba to parse really old txs, this was before public launch
+      if (slot < TensorWhitelistIDL_v0_1_0_EffSlot) return null;
+      if (slot < TensorWhitelistIDL_latest_EffSlot_Mainnet)
+        return TensorWhitelistIDL_v0_1_0;
+      return TensorWhitelistIDL_latest;
+    case Cluster.Devnet:
+      if (slot < TensorWhitelistIDL_latest_EffSlot_Devnet)
+        return TensorWhitelistIDL_v0_1_0;
+      return TensorWhitelistIDL_latest;
+  }
 };
 
 // --------------------------------------- constants

@@ -31,7 +31,8 @@ import {
 } from "@solana/web3.js";
 import {
   AcctDiscHexMap,
-  AUTH_PROG_ID,
+  AUTH_PROGRAM_ID,
+  Cluster,
   decodeAnchorAcct,
   genAcctDiscHexMap,
   getRent,
@@ -43,7 +44,7 @@ import {
   PnftArgs,
   prependComputeIxs,
   prepPnftAccounts,
-  TMETA_PROG_ID,
+  TMETA_PROGRAM_ID,
 } from "@tensor-hq/tensor-common";
 import { v4 } from "uuid";
 import {
@@ -74,51 +75,51 @@ Guide for protocol rollout: https://www.notion.so/tensor-hq/Protocol-Deployment-
 // ---------------------------------------- Versioned IDLs for backwards compat when parsing.
 import {
   IDL as IDL_latest,
-  Tensorswap as Tensorswap_latest,
+  Tensorswap as TSwap_latest,
 } from "./idl/tensorswap";
 import {
   IDL as IDL_v0_1_32,
-  Tensorswap as Tensorswap_v0_1_32,
+  Tensorswap as TSwap_v0_1_32,
 } from "./idl/tensorswap_v0_1_32";
 import {
   IDL as IDL_v0_2_0,
-  Tensorswap as Tensorswap_v0_2_0,
+  Tensorswap as TSwap_v0_2_0,
 } from "./idl/tensorswap_v0_2_0";
 import {
   IDL as IDL_v0_3_0,
-  Tensorswap as Tensorswap_v0_3_0,
+  Tensorswap as TSwap_v0_3_0,
 } from "./idl/tensorswap_v0_3_0";
 import {
   IDL as IDL_v0_3_5,
-  Tensorswap as Tensorswap_v0_3_5,
+  Tensorswap as TSwap_v0_3_5,
 } from "./idl/tensorswap_v0_3_5";
 import {
   IDL as IDL_v1_0_0,
-  Tensorswap as Tensorswap_v1_0_0,
+  Tensorswap as TSwap_v1_0_0,
 } from "./idl/tensorswap_v1_0_0";
 import {
   IDL as IDL_v1_1_0,
-  Tensorswap as Tensorswap_v1_1_0,
+  Tensorswap as TSwap_v1_1_0,
 } from "./idl/tensorswap_v1_1_0";
 import {
   IDL as IDL_v1_3_0,
-  Tensorswap as Tensorswap_v1_3_0,
+  Tensorswap as TSwap_v1_3_0,
 } from "./idl/tensorswap_v1_3_0";
 import {
   IDL as IDL_v1_4_0,
-  Tensorswap as Tensorswap_v1_4_0,
+  Tensorswap as TSwap_v1_4_0,
 } from "./idl/tensorswap_v1_4_0";
 import {
   IDL as IDL_v1_5_0,
-  Tensorswap as Tensorswap_v1_5_0,
+  Tensorswap as TSwap_v1_5_0,
 } from "./idl/tensorswap_v1_5_0";
 import {
   IDL as IDL_v1_6_0,
-  Tensorswap as Tensorswap_v1_6_0,
+  Tensorswap as TSwap_v1_6_0,
 } from "./idl/tensorswap_v1_6_0";
 import {
   IDL as IDL_v1_7_0,
-  Tensorswap as Tensorswap_v1_7_0,
+  Tensorswap as TSwap_v1_7_0,
 } from "./idl/tensorswap_v1_7_0";
 import {
   castPoolConfigAnchor,
@@ -138,94 +139,103 @@ import {
 } from "./types";
 
 // https://solscan.io/tx/5ZWevmR3TLzUEVsPyE9bdUBqseeBdVMuELG45L15dx8rnXVCQZE2n1V1EbqEuGEaF6q4fND7rT7zwW8ZXjP1uC5s
-export const TensorswapIDL_v0_1_32 = IDL_v0_1_32;
-export const TensorswapIDL_v0_1_32_EffSlot = 150855169;
+export const TSwapIDL_v0_1_32 = IDL_v0_1_32;
+export const TSwapIDL_v0_1_32_EffSlot_Mainnet = 150855169;
 
 // remove cosigner: https://solscan.io/tx/5aswB2admCErRwPNgM3DeaYcbVYjAjpHuKVFAZenaSGEm8PKL8R2BmqsGFWdGfMR25NPrVSNKix18ZgLtVpHyXUJ
-export const TensorswapIDL_v0_2_0 = IDL_v0_2_0;
-export const TensorswapIDL_v0_2_0_EffSlot = 153016663;
+export const TSwapIDL_v0_2_0 = IDL_v0_2_0;
+export const TSwapIDL_v0_2_0_EffSlot_Mainnet = 153016663;
 
 // editable pools: https://solscan.io/tx/2NjcKJov7cm7Fa1PqEADMgjiFBS6UXAzXoaiLinCU35stFUAgVyLBniaPyLExPoz18TKis5ch9YxfBs7yAkbjXXn
-export const TensorswapIDL_v0_3_0 = IDL_v0_3_0;
-export const TensorswapIDL_v0_3_0_EffSlot = 154762923;
+export const TSwapIDL_v0_3_0 = IDL_v0_3_0;
+export const TSwapIDL_v0_3_0_EffSlot_Mainnet = 154762923;
 
 // remove pool migration ixs: https://solscan.io/tx/3YruQxQ2HGMEcNRogwGAXw2rXDH3uVKCjZYs655erEKX1T3FxcLBshHHgP5deTLQ4Jd28SZTVGFb2oBpGx6HqANe
-export const TensorswapIDL_v0_3_5 = IDL_v0_3_5;
-export const TensorswapIDL_v0_3_5_EffSlot = 154963721;
+export const TSwapIDL_v0_3_5 = IDL_v0_3_5;
+export const TSwapIDL_v0_3_5_EffSlot_Mainnet = 154963721;
 
 // sniping, cross-margin https://solscan.io/tx/5ogSWohwXU3A2xjdsVwcrF3Hm7gC4zvGfzcsYco4hCKB8SduvTH9aUQTdLZw49YuAVXd4n7B4Ny8q7nEqMaKxJ2N
-export const TensorswapIDL_v1_0_0 = IDL_v1_0_0;
-export const TensorswapIDL_v1_0_0_EffSlot = 172173995;
+export const TSwapIDL_v1_0_0 = IDL_v1_0_0;
+export const TSwapIDL_v1_0_0_EffSlot_Mainnet = 172173995;
 
 // purchase caps for margin orders: https://solscan.io/tx/5YSJCyjo7bKi6etipyHmv3HcSCCc1de2fuSVK1h918GL6HqSomNrukZDvUvMnihtQ21UV2ZAGjdFiRx6PYjcSnWA
-export const TensorswapIDL_v1_1_0 = IDL_v1_1_0;
-export const TensorswapIDL_v1_1_0_EffSlot = 173144552;
+export const TSwapIDL_v1_1_0 = IDL_v1_1_0;
+export const TSwapIDL_v1_1_0_EffSlot_Mainnet = 173144552;
 
 // 1_2_0 was pricing function upgrade
 
 // pnft integration, taker-pays: https://solscan.io/tx/5vHiFK8ij7LRCpBWZt8PQEyPJcPHrUhuoFMD7FQfQcyJ6Fxp3WpHXNUxPKRYacQmqEV2Cw8tb3PjvCQKhvsGQbUa
-export const TensorswapIDL_v1_3_0 = IDL_v1_3_0;
-export const TensorswapIDL_v1_3_0_EffSlot = 176096448;
+export const TSwapIDL_v1_3_0 = IDL_v1_3_0;
+export const TSwapIDL_v1_3_0_EffSlot_Mainnet = 176096448;
 
 // add single listing: https://solscan.io/tx/JMWgwm6RdhZzdRoj9tBQHp5ZXstFr3vuFk94uD4qdq6DfQFKL6D9Zb7rj1reRsHBt87QfYcYwVYfKQ4qFyCcs6r
-export const TensorswapIDL_v1_4_0 = IDL_v1_4_0;
-export const TensorswapIDL_v1_4_0_EffSlot = 177428733;
+export const TSwapIDL_v1_4_0 = IDL_v1_4_0;
+export const TSwapIDL_v1_4_0_EffSlot_Mainnet = 177428733;
 
 // enable margin for MM pools + make MM profit withdrawable
 // part 1 (everything except edit in place): https://solscan.io/tx/2uZgAZXfeabhqAhQTtWinnHkfJHnfuDzPKJcypxK9L3xuHsVwaz9Arb7EDMU3khbKmwGbigcZsweQEXNj8Pa9tcT
 // part 2 (enabled mmCompoundFee in edit in place): https://solscan.io/tx/44aWhcQNx8a95PGGCFsTskLyJwxGbcvRnmsDaqvxsdD9dmKMP6NPRKzPoAiNiGhNfVMRq1ADg6seHPHxU6r8R7jZ
-export const TensorswapIDL_v1_5_0 = IDL_v1_5_0;
-export const TensorswapIDL_v1_5_0_EffSlot = 182023294;
+export const TSwapIDL_v1_5_0 = IDL_v1_5_0;
+export const TSwapIDL_v1_5_0_EffSlot_Mainnet = 182023294;
 
 // remove delegate from SELL NOW: https://solscan.io/tx/3hq9BG1xWEM5NcwTZiLVsNRsACXZxACXBjPNpamg4WMufi3K9Ej5jLHXxo1DEzw1C5vDr1XvKYYGPuciqqoEQiK8
-export const TensorswapIDL_v1_6_0 = IDL_v1_6_0;
-export const TensorswapIDL_v1_6_0_EffSlot = 182972833;
+export const TSwapIDL_v1_6_0 = IDL_v1_6_0;
+export const TSwapIDL_v1_6_0_EffSlot_Mainnet = 182972833;
 
-// add cpi ix for TBID + export acc size as constants https://solscan.io/tx/5jhCkfL622mQm6LXCmzsKbYCMHcyFjHcSLqJPV2G6HApS7iFK9UMyg7gaoeW8aUW6kPFsfAdraibpvNRe3fnSc3h
-export const TensorswapIDL_v1_7_0 = IDL_v1_7_0;
-export const TensorswapIDL_v1_7_0_EffSlot = 183869296;
+// add cpi ix for TBID + export acc size as constants
+export const TSwapIDL_v1_7_0 = IDL_v1_7_0;
+export const TSwapIDL_v1_7_0_EffSlot_Mainnet = 183869296; // https://solscan.io/tx/5jhCkfL622mQm6LXCmzsKbYCMHcyFjHcSLqJPV2G6HApS7iFK9UMyg7gaoeW8aUW6kPFsfAdraibpvNRe3fnSc3h
+export const TSwapIDL_v1_7_0_EffSlot_Devnet = 213361116; // https://solscan.io/tx/GFL7tCbYtDFyG1kVqMDoZ1RTgmE7rGrpp99Ec8ZrUEpp2xH8oMsads6bUqxDhEXQH9caJzMGSCj6ZNZ69kykJYD?cluster=devnet
 
-// add optional royalties + remove optional accs + add broker + add payer for list/delist - https://solscan.io/tx/JtcwNt69DQnJt7622LJwYFBeJbaBLwuabnWLes9YdncxPR3nsSXpH1GqLcZQKVmWQhCqrUKSueirogrBVrTK811
-export const TensorswapIDL_latest = IDL_latest;
-export const TensorswapIDL_latest_EffSlot = 186744215;
+// add optional royalties + remove optional accs + add broker + add payer for list/delist
+export const TSwapIDL_latest = IDL_latest;
+export const TSwapIDL_latest_EffSlot_Mainnet = 186744215; // https://solscan.io/tx/JtcwNt69DQnJt7622LJwYFBeJbaBLwuabnWLes9YdncxxPR3nsSXpH1GqLcZQKVmWQhCqrUKSueirogrBVrTK811
+export const TSwapIDL_latest_EffSlot_Devnet = 265356431; // https://solscan.io/tx/2Ad89TuMGGiu2QEBxcbMiso47rmiyJWJTTRUrGekaipecuWwrCm3G3KYsVGi8PWUSecuTzS8MCFKNsZMJBS1PSR3?cluster=devnet
 
-export type TensorswapIDL =
-  | Tensorswap_v0_1_32
-  | Tensorswap_v0_2_0
-  | Tensorswap_v0_3_0
-  | Tensorswap_v0_3_5
-  | Tensorswap_v1_0_0
-  | Tensorswap_v1_1_0
-  | Tensorswap_v1_3_0
-  | Tensorswap_v1_4_0
-  | Tensorswap_v1_5_0
-  | Tensorswap_v1_6_0
-  | Tensorswap_v1_7_0
-  | Tensorswap_latest;
+export type TSwapIDL =
+  | TSwap_v0_1_32
+  | TSwap_v0_2_0
+  | TSwap_v0_3_0
+  | TSwap_v0_3_5
+  | TSwap_v1_0_0
+  | TSwap_v1_1_0
+  | TSwap_v1_3_0
+  | TSwap_v1_4_0
+  | TSwap_v1_5_0
+  | TSwap_v1_6_0
+  | TSwap_v1_7_0
+  | TSwap_latest;
 
 // Use this function to figure out which IDL to use based on the slot # of historical txs.
-export const triageIDL = (slot: number | bigint): TensorswapIDL | null => {
-  //cba to parse really old txs, this was before public launch
-  if (slot < TensorswapIDL_v0_1_32_EffSlot) return null;
-  if (slot < TensorswapIDL_v0_2_0_EffSlot) return TensorswapIDL_v0_1_32;
-  if (slot < TensorswapIDL_v0_3_0_EffSlot) return TensorswapIDL_v0_2_0;
-  if (slot < TensorswapIDL_v0_3_5_EffSlot) return TensorswapIDL_v0_3_0;
-  if (slot < TensorswapIDL_v1_0_0_EffSlot) return TensorswapIDL_v0_3_5;
-  if (slot < TensorswapIDL_v1_1_0_EffSlot) return TensorswapIDL_v1_0_0;
-  if (slot < TensorswapIDL_v1_3_0_EffSlot) return TensorswapIDL_v1_1_0;
-  if (slot < TensorswapIDL_v1_4_0_EffSlot) return TensorswapIDL_v1_3_0;
-  if (slot < TensorswapIDL_v1_5_0_EffSlot) return TensorswapIDL_v1_4_0;
-  if (slot < TensorswapIDL_v1_6_0_EffSlot) return TensorswapIDL_v1_5_0;
-  if (slot < TensorswapIDL_v1_7_0_EffSlot) return TensorswapIDL_v1_6_0;
-  if (slot < TensorswapIDL_latest_EffSlot) return TensorswapIDL_v1_7_0;
-  return TensorswapIDL_latest;
+export const triageIDL = (
+  slot: number | bigint,
+  cluster: Cluster
+): TSwapIDL | null => {
+  switch (cluster) {
+    case Cluster.Mainnet:
+      //cba to parse really old txs, this was before public launch
+      if (slot < TSwapIDL_v0_1_32_EffSlot_Mainnet) return null;
+      if (slot < TSwapIDL_v0_2_0_EffSlot_Mainnet) return TSwapIDL_v0_1_32;
+      if (slot < TSwapIDL_v0_3_0_EffSlot_Mainnet) return TSwapIDL_v0_2_0;
+      if (slot < TSwapIDL_v0_3_5_EffSlot_Mainnet) return TSwapIDL_v0_3_0;
+      if (slot < TSwapIDL_v1_0_0_EffSlot_Mainnet) return TSwapIDL_v0_3_5;
+      if (slot < TSwapIDL_v1_1_0_EffSlot_Mainnet) return TSwapIDL_v1_0_0;
+      if (slot < TSwapIDL_v1_3_0_EffSlot_Mainnet) return TSwapIDL_v1_1_0;
+      if (slot < TSwapIDL_v1_4_0_EffSlot_Mainnet) return TSwapIDL_v1_3_0;
+      if (slot < TSwapIDL_v1_5_0_EffSlot_Mainnet) return TSwapIDL_v1_4_0;
+      if (slot < TSwapIDL_v1_6_0_EffSlot_Mainnet) return TSwapIDL_v1_5_0;
+      if (slot < TSwapIDL_v1_7_0_EffSlot_Mainnet) return TSwapIDL_v1_6_0;
+      if (slot < TSwapIDL_latest_EffSlot_Mainnet) return TSwapIDL_v1_7_0;
+      return TSwapIDL_latest;
+    case Cluster.Devnet:
+      if (slot < TSwapIDL_v1_7_0_EffSlot_Devnet) return null;
+      if (slot < TSwapIDL_latest_EffSlot_Devnet) return TSwapIDL_v1_7_0;
+      return TSwapIDL_latest;
+  }
 };
 
 // --------------------------------------- constants
 
-export const MAKER_REBATE_BPS: number = +IDL_latest.constants.find(
-  (c) => c.name === "MAKER_REBATE_BPS"
-)!.value;
 export const SNIPE_FEE_BPS: number = +IDL_latest.constants.find(
   (c) => c.name === "SNIPE_FEE_BPS"
 )!.value;
@@ -270,7 +280,7 @@ export type DelistEventAnchor = Event<typeof IDL_latest["events"][1]>;
 
 export type TSwapIxName = typeof IDL_latest["instructions"][number]["name"];
 export type TSwapIx = Omit<Instruction, "name"> & { name: TSwapIxName };
-export type ParsedTSwapIx = ParsedAnchorIx<Tensorswap_latest>;
+export type ParsedTSwapIx = ParsedAnchorIx<TSwap_latest>;
 export type TSwapIxData = { config: PoolConfigAnchor };
 export type EditPoolIxData = {
   oldConfig: PoolConfigAnchor;
@@ -282,8 +292,8 @@ export type ListEditListingData = TSwapIxData & { price: BN };
 
 //decided to NOT build the tx inside the sdk (too much coupling - should not care about blockhash)
 export class TensorSwapSDK {
-  program: Program<TensorswapIDL>;
-  discMap: AcctDiscHexMap<TensorswapIDL>;
+  program: Program<TSwapIDL>;
+  discMap: AcctDiscHexMap<TSwapIDL>;
   coder: BorshCoder;
   eventParser: EventParser;
 
@@ -293,12 +303,12 @@ export class TensorSwapSDK {
     provider,
     coder,
   }: {
-    idl?: TensorswapIDL;
+    idl?: TSwapIDL;
     addr?: PublicKey;
     provider?: AnchorProvider;
     coder?: Coder;
   }) {
-    this.program = new Program<TensorswapIDL>(idl, addr, provider, coder);
+    this.program = new Program<TSwapIDL>(idl, addr, provider, coder);
     this.discMap = genAcctDiscHexMap(idl);
     this.coder = new BorshCoder(idl);
     this.eventParser = new EventParser(addr, this.coder);
@@ -740,8 +750,8 @@ export class TensorSwapSDK {
         destTokenRecord: destTokenRecordPda,
         ownerTokenRecord: ownerTokenRecordPda,
         pnftShared: {
-          authorizationRulesProgram: AUTH_PROG_ID,
-          tokenMetadataProgram: TMETA_PROG_ID,
+          authorizationRulesProgram: AUTH_PROGRAM_ID,
+          tokenMetadataProgram: TMETA_PROGRAM_ID,
           instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
         },
         authRules: ruleSet ?? SystemProgram.programId,
@@ -902,8 +912,8 @@ export class TensorSwapSDK {
         destTokenRecord: destTokenRecordPda,
         ownerTokenRecord: ownerTokenRecordPda,
         pnftShared: {
-          authorizationRulesProgram: AUTH_PROG_ID,
-          tokenMetadataProgram: TMETA_PROG_ID,
+          authorizationRulesProgram: AUTH_PROGRAM_ID,
+          tokenMetadataProgram: TMETA_PROGRAM_ID,
           instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
         },
         authRules: ruleSet ?? SystemProgram.programId,
@@ -1151,8 +1161,8 @@ export class TensorSwapSDK {
         destTokenRecord: destTokenRecordPda,
         ownerTokenRecord: ownerTokenRecordPda,
         pnftShared: {
-          authorizationRulesProgram: AUTH_PROG_ID,
-          tokenMetadataProgram: TMETA_PROG_ID,
+          authorizationRulesProgram: AUTH_PROGRAM_ID,
+          tokenMetadataProgram: TMETA_PROGRAM_ID,
           instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
         },
         authRules: ruleSet ?? SystemProgram.programId,
@@ -1381,8 +1391,8 @@ export class TensorSwapSDK {
         nftEdition: nftEditionPda,
         ownerTokenRecord: ownerTokenRecordPda,
         pnftShared: {
-          authorizationRulesProgram: AUTH_PROG_ID,
-          tokenMetadataProgram: TMETA_PROG_ID,
+          authorizationRulesProgram: AUTH_PROGRAM_ID,
+          tokenMetadataProgram: TMETA_PROGRAM_ID,
           instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
         },
         authRules: ruleSet ?? SystemProgram.programId,
@@ -1902,8 +1912,8 @@ export class TensorSwapSDK {
         destTokenRecord: destTokenRecordPda,
         ownerTokenRecord: ownerTokenRecordPda,
         pnftShared: {
-          authorizationRulesProgram: AUTH_PROG_ID,
-          tokenMetadataProgram: TMETA_PROG_ID,
+          authorizationRulesProgram: AUTH_PROGRAM_ID,
+          tokenMetadataProgram: TMETA_PROGRAM_ID,
           instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
         },
       })
@@ -2012,8 +2022,8 @@ export class TensorSwapSDK {
         destTokenRecord: destTokenRecordPda,
         ownerTokenRecord: ownerTokenRecordPda,
         pnftShared: {
-          authorizationRulesProgram: AUTH_PROG_ID,
-          tokenMetadataProgram: TMETA_PROG_ID,
+          authorizationRulesProgram: AUTH_PROGRAM_ID,
+          tokenMetadataProgram: TMETA_PROGRAM_ID,
           instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
         },
         authRules: ruleSet ?? SystemProgram.programId,
@@ -2112,8 +2122,8 @@ export class TensorSwapSDK {
         destTokenRecord: destTokenRecordPda,
         ownerTokenRecord: ownerTokenRecordPda,
         pnftShared: {
-          authorizationRulesProgram: AUTH_PROG_ID,
-          tokenMetadataProgram: TMETA_PROG_ID,
+          authorizationRulesProgram: AUTH_PROGRAM_ID,
+          tokenMetadataProgram: TMETA_PROGRAM_ID,
           instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
         },
         authRules: ruleSet ?? SystemProgram.programId,
@@ -2230,8 +2240,8 @@ export class TensorSwapSDK {
         destTokenRecord: destTokenRecordPda,
         ownerTokenRecord: ownerTokenRecordPda,
         pnftShared: {
-          authorizationRulesProgram: AUTH_PROG_ID,
-          tokenMetadataProgram: TMETA_PROG_ID,
+          authorizationRulesProgram: AUTH_PROGRAM_ID,
+          tokenMetadataProgram: TMETA_PROGRAM_ID,
           instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
         },
         authRules: ruleSet ?? SystemProgram.programId,
@@ -2401,7 +2411,7 @@ export class TensorSwapSDK {
 
   /** This only works for the latest IDL. This is intentional: otherwise we'll need to switch/case all historical deprecated ixs downstream. */
   parseIxs(tx: TransactionResponse): ParsedTSwapIx[] {
-    return parseAnchorIxs<Tensorswap_latest>({
+    return parseAnchorIxs<TSwap_latest>({
       tx,
       coder: this.coder,
       eventParser: this.eventParser,
