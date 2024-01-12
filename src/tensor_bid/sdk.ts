@@ -22,7 +22,6 @@ import {
 } from "@solana/web3.js";
 import {
   AcctDiscHexMap,
-  AuthorizationData,
   AUTH_PROGRAM_ID,
   Cluster,
   decodeAnchorAcct,
@@ -32,6 +31,7 @@ import {
   hexCode,
   parseAnchorIxs,
   ParsedAnchorIx,
+  PnftArgs,
   prependComputeIxs,
   prepPnftAccounts,
   TMETA_PROGRAM_ID,
@@ -216,8 +216,8 @@ export class TensorBidSDK {
     nftMint,
     lamports,
     margin = null,
-    metaCreators,
     nftSellerAcc,
+    meta,
     authData,
     compute = DEFAULT_XFER_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
@@ -229,21 +229,12 @@ export class TensorBidSDK {
     nftMint: PublicKey;
     lamports: BN;
     margin?: PublicKey | null;
-    /// If provided, skips RPC call to fetch on-chain metadata + creators.
-    metaCreators?: {
-      metadata: PublicKey;
-      creators: PublicKey[];
-    };
     nftSellerAcc: PublicKey;
-    authData?: AuthorizationData | null;
-    //passing in null or undefined means these ixs are NOT included
-    compute?: number | null;
-    priorityMicroLamports?: number | null;
     //optional % OF full royalty amount, so eg 50% of 10% royalty would be 5%
     optionalRoyaltyPct?: number | null;
     //optional taker broker account
     takerBroker?: PublicKey | null;
-  }) {
+  } & PnftArgs) {
     const [bidState, bidStateBump] = findBidStatePda({
       mint: nftMint,
       owner: bidder,
@@ -259,40 +250,36 @@ export class TensorBidSDK {
     const destAta = getAssociatedTokenAddressSync(nftMint, bidder, true);
 
     //prepare 2 pnft account sets
-    const [
-      {
-        meta,
-        creators,
-        ownerTokenRecordBump,
-        ownerTokenRecordPda,
-        destTokenRecordBump: tempDestTokenRecordBump,
-        destTokenRecordPda: tempDestTokenRecordPda,
-        ruleSet,
-        nftEditionPda,
-        authDataSerialized,
-      },
-      {
-        destTokenRecordBump: destTokenRecordBump,
-        destTokenRecordPda: destTokenRecordPda,
-      },
-    ] = await Promise.all([
-      prepPnftAccounts({
-        connection: this.program.provider.connection,
-        metaCreators,
-        nftMint,
-        destAta: tempPda,
-        authData,
-        sourceAta: nftSellerAcc,
-      }),
-      prepPnftAccounts({
-        connection: this.program.provider.connection,
-        metaCreators,
-        nftMint,
-        destAta,
-        authData,
-        sourceAta: tempPda,
-      }),
-    ]);
+    const {
+      meta: newMeta,
+      creators,
+      ownerTokenRecordBump,
+      ownerTokenRecordPda,
+      destTokenRecordBump: tempDestTokenRecordBump,
+      destTokenRecordPda: tempDestTokenRecordPda,
+      ruleSet,
+      nftEditionPda,
+      authDataSerialized,
+    } = await prepPnftAccounts({
+      connection: this.program.provider.connection,
+      meta,
+      nftMint,
+      destAta: tempPda,
+      authData,
+      sourceAta: nftSellerAcc,
+    });
+    meta = newMeta;
+    const {
+      destTokenRecordBump: destTokenRecordBump,
+      destTokenRecordPda: destTokenRecordPda,
+    } = await prepPnftAccounts({
+      connection: this.program.provider.connection,
+      meta,
+      nftMint,
+      destAta,
+      authData,
+      sourceAta: tempPda,
+    });
 
     const builder = this.program.methods
       .takeBid(lamports, !!ruleSet, authDataSerialized, optionalRoyaltyPct)
@@ -303,7 +290,7 @@ export class TensorBidSDK {
         bidState,
         bidder,
         nftSellerAcc,
-        nftMetadata: meta,
+        nftMetadata: meta.address,
         nftBidderAcc: destAta,
         nftTempAcc: tempPda,
         seller,
@@ -327,8 +314,8 @@ export class TensorBidSDK {
       })
       .remainingAccounts(
         creators.map((c) => ({
-          pubkey: c,
-          isWritable: true,
+          pubkey: c.address,
+          isWritable: c.share > 0, //only writable if they have a share
           isSigner: false,
         }))
       );

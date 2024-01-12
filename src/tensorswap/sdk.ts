@@ -681,7 +681,7 @@ export class TensorSwapSDK {
     owner,
     config,
     /** pnft args */
-    metaCreators,
+    meta,
     authData = null,
     compute = DEFAULT_XFER_COMPUTE_UNITS,
     ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
@@ -712,7 +712,7 @@ export class TensorSwapSDK {
 
     //pnft
     const {
-      meta,
+      meta: newMeta,
       ownerTokenRecordBump,
       ownerTokenRecordPda,
       destTokenRecordBump,
@@ -722,12 +722,13 @@ export class TensorSwapSDK {
       authDataSerialized,
     } = await prepPnftAccounts({
       connection: this.program.provider.connection,
-      metaCreators,
+      meta,
       nftMint,
       destAta: escrowPda,
       authData,
       sourceAta: nftSource,
     });
+    meta = newMeta;
 
     const builder = this.program.methods
       .depositNft(config as any, authDataSerialized, !!ruleSet)
@@ -739,7 +740,7 @@ export class TensorSwapSDK {
         nftSource,
         nftEscrow: escrowPda,
         nftReceipt: receiptPda,
-        nftMetadata: meta,
+        nftMetadata: meta.address,
         owner,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
@@ -845,7 +846,7 @@ export class TensorSwapSDK {
     owner,
     config,
     /** pnft args */
-    metaCreators,
+    meta,
     authData = null,
     compute = DEFAULT_XFER_COMPUTE_UNITS,
     ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
@@ -875,7 +876,7 @@ export class TensorSwapSDK {
 
     //pnft
     const {
-      meta,
+      meta: newMeta,
       ownerTokenRecordBump,
       ownerTokenRecordPda,
       destTokenRecordBump,
@@ -885,12 +886,13 @@ export class TensorSwapSDK {
       authDataSerialized,
     } = await prepPnftAccounts({
       connection: this.program.provider.connection,
-      metaCreators,
+      meta,
       nftMint,
       destAta: nftDest,
       authData,
       sourceAta: escrowPda,
     });
+    meta = newMeta;
 
     const builder = this.program.methods
       .withdrawNft(config as any, authDataSerialized, !!ruleSet)
@@ -907,7 +909,7 @@ export class TensorSwapSDK {
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY,
-        nftMetadata: meta,
+        nftMetadata: meta.address,
         nftEdition: nftEditionPda,
         destTokenRecord: destTokenRecordPda,
         ownerTokenRecord: ownerTokenRecordPda,
@@ -1063,7 +1065,7 @@ export class TensorSwapSDK {
     optionalRoyaltyPct = null,
     takerBroker = null,
     /** pnft args */
-    metaCreators,
+    meta,
     authData = null,
     compute = DEFAULT_XFER_COMPUTE_UNITS,
     ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
@@ -1103,7 +1105,7 @@ export class TensorSwapSDK {
 
     //pnft
     const {
-      meta,
+      meta: newMeta,
       creators,
       ownerTokenRecordBump,
       ownerTokenRecordPda,
@@ -1114,12 +1116,13 @@ export class TensorSwapSDK {
       authDataSerialized,
     } = await prepPnftAccounts({
       connection: this.program.provider.connection,
-      metaCreators,
+      meta,
       nftMint,
       destAta: nftBuyerAcc,
       authData,
       sourceAta: escrowPda,
     });
+    meta = newMeta;
 
     let marginPda;
     let marginBump;
@@ -1146,7 +1149,7 @@ export class TensorSwapSDK {
         pool: poolPda,
         whitelist,
         nftMint,
-        nftMetadata: meta,
+        nftMetadata: meta.address,
         nftBuyerAcc,
         nftEscrow: escrowPda,
         nftReceipt: receiptPda,
@@ -1170,10 +1173,10 @@ export class TensorSwapSDK {
         takerBroker: takerBroker ?? tSwapAcc.feeVault,
       })
       .remainingAccounts(
-        creators.map((c) => {
+        (creators ?? []).map((c) => {
           return {
-            pubkey: c,
-            isWritable: true,
+            pubkey: c.address,
+            isWritable: c.share > 0, // reduces congestion + program creators
             isSigner: false,
           };
         })
@@ -1235,7 +1238,7 @@ export class TensorSwapSDK {
     optionalRoyaltyPct = null,
     takerBroker = null,
     /** pnft args */
-    metaCreators,
+    meta,
     authData = null,
     compute = DEFAULT_XFER_COMPUTE_UNITS,
     ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
@@ -1275,40 +1278,37 @@ export class TensorSwapSDK {
     const tSwapAcc = await this.fetchTSwap(tswapPda);
 
     //prepare 2 pnft account sets
-    const [
-      {
-        meta,
-        creators,
-        ownerTokenRecordBump,
-        ownerTokenRecordPda,
-        destTokenRecordBump: escrowDestTokenRecordBump,
-        destTokenRecordPda: escrowDestTokenRecordPda,
-        ruleSet,
-        nftEditionPda,
-        authDataSerialized,
-      },
-      {
-        destTokenRecordBump: tokenDestTokenRecordBump,
-        destTokenRecordPda: tokenDestTokenRecordPda,
-      },
-    ] = await Promise.all([
-      prepPnftAccounts({
-        connection: this.program.provider.connection,
-        metaCreators,
-        nftMint,
-        destAta: escrowPda,
-        authData,
-        sourceAta: nftSellerAcc,
-      }),
-      prepPnftAccounts({
-        connection: this.program.provider.connection,
-        metaCreators,
-        nftMint,
-        destAta: ownerAtaAcc,
-        authData,
-        sourceAta: nftSellerAcc,
-      }),
-    ]);
+    const {
+      meta: newMeta,
+      creators,
+      ownerTokenRecordBump,
+      ownerTokenRecordPda,
+      destTokenRecordBump: escrowDestTokenRecordBump,
+      destTokenRecordPda: escrowDestTokenRecordPda,
+      ruleSet,
+      nftEditionPda,
+      authDataSerialized,
+    } = await prepPnftAccounts({
+      connection: this.program.provider.connection,
+      meta,
+      nftMint,
+      destAta: escrowPda,
+      authData,
+      sourceAta: nftSellerAcc,
+    });
+    meta = newMeta;
+    // Re-use fetched meta = faster.
+    const {
+      destTokenRecordBump: tokenDestTokenRecordBump,
+      destTokenRecordPda: tokenDestTokenRecordPda,
+    } = await prepPnftAccounts({
+      connection: this.program.provider.connection,
+      meta,
+      nftMint,
+      destAta: ownerAtaAcc,
+      authData,
+      sourceAta: nftSellerAcc,
+    });
 
     let marginPda;
     let marginBump;
@@ -1333,8 +1333,8 @@ export class TensorSwapSDK {
     //2.optional creators (last)
     creators.map((c) => {
       remAcc.push({
-        pubkey: c,
-        isWritable: true,
+        pubkey: c.address,
+        isWritable: c.share > 0, // reduces congestion + program creators
         isSigner: false,
       });
     });
@@ -1345,7 +1345,7 @@ export class TensorSwapSDK {
       pool: poolPda,
       whitelist,
       nftMint,
-      nftMetadata: meta,
+      nftMetadata: meta.address,
       nftSellerAcc,
       solEscrow: solEscrowPda,
       mintProof: mintProofPda,
@@ -1823,7 +1823,7 @@ export class TensorSwapSDK {
     marginNr,
     cosigner = TSWAP_COSIGNER,
     /** pnft args */
-    metaCreators,
+    meta,
     authData = null,
     compute = DEFAULT_XFER_COMPUTE_UNITS,
     ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
@@ -1863,7 +1863,7 @@ export class TensorSwapSDK {
 
     //pnft
     const {
-      meta,
+      meta: newMeta,
       ownerTokenRecordBump,
       ownerTokenRecordPda,
       destTokenRecordBump,
@@ -1873,12 +1873,14 @@ export class TensorSwapSDK {
       authDataSerialized,
     } = await prepPnftAccounts({
       connection: this.program.provider.connection,
-      metaCreators,
+      meta,
       nftMint,
       destAta: ownerAtaAcc,
       authData,
       sourceAta: nftSellerAcc,
     });
+    meta = newMeta;
+
     const remAcc: AccountMeta[] = [];
     //1.optional ruleset
     if (!!ruleSet) {
@@ -1896,7 +1898,7 @@ export class TensorSwapSDK {
           nftSellerAcc,
           nftMint,
           mintProof: mintProofPda,
-          nftMetadata: meta,
+          nftMetadata: meta.address,
           solEscrow: solEscrowPda,
           owner,
           seller,
@@ -1966,7 +1968,7 @@ export class TensorSwapSDK {
     price,
     payer = null,
     /** pnft args */
-    metaCreators,
+    meta,
     authData = null,
     compute = DEFAULT_XFER_COMPUTE_UNITS,
     ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
@@ -1987,7 +1989,7 @@ export class TensorSwapSDK {
 
     //pnft
     const {
-      meta,
+      meta: newMeta,
       ownerTokenRecordBump,
       ownerTokenRecordPda,
       destTokenRecordBump,
@@ -1997,12 +1999,13 @@ export class TensorSwapSDK {
       authDataSerialized,
     } = await prepPnftAccounts({
       connection: this.program.provider.connection,
-      metaCreators,
+      meta,
       nftMint,
       destAta: escrowPda,
       authData,
       sourceAta: nftSource,
     });
+    meta = newMeta;
 
     const builder = this.program.methods
       .list(price, authDataSerialized, !!ruleSet)
@@ -2011,7 +2014,7 @@ export class TensorSwapSDK {
         nftMint,
         nftSource,
         nftEscrow: escrowPda,
-        nftMetadata: meta,
+        nftMetadata: meta.address,
         owner,
         singleListing,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -2067,7 +2070,7 @@ export class TensorSwapSDK {
     owner,
     payer = null,
     /** pnft args */
-    metaCreators,
+    meta,
     authData = null,
     compute = DEFAULT_XFER_COMPUTE_UNITS,
     ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
@@ -2087,7 +2090,7 @@ export class TensorSwapSDK {
 
     //pnft
     const {
-      meta,
+      meta: newMeta,
       ownerTokenRecordBump,
       ownerTokenRecordPda,
       destTokenRecordBump,
@@ -2097,12 +2100,13 @@ export class TensorSwapSDK {
       authDataSerialized,
     } = await prepPnftAccounts({
       connection: this.program.provider.connection,
-      metaCreators,
+      meta,
       nftMint,
       destAta: nftDest,
       authData,
       sourceAta: escrowPda,
     });
+    meta = newMeta;
 
     const builder = this.program.methods
       .delist(authDataSerialized, !!ruleSet)
@@ -2117,7 +2121,7 @@ export class TensorSwapSDK {
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY,
-        nftMetadata: meta,
+        nftMetadata: meta.address,
         nftEdition: nftEditionPda,
         destTokenRecord: destTokenRecordPda,
         ownerTokenRecord: ownerTokenRecordPda,
@@ -2172,7 +2176,7 @@ export class TensorSwapSDK {
     optionalRoyaltyPct = null,
     takerBroker = null,
     /** pnft args */
-    metaCreators,
+    meta,
     authData = null,
     compute = DEFAULT_XFER_COMPUTE_UNITS,
     ruleSetAddnCompute = DEFAULT_RULESET_ADDN_COMPUTE_UNITS,
@@ -2197,7 +2201,7 @@ export class TensorSwapSDK {
 
     //pnft
     const {
-      meta,
+      meta: newMeta,
       creators,
       ownerTokenRecordBump,
       ownerTokenRecordPda,
@@ -2208,12 +2212,13 @@ export class TensorSwapSDK {
       authDataSerialized,
     } = await prepPnftAccounts({
       connection: this.program.provider.connection,
-      metaCreators,
+      meta,
       nftMint,
       destAta: nftBuyerAcc,
       authData,
       sourceAta: escrowPda,
     });
+    meta = newMeta;
 
     const builder = this.program.methods
       .buySingleListing(
@@ -2227,7 +2232,7 @@ export class TensorSwapSDK {
         singleListing,
         feeVault: tSwapAcc.feeVault,
         nftMint,
-        nftMetadata: meta,
+        nftMetadata: meta.address,
         nftBuyerAcc,
         nftEscrow: escrowPda,
         owner,
@@ -2250,8 +2255,8 @@ export class TensorSwapSDK {
       .remainingAccounts(
         creators.map((c) => {
           return {
-            pubkey: c,
-            isWritable: true,
+            pubkey: c.address,
+            isWritable: c.share > 0, // reduces congestion + program creators
             isSigner: false,
           };
         })

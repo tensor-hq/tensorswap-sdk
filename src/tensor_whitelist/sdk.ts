@@ -14,7 +14,11 @@ import {
 import { v4 } from "uuid";
 import MerkleTree from "merkletreejs";
 import keccak256 from "keccak256";
-import { evalMathExpr } from "../common";
+import {
+  DEFAULT_MICRO_LAMPORTS,
+  DEFAULT_XFER_COMPUTE_UNITS,
+  evalMathExpr,
+} from "../common";
 
 // ---------------------------------------- Versioned IDLs for backwards compat when parsing.
 import {
@@ -34,6 +38,7 @@ import {
   getRent,
   getRentSync,
   hexCode,
+  prependComputeIxs,
   removeNullBytes,
 } from "@tensor-hq/tensor-common";
 
@@ -220,6 +225,8 @@ export class TensorWhitelistSDK {
     name = null,
     voc = null,
     fvc = null,
+    compute = null,
+    priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
   }: {
     cosigner?: PublicKey;
     owner?: PublicKey;
@@ -228,6 +235,8 @@ export class TensorWhitelistSDK {
     name?: number[] | null;
     voc?: PublicKey | null;
     fvc?: PublicKey | null;
+    priorityMicroLamports?: number | null;
+    compute?: number | null;
   }) {
     const [authPda] = findWhitelistAuthPDA({});
     const [whitelistPda] = findWhitelistPDA({
@@ -257,7 +266,14 @@ export class TensorWhitelistSDK {
 
     return {
       builder,
-      tx: { ixs: [await builder.instruction()], extraSigners: [] },
+      tx: {
+        ixs: prependComputeIxs(
+          [await builder.instruction()],
+          compute,
+          priorityMicroLamports
+        ),
+        extraSigners: [],
+      },
       authPda,
       whitelistPda,
     };
