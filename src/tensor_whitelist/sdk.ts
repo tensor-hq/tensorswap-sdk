@@ -471,17 +471,43 @@ export class TensorWhitelistSDK {
   };
 
   // Generates a Merkle tree + root hash + proofs for a set of mints.
-  static createTreeForMints = (mints: PublicKey[]) => {
+  static createTreeForMints = (mints: PublicKey[], skipVerify: boolean = false) => {
     const buffers = mints.map((m) => m.toBuffer());
 
-    const tree = new MerkleTree(buffers, keccak256, {
-      sort: true,
-      hashLeaves: true,
+    // Create hashes
+    const leaves = buffers.map(keccak256);
+
+    // Create an array of { leaf, mint } to preserve mapping
+    const leafMintPairs = leaves.map((leaf, index) => {
+        return { leaf: leaf, mint: mints[index] };
     });
-    const proofs: { mint: PublicKey; proof: Buffer[] }[] = mints.map((mint) => {
-      const leaf = keccak256(mint.toBuffer());
-      const proof = tree.getProof(leaf);
+
+    // Presort the array based on the leaves, so that original leaves remain in the same order after tree construction
+    const sortedLeafMintPairs = leafMintPairs.slice().sort((a, b) => Buffer.compare(a.leaf, b.leaf));
+
+    // Extract only the leaves from sortedLeafMintPairs
+    const sortedLeaves = sortedLeafMintPairs.map(pair => pair.leaf);
+
+    const tree = new MerkleTree(sortedLeaves, keccak256, {
+      sortPairs: true,
+    });
+
+    const rootHash = tree.getRoot();
+
+    // Get all proofs (order should be same as leaves)
+    const allProofs = tree.getProofs();
+
+    // This assumes proofs indices align with mints indices (which appears to be the case).
+    const proofs: { mint: PublicKey; proof: Buffer[] }[] = sortedLeafMintPairs.map((val, index) => {
+      const proof = allProofs[index];
+      const mint = val.mint;
+
+      if (!skipVerify && !tree.verify(proof, keccak256(mint.toBuffer()), rootHash)){
+        throw new Error(`Invalid proof for mint at index ${index}`);
+      }
+
       const validProof: Buffer[] = proof.map((p) => p.data);
+
       return { mint, proof: validProof };
     });
 

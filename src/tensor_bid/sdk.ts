@@ -9,7 +9,7 @@ import {
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID,
+  TOKEN_2022_PROGRAM_ID,
 } from "@solana/spl-token";
 import {
   AccountInfo,
@@ -215,6 +215,7 @@ export class TensorBidSDK {
     seller,
     nftMint,
     lamports,
+    tokenProgram,
     margin = null,
     nftSellerAcc,
     meta,
@@ -228,6 +229,7 @@ export class TensorBidSDK {
     seller: PublicKey;
     nftMint: PublicKey;
     lamports: BN;
+    tokenProgram: PublicKey;
     margin?: PublicKey | null;
     nftSellerAcc: PublicKey;
     //optional % OF full royalty amount, so eg 50% of 10% royalty would be 5%
@@ -247,7 +249,12 @@ export class TensorBidSDK {
     const tSwapAcc = await swapSdk.fetchTSwap(tswapPda);
     const [tempPda, tempPdaBump] = findNftTempPDA({ nftMint });
 
-    const destAta = getAssociatedTokenAddressSync(nftMint, bidder, true);
+    const destAta = getAssociatedTokenAddressSync(
+      nftMint,
+      bidder,
+      true,
+      tokenProgram
+    );
 
     //prepare 2 pnft account sets
     const {
@@ -295,7 +302,7 @@ export class TensorBidSDK {
         nftTempAcc: tempPda,
         seller,
         tensorswapProgram: TENSORSWAP_ADDR,
-        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgram,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY,
@@ -405,6 +412,85 @@ export class TensorBidSDK {
     };
   }
 
+  async takeBidT22({
+    bidder,
+    seller,
+    nftMint,
+    lamports,
+    margin = null,
+    nftSellerAcc,
+    compute = DEFAULT_XFER_COMPUTE_UNITS,
+    priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
+    takerBroker = null,
+  }: {
+    bidder: PublicKey;
+    seller: PublicKey;
+    nftMint: PublicKey;
+    lamports: BN;
+    margin?: PublicKey | null;
+    nftSellerAcc: PublicKey;
+    compute?: number | null | undefined;
+    priorityMicroLamports?: number | null | undefined;
+    //optional taker broker account
+    takerBroker?: PublicKey | null;
+  }) {
+    const [bidState, bidStateBump] = findBidStatePda({
+      mint: nftMint,
+      owner: bidder,
+    });
+    const [tswapPda, tswapPdaBump] = findTSwapPDA({});
+
+    const swapSdk = new TensorSwapSDK({
+      provider: this.program.provider as AnchorProvider,
+    });
+    const tSwapAcc = await swapSdk.fetchTSwap(tswapPda);
+    const [tempPda, tempPdaBump] = findNftTempPDA({ nftMint });
+
+    const destAta = getAssociatedTokenAddressSync(
+      nftMint,
+      bidder,
+      true,
+      TOKEN_2022_PROGRAM_ID
+    );
+
+    const builder = this.program.methods.takeBidT22(lamports).accounts({
+      nftMint,
+      tswap: tswapPda,
+      feeVault: tSwapAcc.feeVault,
+      bidState,
+      bidder,
+      nftSellerAcc,
+      nftBidderAcc: destAta,
+      seller,
+      tensorswapProgram: TENSORSWAP_ADDR,
+      tokenProgram: TOKEN_2022_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+      marginAccount: margin ?? seller,
+      takerBroker: takerBroker ?? tSwapAcc.feeVault,
+    });
+
+    return {
+      builder,
+      tx: {
+        ixs: prependComputeIxs(
+          [await builder.instruction()],
+          compute,
+          priorityMicroLamports
+        ),
+        extraSigners: [],
+      },
+      bidState,
+      bidStateBump,
+      tswapPda,
+      tswapPdaBump,
+      tempPda,
+      tempPdaBump,
+      nftbidderAcc: destAta,
+    };
+  }
+
   // --------------------------------------- helpers
 
   async getBidStateRent() {
@@ -439,7 +525,8 @@ export class TensorBidSDK {
 
   getFeeAmount(ix: ParsedTBidIx): BN | null {
     switch (ix.ix.name) {
-      case "takeBid": {
+      case "takeBid":
+      case "takeBidT22": {
         const event = ix.events[0].data;
         return event.tswapFee.add(event.creatorsFee);
       }
@@ -453,6 +540,7 @@ export class TensorBidSDK {
   getSolAmount(ix: ParsedTBidIx): BN | null {
     switch (ix.ix.name) {
       case "takeBid":
+      case "takeBidT22":
       case "bid":
         return (ix.ix.data as TBidPricedIx).lamports;
       case "cancelBid":

@@ -402,6 +402,54 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@solana/codecs-core@npm:2.0.0-experimental.8618508":
+  version: 2.0.0-experimental.8618508
+  resolution: "@solana/codecs-core@npm:2.0.0-experimental.8618508"
+  checksum: 3f16d037b0cb7347e87b94558cf90cb10c8e50c08856d057b2844dc9ae19a5721e04f03058fa4ad45f7529531f6c2678c0cb088c6711169951a11c1ef508da57
+  languageName: node
+  linkType: hard
+
+"@solana/codecs-data-structures@npm:2.0.0-experimental.8618508":
+  version: 2.0.0-experimental.8618508
+  resolution: "@solana/codecs-data-structures@npm:2.0.0-experimental.8618508"
+  dependencies:
+    "@solana/codecs-core": 2.0.0-experimental.8618508
+    "@solana/codecs-numbers": 2.0.0-experimental.8618508
+  checksum: 1a72f82cad338bb6153eb7687fef860dffa2d1701961fc529f5051007a029f302621e92a05a51ad1d23a3bc4aa1d02d517cac0f4b28e9819d91686e18becd07c
+  languageName: node
+  linkType: hard
+
+"@solana/codecs-numbers@npm:2.0.0-experimental.8618508":
+  version: 2.0.0-experimental.8618508
+  resolution: "@solana/codecs-numbers@npm:2.0.0-experimental.8618508"
+  dependencies:
+    "@solana/codecs-core": 2.0.0-experimental.8618508
+  checksum: 7c80fc0a2deb654fb5e43b8cc267f6105eab6d9e18afcef43374768c82fa088d58b4872adc608c74b0f54a9e0822f4ae49772137d436d323b2b327770d867df7
+  languageName: node
+  linkType: hard
+
+"@solana/codecs-strings@npm:2.0.0-experimental.8618508":
+  version: 2.0.0-experimental.8618508
+  resolution: "@solana/codecs-strings@npm:2.0.0-experimental.8618508"
+  dependencies:
+    "@solana/codecs-core": 2.0.0-experimental.8618508
+    "@solana/codecs-numbers": 2.0.0-experimental.8618508
+  peerDependencies:
+    fastestsmallesttextencoderdecoder: ^1.0.22
+  checksum: 0186dbf1c6933ba451e0f5dc7be1092220d7a5551ee97ae09259d2b736d52273dbbda6dbf4bb847ed251fb1849399b4dc76889998d3bea1648c930b1c3ead895
+  languageName: node
+  linkType: hard
+
+"@solana/options@npm:2.0.0-experimental.8618508":
+  version: 2.0.0-experimental.8618508
+  resolution: "@solana/options@npm:2.0.0-experimental.8618508"
+  dependencies:
+    "@solana/codecs-core": 2.0.0-experimental.8618508
+    "@solana/codecs-numbers": 2.0.0-experimental.8618508
+  checksum: d260faec7a44d5c2e95edcea756fe5690bdc6685b2e4ee078226e74319eee6ab931aeedfb580b420e1c5987a1d28304898ed03cdcf6b19e253460a3101080c75
+  languageName: node
+  linkType: hard
+
 "@solana/spl-account-compression@npm:^0.1.4":
   version: 0.1.10
   resolution: "@solana/spl-account-compression@npm:0.1.10"
@@ -415,6 +463,22 @@ __metadata:
   peerDependencies:
     "@solana/web3.js": ^1.50.1
   checksum: 99bd851933c46a068dbd13484770edd7ae12488b1474ee2e9d7dfd114087f3f9f813745795f91278142fbeb09aec1024f74ef2d2c8be2b47f1df319d37f0af11
+  languageName: node
+  linkType: hard
+
+"@solana/spl-token-metadata@npm:^0.1.2":
+  version: 0.1.2
+  resolution: "@solana/spl-token-metadata@npm:0.1.2"
+  dependencies:
+    "@solana/codecs-core": 2.0.0-experimental.8618508
+    "@solana/codecs-data-structures": 2.0.0-experimental.8618508
+    "@solana/codecs-numbers": 2.0.0-experimental.8618508
+    "@solana/codecs-strings": 2.0.0-experimental.8618508
+    "@solana/options": 2.0.0-experimental.8618508
+    "@solana/spl-type-length-value": 0.1.0
+  peerDependencies:
+    "@solana/web3.js": ^1.87.6
+  checksum: 9cd90aed86a2fcfa40cd209b61553641524c01d9888eb4a36f053315dfdc544aa66ad0e7a22d27a30d904648c0ec5c9db11791ac6fa87ec15a44322f7bf5077b
   languageName: node
   linkType: hard
 
@@ -455,6 +519,29 @@ __metadata:
   peerDependencies:
     "@solana/web3.js": ^1.47.4
   checksum: 4452c5cb6473d0452383eb1da22ed463e5d896bf04ae91d43385b286edcb682908d6476db9f44d46fd602e335daf9c3a74f20ddfe34d6d3ac9caeddb09316d87
+  languageName: node
+  linkType: hard
+
+"@solana/spl-token@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@solana/spl-token@npm:0.4.0"
+  dependencies:
+    "@solana/buffer-layout": ^4.0.0
+    "@solana/buffer-layout-utils": ^0.2.0
+    "@solana/spl-token-metadata": ^0.1.2
+    buffer: ^6.0.3
+  peerDependencies:
+    "@solana/web3.js": ^1.89.1
+  checksum: 6f578ea2019f46b8ac87a696377d9c08e227227da4f623b1f4e6c0b25cc2d2dda55b1ef63b909ac39d83d75d630d106f61df03887f2abc7d69d477dbd106d0ad
+  languageName: node
+  linkType: hard
+
+"@solana/spl-type-length-value@npm:0.1.0":
+  version: 0.1.0
+  resolution: "@solana/spl-type-length-value@npm:0.1.0"
+  dependencies:
+    buffer: ^6.0.3
+  checksum: 9bea6d9638fd2093db4542b12ac657407950737bd00ed919448308df59bfeb9d97a96e471d7824ba4077daeb01bbb0cf9e410d412767555e49a5bfc6bfb9bc91
   languageName: node
   linkType: hard
 
@@ -538,7 +625,7 @@ __metadata:
     "@metaplex-foundation/mpl-token-metadata": ^2.13.0
     "@msgpack/msgpack": ^2.8.0
     "@saberhq/solana-contrib": ^1.14.11
-    "@solana/spl-token": ^0.3.7
+    "@solana/spl-token": ^0.4.0
     "@solana/web3.js": ^1.73.0
     "@tensor-hq/tensor-common": ^4.1.0
     "@types/big.js": ^6.1.5
@@ -558,7 +645,7 @@ __metadata:
     jsbi: ^4.1.0
     keccak256: ^1.0.6
     math-expression-evaluator: ^2.0.4
-    merkletreejs: ^0.2.32
+    merkletreejs: ^0.3.11
     mocha: ^10.0.0
     prettier: ^2.5.1
     ts-mocha: ^10.0.0
@@ -1503,10 +1590,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"crypto-js@npm:^3.1.9-1":
-  version: 3.3.0
-  resolution: "crypto-js@npm:3.3.0"
-  checksum: 193923143a4784b2f974366068d96fe8280168fd3fef2bfea9551a5c3e32096f5a8fa49ff4eeb5bd0b9716d325618d38cfbe6125e359a4ef488fbca93e600824
+"crypto-js@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "crypto-js@npm:4.2.0"
+  checksum: f051666dbc077c8324777f44fbd3aaea2986f198fe85092535130d17026c7c2ccf2d23ee5b29b36f7a4a07312db2fae23c9094b644cc35f7858b1b4fcaf27774
   languageName: node
   linkType: hard
 
@@ -2545,16 +2632,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"merkletreejs@npm:^0.2.32":
-  version: 0.2.32
-  resolution: "merkletreejs@npm:0.2.32"
+"merkletreejs@npm:^0.3.11":
+  version: 0.3.11
+  resolution: "merkletreejs@npm:0.3.11"
   dependencies:
     bignumber.js: ^9.0.1
     buffer-reverse: ^1.0.1
-    crypto-js: ^3.1.9-1
+    crypto-js: ^4.2.0
     treeify: ^1.1.0
     web3-utils: ^1.3.4
-  checksum: 041b235adde94de584fdf5ef60138baca8d6f16bb48b3b7f714b607eaa76e4207ed5fef501ee5967371c56c5876804c4ff6da4705707f8cc0362d5c1e0358425
+  checksum: 93edb8ec66aa6c9f59aa0902e675590e3791692893bb3e8c1018f758367ded1bf7d6b1057ccde3729b283ca946a316838a631a922960b76889b3be528c43ef4e
   languageName: node
   linkType: hard
 
