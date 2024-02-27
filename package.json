@@ -1,6 +1,6 @@
 {
   "name": "@tensor-oss/tensorswap-sdk",
-  "version": "4.0.0-alpha.3",
+  "version": "4.1.0-alpha.2",
   "description": "Anchor/JS SDK for interacting with TensorSwap, TensorWhitelist and TensorBid.",
   "sideEffects": false,
   "module": "./dist/esm/index.js",
@@ -56,6 +56,7 @@
     "chai": "^4.3.6",
     "chai-as-promised": "^7.1.1",
     "chai-bn": "^0.3.1",
+    "corepack": "^0.25.2",
     "exponential-backoff": "^3.1.0",
     "jsbi": "^4.1.0",
     "mocha": "^10.0.0",

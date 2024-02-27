@@ -65,7 +65,7 @@ export const computeTakerPrice = (args: ComputePriceArgs): Big | null => {
 // Note even w/ 0 slippage this price will differ from the on-chain current price
 // for Exponential curves b/c of rounding differences.
 // Will return null if price is neagtive (ie cannot sell anymore).
-export const computeCurrentPrice = ({
+const computeCurrentPrice = ({
   config,
   takerSellCount,
   takerBuyCount,

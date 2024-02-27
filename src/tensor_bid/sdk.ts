@@ -9,10 +9,12 @@ import {
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
+  getExtraAccountMetaAddress,
   TOKEN_2022_PROGRAM_ID,
 } from "@solana/spl-token";
 import {
   AccountInfo,
+  AccountMeta,
   Commitment,
   PublicKey,
   SystemProgram,
@@ -43,6 +45,12 @@ import {
   DEFAULT_XFER_COMPUTE_UNITS,
   evalMathExpr,
 } from "../common";
+import {
+  WNS_PROGRAM_ID,
+  WNS_DISTRIBUTION_PROGRAM_ID,
+  getApprovalAccount,
+  getDistributionAccount,
+} from "../token2022";
 import { findTSwapPDA, TensorSwapSDK, TENSORSWAP_ADDR } from "../tensorswap";
 import { ParsedAccount } from "../types";
 import { TBID_ADDR } from "./constants";
@@ -122,7 +130,7 @@ export type TaggedTensorBidPdaAnchor = {
 
 // ------------- Types for parsed ixs from raw tx.
 
-export type TBidIxName = typeof IDL_latest["instructions"][number]["name"];
+export type TBidIxName = (typeof IDL_latest)["instructions"][number]["name"];
 export type TBidIx = Omit<Instruction, "name"> & { name: TBidIxName };
 export type ParsedTBidIx = ParsedAnchorIx<TBid_latest>;
 export type TBidPricedIx = { lamports: BN };
@@ -412,6 +420,8 @@ export class TensorBidSDK {
     };
   }
 
+  // --------------------------------------- T22
+
   async takeBidT22({
     bidder,
     seller,
@@ -491,6 +501,98 @@ export class TensorBidSDK {
     };
   }
 
+  // --------------------------------------- WNS
+
+  async wnsTakeBid({
+    bidder,
+    seller,
+    nftMint,
+    lamports,
+    margin = null,
+    nftSellerAcc,
+    collectionMint,
+    compute = DEFAULT_XFER_COMPUTE_UNITS,
+    priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
+    takerBroker = null,
+  }: {
+    bidder: PublicKey;
+    seller: PublicKey;
+    nftMint: PublicKey;
+    lamports: BN;
+    margin?: PublicKey | null;
+    nftSellerAcc: PublicKey;
+    collectionMint: PublicKey;
+    compute?: number | null | undefined;
+    priorityMicroLamports?: number | null | undefined;
+    //optional taker broker account
+    takerBroker?: PublicKey | null;
+  }) {
+    const [bidState, bidStateBump] = findBidStatePda({
+      mint: nftMint,
+      owner: bidder,
+    });
+    const [tswapPda, tswapPdaBump] = findTSwapPDA({});
+
+    const swapSdk = new TensorSwapSDK({
+      provider: this.program.provider as AnchorProvider,
+    });
+    const tSwapAcc = await swapSdk.fetchTSwap(tswapPda);
+    const [tempPda, tempPdaBump] = findNftTempPDA({ nftMint });
+
+    const destAta = getAssociatedTokenAddressSync(
+      nftMint,
+      bidder,
+      true,
+      TOKEN_2022_PROGRAM_ID
+    );
+
+    const approveAccount = getApprovalAccount(nftMint);
+    const distribution = getDistributionAccount(collectionMint);
+    const extraMetas = getExtraAccountMetaAddress(nftMint, WNS_PROGRAM_ID);
+
+    const builder = this.program.methods.wnsTakeBid(lamports).accounts({
+      nftMint,
+      tswap: tswapPda,
+      feeVault: tSwapAcc.feeVault,
+      bidState,
+      bidder,
+      nftSellerAcc,
+      nftBidderAcc: destAta,
+      seller,
+      tensorswapProgram: TENSORSWAP_ADDR,
+      tokenProgram: TOKEN_2022_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+      marginAccount: margin ?? seller,
+      takerBroker: takerBroker ?? tSwapAcc.feeVault,
+      approveAccount,
+      distribution,
+      distributionProgram: WNS_DISTRIBUTION_PROGRAM_ID,
+      wnsProgram: WNS_PROGRAM_ID,
+      extraMetas,
+    });
+
+    return {
+      builder,
+      tx: {
+        ixs: prependComputeIxs(
+          [await builder.instruction()],
+          compute,
+          priorityMicroLamports
+        ),
+        extraSigners: [],
+      },
+      bidState,
+      bidStateBump,
+      tswapPda,
+      tswapPdaBump,
+      tempPda,
+      tempPdaBump,
+      nftbidderAcc: destAta,
+    };
+  }
+
   // --------------------------------------- helpers
 
   async getBidStateRent() {
@@ -501,13 +603,13 @@ export class TensorBidSDK {
   }
 
   getError(
-    name: typeof IDL_latest["errors"][number]["name"]
-  ): typeof IDL_latest["errors"][number] {
+    name: (typeof IDL_latest)["errors"][number]["name"]
+  ): (typeof IDL_latest)["errors"][number] {
     //@ts-ignore (throwing weird ts errors for me)
     return this.program.idl.errors.find((e) => e.name === name)!;
   }
 
-  getErrorCodeHex(name: typeof IDL_latest["errors"][number]["name"]): string {
+  getErrorCodeHex(name: (typeof IDL_latest)["errors"][number]["name"]): string {
     return hexCode(this.getError(name).code);
   }
 
@@ -526,7 +628,8 @@ export class TensorBidSDK {
   getFeeAmount(ix: ParsedTBidIx): BN | null {
     switch (ix.ix.name) {
       case "takeBid":
-      case "takeBidT22": {
+      case "takeBidT22":
+      case "wnsTakeBid": {
         const event = ix.events[0].data;
         return event.tswapFee.add(event.creatorsFee);
       }
@@ -541,6 +644,7 @@ export class TensorBidSDK {
     switch (ix.ix.name) {
       case "takeBid":
       case "takeBidT22":
+      case "wnsTakeBid":
       case "bid":
         return (ix.ix.data as TBidPricedIx).lamports;
       case "cancelBid":

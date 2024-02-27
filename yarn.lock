@@ -640,6 +640,7 @@ __metadata:
     chai: ^4.3.6
     chai-as-promised: ^7.1.1
     chai-bn: ^0.3.1
+    corepack: ^0.25.2
     exponential-backoff: ^3.1.0
     js-sha256: ^0.9.0
     jsbi: ^4.1.0
@@ -1537,6 +1538,19 @@ __metadata:
   version: 1.0.3
   resolution: "core-util-is@npm:1.0.3"
   checksum: 9de8597363a8e9b9952491ebe18167e3b36e7707569eed0ebf14f8bba773611376466ae34575bca8cfe3c767890c859c74056084738f09d4e4a6f902b2ad7d99
+  languageName: node
+  linkType: hard
+
+"corepack@npm:^0.25.2":
+  version: 0.25.2
+  resolution: "corepack@npm:0.25.2"
+  bin:
+    corepack: ./dist/corepack.js
+    pnpm: ./dist/pnpm.js
+    pnpx: ./dist/pnpx.js
+    yarn: ./dist/yarn.js
+    yarnpkg: ./dist/yarnpkg.js
+  checksum: b5bd6123e0bc1913d2b7902f686ac61f4a6d8925f6a8982c70bab81d01e9d55c4dec75829d5c06c1df551ce4004ad5aa43bd099d9b8c29a6099f3075386808ab
   languageName: node
   linkType: hard
 
