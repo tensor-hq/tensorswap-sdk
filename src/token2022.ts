@@ -73,9 +73,12 @@ export const getApprovalAccount = (mint: PublicKey) => {
   return approvalAccount;
 };
 
-export const getDistributionAccount = (collection: PublicKey) => {
+export const getDistributionAccount = (
+  collection: PublicKey,
+  paymentMint: PublicKey = PublicKey.default
+) => {
   const [distributionAccount] = PublicKey.findProgramAddressSync(
-    [collection.toBuffer()],
+    [collection.toBuffer(), paymentMint.toBuffer()],
     WNS_DISTRIBUTION_PROGRAM_ID
   );
 
