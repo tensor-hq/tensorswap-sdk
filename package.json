@@ -1,6 +1,6 @@
 {
   "name": "@tensor-oss/tensorswap-sdk",
-  "version": "4.4.2",
+  "version": "4.5.0",
   "description": "Anchor/JS SDK for interacting with TensorSwap, TensorWhitelist and TensorBid.",
   "sideEffects": false,
   "module": "./dist/esm/index.js",
@@ -43,8 +43,6 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@ledgerhq/hw-app-solana": "^6.27.2",
-    "@ledgerhq/hw-transport-node-hid": "^6.27.2",
     "@metaplex-foundation/mpl-token-auth-rules": "^2.0.0",
     "@metaplex-foundation/mpl-token-metadata": "^2.13.0",
     "@types/big.js": "^6.1.5",
