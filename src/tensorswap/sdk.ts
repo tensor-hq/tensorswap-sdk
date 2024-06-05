@@ -290,12 +290,12 @@ export const APPROX_DEPOSIT_RECEIPT_RENT = getRentSync(DEPOSIT_RECEIPT_SIZE);
 export const APPROX_NFT_AUTHORITY_RENT = getRentSync(NFT_AUTHORITY_SIZE);
 export const APPROX_SOL_ESCROW_RENT = 946560; //token account owned by the program, keep hardcoded
 
-export type BuySellEventAnchor = Event<(typeof IDL_latest)["events"][0]>;
-export type DelistEventAnchor = Event<(typeof IDL_latest)["events"][1]>;
+export type BuySellEventAnchor = Event<typeof IDL_latest["events"][0]>;
+export type DelistEventAnchor = Event<typeof IDL_latest["events"][1]>;
 
 // ------------- Types for parsed ixs from raw tx.
 
-export type TSwapIxName = (typeof IDL_latest)["instructions"][number]["name"];
+export type TSwapIxName = typeof IDL_latest["instructions"][number]["name"];
 export type TSwapIx = Omit<Instruction, "name"> & { name: TSwapIxName };
 export type ParsedTSwapIx = ParsedAnchorIx<TSwap_latest>;
 export type TSwapIxData = { config: PoolConfigAnchor };
@@ -2382,6 +2382,7 @@ export class TensorSwapSDK {
     payer = null,
     compute = DEFAULT_XFER_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
+    transferHook = null,
   }: {
     nftMint: PublicKey;
     nftSource: PublicKey;
@@ -2391,6 +2392,10 @@ export class TensorSwapSDK {
     payer?: PublicKey | null;
     compute?: number | null | undefined;
     priorityMicroLamports?: number | null | undefined;
+    transferHook?: {
+      program: PublicKey;
+      remainingAccounts?: AccountMeta[] | null;
+    } | null;
   }) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [singleListing, singleListingBump] = findSingleListingPDA({
@@ -2409,6 +2414,20 @@ export class TensorSwapSDK {
       systemProgram: SystemProgram.programId,
       payer: payer ?? owner,
     });
+
+    if (transferHook) {
+      const hookAccounts = await getTransferHookExtraAccounts(
+        this.program.provider.connection,
+        nftMint,
+        await builder.instruction(),
+        transferHook.program
+      );
+
+      builder.remainingAccounts([
+        ...hookAccounts,
+        ...(transferHook.remainingAccounts ?? []),
+      ]);
+    }
 
     const ixs = prependComputeIxs(
       [await builder.instruction()],
@@ -2439,6 +2458,7 @@ export class TensorSwapSDK {
     payer = null,
     compute = DEFAULT_XFER_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
+    transferHook = null,
   }: {
     nftMint: PublicKey;
     nftDest: PublicKey;
@@ -2447,6 +2467,10 @@ export class TensorSwapSDK {
     payer?: PublicKey | null;
     compute?: number | null | undefined;
     priorityMicroLamports?: number | null | undefined;
+    transferHook?: {
+      program: PublicKey;
+      remainingAccounts?: AccountMeta[] | null;
+    } | null;
   }) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [singleListing, singleListingBump] = findSingleListingPDA({
@@ -2467,6 +2491,20 @@ export class TensorSwapSDK {
       rent: SYSVAR_RENT_PUBKEY,
       payer: payer ?? owner,
     });
+
+    if (transferHook) {
+      const hookAccounts = await getTransferHookExtraAccounts(
+        this.program.provider.connection,
+        nftMint,
+        await builder.instruction(),
+        transferHook.program
+      );
+
+      builder.remainingAccounts([
+        ...hookAccounts,
+        ...(transferHook.remainingAccounts ?? []),
+      ]);
+    }
 
     const ixs = prependComputeIxs(
       [
@@ -2502,6 +2540,7 @@ export class TensorSwapSDK {
     takerBroker = null,
     compute = DEFAULT_XFER_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
+    transferHook = null,
   }: {
     nftMint: PublicKey;
     nftBuyerAcc: PublicKey;
@@ -2511,6 +2550,10 @@ export class TensorSwapSDK {
     takerBroker?: PublicKey | null;
     compute?: number | null | undefined;
     priorityMicroLamports?: number | null | undefined;
+    transferHook?: {
+      program: PublicKey;
+      remainingAccounts?: AccountMeta[] | null;
+    } | null;
   }) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [singleListing, singleListingBump] = findSingleListingPDA({
@@ -2535,6 +2578,20 @@ export class TensorSwapSDK {
         systemProgram: SystemProgram.programId,
         takerBroker: takerBroker ?? tSwapAcc.feeVault,
       });
+
+    if (transferHook) {
+      const hookAccounts = await getTransferHookExtraAccounts(
+        this.program.provider.connection,
+        nftMint,
+        await builder.instruction(),
+        transferHook.program
+      );
+
+      builder.remainingAccounts([
+        ...hookAccounts,
+        ...(transferHook.remainingAccounts ?? []),
+      ]);
+    }
 
     const ixs = prependComputeIxs(
       [await builder.instruction()],
@@ -2570,6 +2627,7 @@ export class TensorSwapSDK {
     takerBroker = null,
     compute = DEFAULT_XFER_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
+    transferHook = null,
   }: {
     whitelist: PublicKey;
     nftMint: PublicKey;
@@ -2583,6 +2641,10 @@ export class TensorSwapSDK {
     takerBroker?: PublicKey | null;
     compute?: number | null | undefined;
     priorityMicroLamports?: number | null | undefined;
+    transferHook?: {
+      program: PublicKey;
+      remainingAccounts?: AccountMeta[] | null;
+    } | null;
   }) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [poolPda, poolBump] = findPoolPDA({
@@ -2635,6 +2697,20 @@ export class TensorSwapSDK {
         takerBroker: takerBroker ?? tSwapAcc.feeVault,
       });
 
+    if (transferHook) {
+      const hookAccounts = await getTransferHookExtraAccounts(
+        this.program.provider.connection,
+        nftMint,
+        await builder.instruction(),
+        transferHook.program
+      );
+
+      builder.remainingAccounts([
+        ...hookAccounts,
+        ...(transferHook.remainingAccounts ?? []),
+      ]);
+    }
+
     const ixs = prependComputeIxs(
       [await builder.instruction()],
       isNullLike(compute) ? null : compute ?? 0,
@@ -2671,6 +2747,7 @@ export class TensorSwapSDK {
     config,
     compute = DEFAULT_XFER_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
+    transferHook = null,
   }: {
     whitelist: PublicKey;
     nftMint: PublicKey;
@@ -2679,6 +2756,10 @@ export class TensorSwapSDK {
     config: PoolConfigAnchor;
     compute?: number | null | undefined;
     priorityMicroLamports?: number | null | undefined;
+    transferHook?: {
+      program: PublicKey;
+      remainingAccounts?: AccountMeta[] | null;
+    } | null;
   }) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [poolPda, poolBump] = findPoolPDA({
@@ -2710,6 +2791,20 @@ export class TensorSwapSDK {
       systemProgram: SystemProgram.programId,
       mintProof: mintProofPda,
     });
+
+    if (transferHook) {
+      const hookAccounts = await getTransferHookExtraAccounts(
+        this.program.provider.connection,
+        nftMint,
+        await builder.instruction(),
+        transferHook.program
+      );
+
+      builder.remainingAccounts([
+        ...hookAccounts,
+        ...(transferHook.remainingAccounts ?? []),
+      ]);
+    }
 
     const ixs = prependComputeIxs(
       [await builder.instruction()],
@@ -2751,6 +2846,7 @@ export class TensorSwapSDK {
     takerBroker = null,
     compute = DEFAULT_XFER_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
+    transferHook = null,
   }: {
     type: "trade" | "token";
     whitelist: PublicKey;
@@ -2767,6 +2863,10 @@ export class TensorSwapSDK {
     takerBroker?: PublicKey | null;
     compute?: number | null | undefined;
     priorityMicroLamports?: number | null | undefined;
+    transferHook?: {
+      program: PublicKey;
+      remainingAccounts?: AccountMeta[] | null;
+    } | null;
   }) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [poolPda, poolBump] = findPoolPDA({
@@ -2853,6 +2953,19 @@ export class TensorSwapSDK {
       })
       .remainingAccounts(remAcc);
 
+    if (transferHook) {
+      const hookAccounts = await getTransferHookExtraAccounts(
+        this.program.provider.connection,
+        nftMint,
+        await builder.instruction(),
+        transferHook.program
+      );
+
+      remAcc.push(...hookAccounts, ...(transferHook.remainingAccounts ?? []));
+    }
+
+    builder.remainingAccounts(remAcc);
+
     const ixs = prependComputeIxs(
       [await builder.instruction()],
       isNullLike(compute) ? null : compute ?? 0,
@@ -2890,6 +3003,7 @@ export class TensorSwapSDK {
     config,
     compute = DEFAULT_XFER_COMPUTE_UNITS,
     priorityMicroLamports = DEFAULT_MICRO_LAMPORTS,
+    transferHook = null,
   }: {
     whitelist: PublicKey;
     nftMint: PublicKey;
@@ -2898,6 +3012,10 @@ export class TensorSwapSDK {
     config: PoolConfigAnchor;
     compute?: number | null | undefined;
     priorityMicroLamports?: number | null | undefined;
+    transferHook?: {
+      program: PublicKey;
+      remainingAccounts?: AccountMeta[] | null;
+    } | null;
   }) {
     const [tswapPda, tswapBump] = findTSwapPDA({});
     const [poolPda, poolBump] = findPoolPDA({
@@ -2930,6 +3048,20 @@ export class TensorSwapSDK {
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       });
+
+    if (transferHook) {
+      const hookAccounts = await getTransferHookExtraAccounts(
+        this.program.provider.connection,
+        nftMint,
+        await builder.instruction(),
+        transferHook.program
+      );
+
+      builder.remainingAccounts([
+        ...hookAccounts,
+        ...(transferHook.remainingAccounts ?? []),
+      ]);
+    }
 
     const ixs = prependComputeIxs(
       [
@@ -3724,13 +3856,13 @@ export class TensorSwapSDK {
   }
 
   getError(
-    name: (typeof IDL_latest)["errors"][number]["name"]
-  ): (typeof IDL_latest)["errors"][number] {
+    name: typeof IDL_latest["errors"][number]["name"]
+  ): typeof IDL_latest["errors"][number] {
     //@ts-ignore (throwing weird ts errors for me)
     return this.program.idl.errors.find((e) => e.name === name)!;
   }
 
-  getErrorCodeHex(name: (typeof IDL_latest)["errors"][number]["name"]): string {
+  getErrorCodeHex(name: typeof IDL_latest["errors"][number]["name"]): string {
     return hexCode(this.getError(name).code);
   }
 
