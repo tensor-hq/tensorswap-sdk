@@ -564,7 +564,7 @@ __metadata:
 
 "@tensor-hq/tensor-common@npm:^8.0.8":
   version: 8.0.8
-  resolution: "@tensor-hq/tensor-common@npm:8.0.8::__archiveUrl=https%3A%2F%2Fnpm.pkg.github.com%2Fdownload%2F%40tensor-hq%2Ftensor-common%2F8.0.8%2F9b4ea17b03e42e4f37212599067d148eb880ba99"
+  resolution: "@tensor-hq/tensor-common@npm:8.0.8"
   dependencies:
     "@coral-xyz/anchor": ^0.26.0
     "@metaplex-foundation/mpl-auction-house": ^2.1.1
@@ -580,7 +580,7 @@ __metadata:
     exponential-backoff: ^3.1.1
     js-sha3: ^0.8.0
     semaphore: ^1.1.0
-  checksum: 97c20c72b7400ad64e7f2229c793e73367940a28ccd9a31d8cb542c4e78d4b34fed28a219c64f46f5f1b105dd1de55ee353e8775c2f51a479924a036577b308e
+  checksum: e851cbc5787cc2c3ed79e39d678def979e851f997ad4418c41a97ec2ab62b3742b55bd2ad6d65546bf27b93603445d9f6b03d64300378a9d53e0ee6e68b7a7ae
   languageName: node
   linkType: hard
 
